@@ -52,6 +52,8 @@ export class Yasqe extends CodeMirror {
   private abortController: AbortController | undefined;
   private queryStatus: "valid" | "error" | undefined;
   private queryBtn: HTMLButtonElement | undefined;
+  private fullscreenBtn: HTMLButtonElement | undefined;
+  private isFullscreen: boolean = false;
   private resizeWrapper?: HTMLDivElement;
   public rootEl: HTMLDivElement;
   public storage: YStorage;
@@ -226,7 +228,7 @@ export class Yasqe extends CodeMirror {
               popup = undefined;
             }
           },
-          true
+          true,
         );
         var input = document.createElement("input");
         input.type = "text";
@@ -278,7 +280,7 @@ export class Yasqe extends CodeMirror {
                 }
                 errSpan.textContent = textContent;
                 input.replaceWith(errSpan);
-              }
+              },
             );
           };
         }
@@ -333,6 +335,38 @@ export class Yasqe extends CodeMirror {
       buttons.appendChild(this.queryBtn);
       this.updateQueryButton();
     }
+
+    /**
+     * Draw fullscreen btn
+     */
+    this.fullscreenBtn = document.createElement("button");
+    addClass(this.fullscreenBtn, "yasqe_fullscreenButton");
+    const fullscreenIcon = drawSvgStringAsElement(imgs.fullscreen);
+    addClass(fullscreenIcon, "fullscreenIcon");
+    this.fullscreenBtn.appendChild(fullscreenIcon);
+    const fullscreenExitIcon = drawSvgStringAsElement(imgs.fullscreenExit);
+    addClass(fullscreenExitIcon, "fullscreenExitIcon");
+    this.fullscreenBtn.appendChild(fullscreenExitIcon);
+    this.fullscreenBtn.onclick = () => {
+      this.toggleFullscreen();
+    };
+    this.fullscreenBtn.title = "Toggle fullscreen (F11)";
+    this.fullscreenBtn.setAttribute("aria-label", "Toggle fullscreen");
+    buttons.appendChild(this.fullscreenBtn);
+  }
+  public toggleFullscreen() {
+    this.isFullscreen = !this.isFullscreen;
+    if (this.isFullscreen) {
+      addClass(this.rootEl, "fullscreen");
+      this.fullscreenBtn?.setAttribute("title", "Exit fullscreen (F11)");
+    } else {
+      removeClass(this.rootEl, "fullscreen");
+      this.fullscreenBtn?.setAttribute("title", "Toggle fullscreen (F11)");
+    }
+    this.refresh();
+  }
+  public getIsFullscreen() {
+    return this.isFullscreen;
   }
   private drawResizer() {
     if (this.resizeWrapper) return;
@@ -458,7 +492,7 @@ export class Yasqe extends CodeMirror {
     //on caveat: this function won't work when query is invalid (i.e. when typing)
     const token: Token = this.getTokenAt(
       { line: this.getDoc().lastLine(), ch: this.getDoc().getLine(this.getDoc().lastLine()).length },
-      true
+      true,
     );
     const vars: string[] = [];
     for (var v in token.state.variables) {
@@ -561,7 +595,7 @@ export class Yasqe extends CodeMirror {
           {
             line: i,
             ch: 1,
-          }
+          },
         );
       } else {
         // Not all lines are commented, so add comments
@@ -646,7 +680,7 @@ export class Yasqe extends CodeMirror {
           //start injecting
           newQuery += "\n" + injectString;
         }
-      }
+      },
     );
     return newQuery;
   }
@@ -685,7 +719,7 @@ export class Yasqe extends CodeMirror {
           line: l,
           ch: this.getDoc().getLine(l).length,
         },
-        precise
+        precise,
       );
       var state = token.state;
       this.setOption("queryType", state.queryType);
@@ -911,7 +945,7 @@ export class Yasqe extends CodeMirror {
   static forkAutocompleter(
     fromCompleter: string,
     newCompleter: { name: string } & Partial<Autocompleter.CompleterConfig>,
-    enable = true
+    enable = true,
   ) {
     if (!Yasqe.Autocompleters[fromCompleter]) throw new Error("Autocompleter " + fromCompleter + " does not exist");
     if (!newCompleter?.name) {
@@ -975,7 +1009,7 @@ export interface HintConfig {
         moveFocus: (movement: number) => void;
         pick: () => void;
         setFocus: (index: number) => void;
-      }
+      },
     ) => void;
   };
 }

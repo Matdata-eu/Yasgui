@@ -211,5 +211,65 @@
         }
       }
     }
+
+    .yasqe_fullscreenButton {
+      display: inline-block;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 5px;
+
+      svg {
+        height: 25px;
+        width: 25px;
+      }
+
+      .fullscreenExitIcon {
+        display: none;
+      }
+
+      &:hover {
+        svg {
+          fill: #337ab7;
+        }
+      }
+    }
+  }
+
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9998;
+    background: white;
+    margin: 0;
+    padding-top: 100px;
+
+    .CodeMirror-wrap {
+      padding-top: 10px;
+    }
+
+    .yasqe_buttons {
+      position: fixed;
+      top: 110px;
+      right: 20px;
+      z-index: 10000;
+    }
+
+    .yasqe_fullscreenButton {
+      .fullscreenIcon {
+        display: none;
+      }
+      .fullscreenExitIcon {
+        display: block;
+      }
+    }
+
+    .CodeMirror {
+      height: calc(100vh - 150px) !important;
+    }
   }
 }

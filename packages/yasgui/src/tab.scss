@@ -5,6 +5,23 @@
     &.active {
       display: block;
     }
+
+    // Hide editor wrapper when yasr is in fullscreen
+    &:has(.yasr.fullscreen) .editorwrapper {
+      display: none;
+    }
+
+    // When yasqe is fullscreen, keep controlbar visible
+    &:has(.yasqe.fullscreen) .controlbar {
+      position: fixed;
+      top: 50px;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      padding: 5px;
+    }
   }
   .yasr {
     margin-top: 5px;

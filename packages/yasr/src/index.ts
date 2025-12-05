@@ -15,6 +15,7 @@ export { default as Parser } from "./parsers";
 import { addScript, addCss, sanitize } from "./helpers";
 import * as faDownload from "@fortawesome/free-solid-svg-icons/faDownload";
 import * as faQuestionCircle from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
+import * as imgs from "./imgs";
 require("./main.scss");
 
 export interface PersistentConfig {
@@ -46,6 +47,10 @@ export class Yasr extends EventEmitter {
   public helpDrawn: Boolean = false;
   private drawnPlugin: string | undefined;
   private selectedPlugin: string | undefined;
+  private fullscreenBtn: HTMLButtonElement | undefined;
+  private isFullscreen: boolean = false;
+  private loadingEl: HTMLDivElement | undefined;
+  private isLoading: boolean = false;
 
   // Utils
   public utils = { addScript: addScript, addCSS: addCss, sanitize: sanitize };
@@ -71,6 +76,7 @@ export class Yasr extends EventEmitter {
     this.resultsEl.className = "yasr_results";
     this.resultsEl.id = uniqueId("resultsId");
     this.rootEl.appendChild(this.resultsEl);
+    this.createLoadingElement();
     this.initializePlugins();
     this.drawHeader();
 
@@ -167,7 +173,7 @@ export class Yasr extends EventEmitter {
   private getCompatiblePlugins(): string[] {
     if (!this.results)
       return Object.keys(
-        filter(this.config.plugins, (val) => (typeof val === "object" && val.enabled) || (val as any) === true)
+        filter(this.config.plugins, (val) => (typeof val === "object" && val.enabled) || (val as any) === true),
       );
 
     const supportedPlugins: { name: string; priority: number }[] = [];
@@ -222,7 +228,7 @@ export class Yasr extends EventEmitter {
             this.updatePluginSelectors(compatiblePlugins);
           }
         },
-        (_e) => console.error
+        (_e) => console.error,
       );
     } else {
       this.resultsEl.textContent = "cannot render result";
@@ -354,6 +360,10 @@ export class Yasr extends EventEmitter {
     this.drawResponseInfo();
     this.drawPluginElement();
     this.drawDownloadIcon();
+    this.drawFullscreenButton();
+    if (this.loadingEl) {
+      this.headerEl.appendChild(this.loadingEl);
+    }
     this.drawDocumentationButton();
   }
   private downloadBtn: HTMLAnchorElement | undefined;
@@ -438,6 +448,74 @@ export class Yasr extends EventEmitter {
     }
   }
 
+  private drawFullscreenButton() {
+    this.fullscreenBtn = document.createElement("button");
+    addClass(this.fullscreenBtn, "yasr_btn", "yasr_fullscreenButton", "btn_icon");
+    this.fullscreenBtn.setAttribute("aria-label", "Toggle fullscreen");
+    this.fullscreenBtn.setAttribute("tabindex", "0");
+    this.fullscreenBtn.setAttribute("role", "button");
+
+    const fullscreenIcon = drawSvgStringAsElement(imgs.fullscreen);
+    addClass(fullscreenIcon, "fullscreenIcon");
+    fullscreenIcon.setAttribute("aria-hidden", "true");
+    this.fullscreenBtn.appendChild(fullscreenIcon);
+
+    const fullscreenExitIcon = drawSvgStringAsElement(imgs.fullscreenExit);
+    addClass(fullscreenExitIcon, "fullscreenExitIcon");
+    fullscreenExitIcon.setAttribute("aria-hidden", "true");
+    this.fullscreenBtn.appendChild(fullscreenExitIcon);
+
+    this.fullscreenBtn.title = "Toggle fullscreen (F10)";
+    this.fullscreenBtn.addEventListener("click", () => {
+      this.toggleFullscreen();
+    });
+    this.fullscreenBtn.addEventListener("keydown", (event) => {
+      if (event.code === "Space" || event.code === "Enter") {
+        this.toggleFullscreen();
+      }
+    });
+
+    this.headerEl.appendChild(this.fullscreenBtn);
+  }
+
+  public toggleFullscreen() {
+    this.isFullscreen = !this.isFullscreen;
+    if (this.isFullscreen) {
+      addClass(this.rootEl, "fullscreen");
+      if (this.fullscreenBtn) this.fullscreenBtn.title = "Exit fullscreen (F10)";
+    } else {
+      removeClass(this.rootEl, "fullscreen");
+      if (this.fullscreenBtn) this.fullscreenBtn.title = "Toggle fullscreen (F10)";
+    }
+  }
+
+  public getIsFullscreen() {
+    return this.isFullscreen;
+  }
+
+  private createLoadingElement() {
+    this.loadingEl = document.createElement("div");
+    this.loadingEl.className = "yasr_loading_indicator";
+    this.loadingEl.title = "Executing query...";
+    this.loadingEl.innerHTML = `<div class="yasr_loading_spinner"></div>`;
+    this.loadingEl.style.display = "none";
+    // Will be appended to header in drawHeader
+  }
+
+  public showLoading() {
+    this.isLoading = true;
+    if (this.loadingEl) {
+      this.loadingEl.style.display = "flex";
+    }
+  }
+
+  public hideLoading() {
+    this.isLoading = false;
+    if (this.loadingEl) {
+      this.loadingEl.style.display = "none";
+    }
+  }
+
   private documentationLink!: HTMLAnchorElement;
   private drawDocumentationButton() {
     this.documentationLink = document.createElement("a");
@@ -499,7 +577,7 @@ export class Yasr extends EventEmitter {
         storageId,
         this.getPersistentConfig(),
         this.config.persistencyExpire,
-        this.handleLocalStorageQuotaFull
+        this.handleLocalStorageQuotaFull,
       );
     }
   }
@@ -517,6 +595,7 @@ export class Yasr extends EventEmitter {
   }
   public setResponse(data: any, duration?: number) {
     if (!data) return;
+    this.hideLoading();
     this.results = new Parser(data, duration);
 
     this.draw();

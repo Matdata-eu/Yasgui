@@ -4,6 +4,30 @@
     text-decoration: none;
   }
 
+  // Keep tabs visible when yasqe is in fullscreen
+  &:has(.yasqe.fullscreen) .tabsList {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+    margin: 0;
+
+    .tab {
+      span {
+        display: inline !important;
+      }
+
+      a {
+        display: flex !important;
+        align-items: center !important;
+      }
+    }
+  }
+
   //css taken from https://www.muicss.com/docs/v1/css-js/forms
   $focusColor: #337ab7;
   $font-size: 15px;

@@ -110,6 +110,7 @@ export class Tab extends EventEmitter {
   }
   public hide() {
     removeClass(this.rootEl, "active");
+    this.detachKeyboardListeners();
   }
   public show() {
     this.draw();
@@ -124,11 +125,66 @@ export class Tab extends EventEmitter {
     }
     //refresh, as other tabs might have changed the endpoint history
     this.setEndpoint(this.getEndpoint(), this.yasgui.persistentConfig.getEndpointHistory());
+    this.attachKeyboardListeners();
+  }
+
+  private handleKeyDown = (event: KeyboardEvent) => {
+    // F11 - Toggle Yasqe fullscreen
+    if (event.key === "F11") {
+      event.preventDefault();
+      if (this.yasqe) {
+        this.yasqe.toggleFullscreen();
+        // If Yasr is fullscreen, exit it
+        if (this.yasr?.getIsFullscreen()) {
+          this.yasr.toggleFullscreen();
+        }
+      }
+    }
+    // F10 - Toggle Yasr fullscreen
+    else if (event.key === "F10") {
+      event.preventDefault();
+      if (this.yasr) {
+        this.yasr.toggleFullscreen();
+        // If Yasqe is fullscreen, exit it
+        if (this.yasqe?.getIsFullscreen()) {
+          this.yasqe.toggleFullscreen();
+        }
+      }
+    }
+    // Ctrl+Shift+F - Switch between fullscreen modes
+    else if (event.ctrlKey && event.shiftKey && event.key === "F") {
+      event.preventDefault();
+      const yasqeFullscreen = this.yasqe?.getIsFullscreen();
+      const yasrFullscreen = this.yasr?.getIsFullscreen();
+
+      if (yasqeFullscreen) {
+        // Switch from Yasqe to Yasr fullscreen
+        this.yasqe?.toggleFullscreen();
+        this.yasr?.toggleFullscreen();
+      } else if (yasrFullscreen) {
+        // Switch from Yasr to Yasqe fullscreen
+        this.yasr?.toggleFullscreen();
+        this.yasqe?.toggleFullscreen();
+      } else {
+        // If neither is fullscreen, make Yasqe fullscreen
+        this.yasqe?.toggleFullscreen();
+      }
+    }
+  };
+
+  private attachKeyboardListeners() {
+    if (!this.rootEl) return;
+    document.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  private detachKeyboardListeners() {
+    document.removeEventListener("keydown", this.handleKeyDown);
   }
   public select() {
     this.yasgui.selectTabId(this.persistentJson.id);
   }
   public close() {
+    this.detachKeyboardListeners();
     if (this.yasqe) this.yasqe.abortQuery();
     if (this.yasgui.getTab() === this) {
       //it's the active tab
@@ -188,7 +244,7 @@ export class Tab extends EventEmitter {
       this.getEndpoint(),
       this.controlBarEl,
       this.yasgui.config.endpointCatalogueOptions,
-      this.yasgui.persistentConfig.getEndpointHistory()
+      this.yasgui.persistentConfig.getEndpointHistory(),
     );
     this.endpointSelect.on("select", (endpoint, endpointHistory) => {
       this.setEndpoint(endpoint, endpointHistory);
@@ -323,7 +379,7 @@ export class Tab extends EventEmitter {
               if (Array.isArray(objValue) || Array.isArray(srcValue)) {
                 return [...(objValue || []), ...(srcValue || [])];
               }
-            }
+            },
           ),
           //Passing this manually. Dont want to use our own persistentJson, as that's flattened exclude functions
           //The adjustQueryBeforeRequest is meant to be a function though, so let's copy that as is
@@ -393,9 +449,17 @@ export class Tab extends EventEmitter {
   };
   handleYasqeQueryAbort = () => {
     this.emit("queryAbort", this);
+    // Hide loading indicator in Yasr
+    if (this.yasr) {
+      this.yasr.hideLoading();
+    }
   };
   handleYasqeQueryBefore = () => {
     this.emit("queryBefore", this);
+    // Show loading indicator in Yasr
+    if (this.yasr) {
+      this.yasr.showLoading();
+    }
   };
   handleYasqeResize = (_yasqe: Yasqe, newSize: string) => {
     this.persistentJson.yasqe.editorHeight = newSize;
@@ -414,7 +478,7 @@ export class Tab extends EventEmitter {
     if (!this.yasr.results) return;
     if (!this.yasr.results.hasError()) {
       this.persistentJson.yasr.response = this.yasr.results.getAsStoreObject(
-        this.yasgui.config.yasr.maxPersistentResponseSize
+        this.yasgui.config.yasr.maxPersistentResponseSize,
       );
     } else {
       // Don't persist if there is an error and remove the previous result
@@ -444,7 +508,7 @@ export class Tab extends EventEmitter {
         if (this.yasqe) {
           return shareLink.appendArgsToUrl(
             this.getEndpoint(),
-            Yasqe.Sparql.getUrlArguments(this.yasqe, this.persistentJson.requestConfig as RequestConfig<any>)
+            Yasqe.Sparql.getUrlArguments(this.yasqe, this.persistentJson.requestConfig as RequestConfig<any>),
           );
         }
       },
@@ -521,16 +585,16 @@ function getCorsErrorRenderer(tab: Tab) {
         const errorEl = document.createElement("div");
         const errorSpan = document.createElement("p");
         errorSpan.innerHTML = `You are trying to query an HTTP endpoint (<a href="${safeEndpoint(
-          tab.getEndpoint()
+          tab.getEndpoint(),
         )}" target="_blank" rel="noopener noreferrer">${safeEndpoint(
-          tab.getEndpoint()
+          tab.getEndpoint(),
         )}</a>) from an HTTP<strong>S</strong> website (<a href="${safeEndpoint(window.location.href)}">${safeEndpoint(
-          window.location.href
+          window.location.href,
         )}</a>).<br>This is not allowed in modern browsers, see <a target="_blank" rel="noopener noreferrer" href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy</a>.`;
         if (tab.yasgui.config.nonSslDomain) {
           const errorLink = document.createElement("p");
           errorLink.innerHTML = `As a workaround, you can use the HTTP version of Yasgui instead: <a href="${tab.getShareableLink(
-            tab.yasgui.config.nonSslDomain
+            tab.yasgui.config.nonSslDomain,
           )}" target="_blank">${tab.yasgui.config.nonSslDomain}</a>`;
           errorSpan.appendChild(errorLink);
         }
