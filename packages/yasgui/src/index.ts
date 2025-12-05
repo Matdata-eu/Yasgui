@@ -10,8 +10,12 @@ import TabElements from "./TabElements";
 import { default as Yasqe, PartialConfig as YasqeConfig, RequestConfig } from "@zazuko/yasqe";
 import { default as Yasr, Config as YasrConfig } from "@zazuko/yasr";
 import { addClass, removeClass } from "@zazuko/yasgui-utils";
+import GeoPlugin from "yasgui-geo-tg";
 require("./index.scss");
 require("@zazuko/yasr/src/scss/global.scss");
+
+// Register the GeoPlugin to Yasr
+Yasr.registerPlugin("geo", GeoPlugin);
 if (window) {
   //We're storing yasqe and yasr as a member of Yasgui, but _also_ in the window
   //That way, we dont have to tweak e.g. pro plugins to register themselves to both
@@ -132,7 +136,7 @@ export class Yasgui extends EventEmitter {
             optionsFromUrl.id,
             typeof this.config.populateFromUrl === "function"
               ? this.config.populateFromUrl(optionsFromUrl)
-              : optionsFromUrl
+              : optionsFromUrl,
           );
           executeIdAfterInit = optionsFromUrl.id;
         }
@@ -248,7 +252,7 @@ export class Yasgui extends EventEmitter {
      */
     if (sameRequest) {
       sameRequest = (<Array<keyof PersistedTabJson["yasqe"]>>["endpoint", "value"]).every(
-        (key) => tab1.yasqe[key] === tab2.yasqe[key]
+        (key) => tab1.yasqe[key] === tab2.yasqe[key],
       );
     }
 
@@ -260,7 +264,7 @@ export class Yasgui extends EventEmitter {
         tab1.yasr.settings.selectedPlugin === tab2.yasr.settings.selectedPlugin &&
         isEqual(
           tab1.yasr.settings.pluginsConfig?.[tab1.yasr.settings?.selectedPlugin || ""],
-          tab2.yasr.settings.pluginsConfig?.[tab2.yasr.settings?.selectedPlugin || ""]
+          tab2.yasr.settings.pluginsConfig?.[tab2.yasr.settings?.selectedPlugin || ""],
         );
     }
 
@@ -302,7 +306,7 @@ export class Yasgui extends EventEmitter {
   public addTab(
     setActive: boolean,
     partialTabConfig?: Partial<PersistedTabJson>,
-    opts: { atIndex?: number; avoidDuplicateTabs?: boolean } = {}
+    opts: { atIndex?: number; avoidDuplicateTabs?: boolean } = {},
   ): Tab {
     const tabConfig = merge({}, Tab.getDefaults(this), partialTabConfig);
     if (tabConfig.id && this.getTab(tabConfig.id)) {
