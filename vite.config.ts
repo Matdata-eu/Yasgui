@@ -24,4 +24,11 @@ export default defineConfig({
   esbuild: {
     target: "es2020",
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler", // or "modern"
+      },
+    },
+  },
 });
