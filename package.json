@@ -30,7 +30,7 @@
       }
     },
     "build": {
-      "command": "node -e \"require('fs').rmSync('./build', {recursive: true, force: true})\" && npm run util:buildWebpackConfig && webpack --config ./webpack/config.js && node ./webpack/distributeBuildFiles.js",
+      "command": "node -e \"require('fs').rmSync('./build', {recursive: true, force: true})\" && npm run util:buildWebpackConfig && webpack --config ./webpack/config.js && node webpack/distributeBuildFiles.js",
       "env": {
         "NODE_ENV": "production"
       }
@@ -52,6 +52,7 @@
     ]
   },
   "dependencies": {
+    "@matdata/yasgui-graph-plugin": "^1.0.7",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.13.2",
     "autoprefixer": "^10.4.21",
