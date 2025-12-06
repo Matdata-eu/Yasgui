@@ -30,11 +30,21 @@ jobs:
       - name: Build packages
         run: npm run build
 
-      - name: Update package version from release tag
+      - name: Update package versions from release tag
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/}
           TAG_VERSION=${TAG_VERSION#v}
-          npm version $TAG_VERSION --no-git-tag-version --allow-same-version
+          echo "Updating all packages to version $TAG_VERSION"
+          
+          # Update each package version
+          for package_dir in packages/*/; do
+            if [ -f "${package_dir}package.json" ]; then
+              echo "Updating version in ${package_dir}package.json"
+              cd "$package_dir"
+              npm version $TAG_VERSION --no-git-tag-version --allow-same-version
+              cd ../..
+            fi
+          done
 
       - name: Publish to npm using Changesets
         run: npx changeset publish --no-git-tag
