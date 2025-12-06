@@ -9,14 +9,14 @@ const AcceptOptionsMap: { key: string; value: string }[] = [
   { key: "TSV", value: "text/tab-separated-values" },
 ];
 const AcceptHeaderGraphMap: { key: string; value: string }[] = [
-  { key: "Turtle", value: "text/turtle" },
-  { key: "JSON", value: "application/rdf+json" },
-  { key: "RDF/XML", value: "application/rdf+xml" },
-  { key: "TriG", value: "application/trig" },
-  { key: "N-Triples", value: "application/n-triples" },
-  { key: "N-Quads", value: "application/n-quads" },
-  { key: "CSV", value: "text/csv" },
-  { key: "TSV", value: "text/tab-separated-values" },
+  { key: "Turtle", value: "text/turtle,*/*;q=0.9" },
+  { key: "JSON", value: "application/rdf+json,*/*;q=0.9" },
+  { key: "RDF/XML", value: "application/rdf+xml,*/*;q=0.9" },
+  { key: "TriG", value: "application/trig,*/*;q=0.9" },
+  { key: "N-Triples", value: "application/n-triples,*/*;q=0.9" },
+  { key: "N-Quads", value: "application/n-quads,*/*;q=0.9" },
+  { key: "CSV", value: "text/csv,*/*;q=0.9" },
+  { key: "TSV", value: "text/tab-separated-values,*/*;q=0.9" },
 ];
 
 export default class TabSettingsModal {
