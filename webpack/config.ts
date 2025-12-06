@@ -12,6 +12,7 @@ import CopyPlugin from "copy-webpack-plugin";
 
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 export const analyzeBundle = process.env["ANALYZE_BUNDLE"] === "true";
+const publicPath = process.env.PUBLIC_PATH || "/";
 
 const plugins: any[] = [
   new webpack.DefinePlugin({
@@ -260,7 +261,7 @@ const config: webpack.Configuration = {
   },
   output: {
     path: path.resolve("build"),
-    publicPath: "/",
+    publicPath: publicPath,
     filename: function (chunkData: any) {
       const ext = `${isDev ? "" : ".min"}.js`;
       return `${chunkData.chunk.name.toLowerCase()}${ext}`;
