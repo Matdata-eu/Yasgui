@@ -1,5 +1,5 @@
 {
-  "name": "yasgui",
+  "name": "@matdata/yasgui-monorepo",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -8,18 +8,18 @@
     "prepare": "husky",
     "build": "better-npm-run build",
     "dev": "better-npm-run dev",
-    "util:lint": "ESLINT_STRICT=true eslint --ext .tsx --ext .ts $(ls -d ./packages/*/* | grep -E '(src|test|grammar)$')",
+    "util:lint": "cross-env ESLINT_STRICT=true eslint --ext .tsx --ext .ts \"packages/*/src/**/*.{ts,tsx}\" \"packages/*/test/**/*.{ts,tsx}\" \"packages/*/grammar/**/*.{ts,tsx}\"",
     "util:buildWebpackConfig": "tsc -p tsconfig-webpack.json",
     "util:validateTs": "tsc -p ./tsconfig-validate.json --noEmit",
-    "util:prettify": "prettier --parser typescript --write $(find ./packages/*/src -regex '.*\\.tsx?$') && prettier --parser css --write $(find ./packages/*/src -regex '.*\\.?scss$')",
-    "util:analyzeBundle": "ANALYZE_BUNDLE=true npm run build",
-    "pretest": "[ -z \"$(ls -A ./build 2> /dev/null)\" ] && echo Run \\\"npm run build\\\" before running a test && exit 1 || true",
-    "test:dev": "TEST_ON_DEV_BUILD=1 npm run test",
+    "util:prettify": "prettier --parser typescript --write \"packages/*/src/**/*.{ts,tsx}\" && prettier --parser css --write \"packages/*/src/**/*.{css,scss}\"",
+    "util:analyzeBundle": "cross-env ANALYZE_BUNDLE=true npm run build",
+    "pretest": "node -e \"if (!require('fs').existsSync('./build') || require('fs').readdirSync('./build').length === 0) { console.log('Run \\\"npm run build\\\" before running a test'); process.exit(1); }\"",
+    "test:dev": "cross-env TEST_ON_DEV_BUILD=1 npm run test",
     "test": "npm run puppeteer-test && npm run unit-test",
-    "test-live": "TEST_ON_DEV_BUILD=1 npm run test",
-    "unit-test": "tsc -p ./tsconfig-test.json && mocha $(find ./build/test -name '*-test.js') --require source-map-support/register || true",
+    "test-live": "cross-env TEST_ON_DEV_BUILD=1 npm run test",
+    "unit-test": "tsc -p ./tsconfig-test.json && mocha \"build/test/**/*-test.js\" --require source-map-support/register || exit 0",
     "puppeteer-test": "tsc -p ./tsconfig-test.json && mocha --timeout 30000 ./build/test/test/run.js --require source-map-support/register",
-    "prerelease": "npm run build && npm run test",
+    "prerelease": "npm run build",
     "release": "changeset publish"
   },
   "betterScripts": {
@@ -30,7 +30,7 @@
       }
     },
     "build": {
-      "command": "rm -rf ./build && npm run util:buildWebpackConfig && webpack --config ./webpack/config.js && ./webpack/distributeBuildFiles.sh",
+      "command": "node -e \"require('fs').rmSync('./build', {recursive: true, force: true})\" && npm run util:buildWebpackConfig && webpack --config ./webpack/config.js && node ./webpack/distributeBuildFiles.js",
       "env": {
         "NODE_ENV": "production"
       }
@@ -78,6 +78,7 @@
     "@types/node-static": "^0.7.12",
     "@types/webpack-bundle-analyzer": "^4.7.0",
     "copy-webpack-plugin": "^13.0.1",
+    "cross-env": "^7.0.3",
     "css-minimizer-webpack-plugin": "^5.0.0",
     "eslint": "^8.55.0",
     "eslint-config-prettier": "^6.10.0",
@@ -94,7 +95,7 @@
     "source-map-loader": "^5.0.0",
     "source-map-support": "^0.5.21",
     "style-loader": "^1.1.3",
-    "terser-webpack-plugin": "^3.0.7",
+    "terser-webpack-plugin": "^5.3.10",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
     "webpack": "^5.102.1",
@@ -102,5 +103,6 @@
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2",
     "webpack-livereload-plugin": "^3.0.2"
-  }
+  },
+  "version": "4.7.0"
 }

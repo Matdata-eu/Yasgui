@@ -128,7 +128,19 @@ export const genericConfig: webpack.Configuration = {
       ? []
       : [
           new TerserPlugin({
-            sourceMap: true,
+            exclude: /yasgui-geo-tg/,
+            terserOptions: {
+              ecma: 2020,
+              parse: {
+                ecma: 2020,
+              },
+              compress: {
+                ecma: 2020,
+              },
+              output: {
+                ecma: 2020,
+              },
+            },
           }),
           new CssMinimizerPlugin({}),
         ],
