@@ -1,8 +1,12 @@
 name: Deploy to GitHub Pages
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read

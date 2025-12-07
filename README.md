@@ -23,9 +23,10 @@ Go to https://yasgui.matdata.eu/ and use it freely in production. Or fork this r
 ## Useful Links
 
 - Production environment: https://yasgui.matdata.eu/
-- Dev environment: https://yasgui-dev.matdata.eu/
+- Dev environment: https://yasgui-dev.matdata.eu/ (GitHub Pages - automatically updated with every commit to main branch)
 - User documentation: https://docs.triply.cc/yasgui/
 - Developer documentation: https://docs.triply.cc/yasgui-api/
+- Docker Hub: https://hub.docker.com/r/mathiasvda/yasgui
 
 ## Features
 
@@ -98,6 +99,23 @@ npm i @matdata/yasgui
 ```sh
 yarn add @matdata/yasgui
 ```
+
+### Docker
+
+Yasgui is also available as a Docker image on Docker Hub. Images are built and published automatically when a new release is created.
+
+```sh
+docker pull mathiasvda/yasgui:latest
+docker run -p 8080:8080 mathiasvda/yasgui:latest
+```
+
+You can customize the default SPARQL endpoint by setting the `YASGUI_DEFAULT_ENDPOINT` environment variable:
+
+```sh
+docker run -p 8080:8080 -e YASGUI_DEFAULT_ENDPOINT=https://your-endpoint.com/sparql mathiasvda/yasgui:latest
+```
+
+The application will be available at `http://localhost:8080`.
 
 ## Local Development
 
