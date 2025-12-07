@@ -51,7 +51,7 @@
     ]
   },
   "dependencies": {
-    "@matdata/yasgui-graph-plugin": "^1.0.8",
+    "@matdata/yasgui-graph-plugin": "^1.1.1",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.13.2",
     "autoprefixer": "^10.4.21",
