@@ -6,26 +6,48 @@
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0px;
+      background-color: #ffffff;
+      transition: background-color 0.3s ease;
+    }
+    [data-theme="dark"] body {
+      background-color: #1e1e1e;
+    }
+    .nav-header {
+      background: #eee;
+      transition: background-color 0.3s ease;
+    }
+    [data-theme="dark"] .nav-header {
+      background: #2d2d30;
     }
     .navItem a {
       color: #555;
       text-decoration: none;
       padding: 5px;
       padding-right: 15px;
+      transition: color 0.3s ease;
+    }
+    [data-theme="dark"] .navItem a {
+      color: #cccccc;
     }
     .navItem a:hover {
       color: #222;
     }
+    [data-theme="dark"] .navItem a:hover {
+      color: #ffffff;
+    }
     .navItem.active a {
       color: black;
       font-size: 110%;
+    }
+    [data-theme="dark"] .navItem.active a {
+      color: #4fc3f7;
     }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
   <title>Yasgui</title>
 </head>
 <body>
-  <div style="background:#eee">
+  <div class="nav-header">
     <nav style="display: flex">
       <img src="/yasgui.png" style="max-height:50px;padding:5px;margin-left: 10px" alt="Yasgui Logo">
       <ul style="display: flex; list-style: none; align-self: center">
@@ -41,12 +63,35 @@
   <script type="module">
     import Yasgui from '../packages/yasgui/src/index.ts';
     
+    // Function to sync theme with body
+    function syncThemeWithBody() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'light';
+      document.body.setAttribute('data-theme', theme);
+    }
+    
     window.onpageshow = function () {
       window.yasgui = new Yasgui(document.getElementById("yasgui"), {
         corsProxy: "",
         requestConfig: {
           endpoint: "https://dbpedia.org/sparql",
         }
+      });
+      
+      // Sync theme immediately after initialization
+      syncThemeWithBody();
+      
+      // Watch for theme changes on document.documentElement
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+            syncThemeWithBody();
+          }
+        });
+      });
+      
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
       });
     };
   </script>

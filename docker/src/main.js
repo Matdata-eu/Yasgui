@@ -24,6 +24,12 @@
   });
 })();
 
+// Function to sync theme with body
+function syncThemeWithBody() {
+  const theme = document.documentElement.getAttribute("data-theme") || "light";
+  document.body.setAttribute("data-theme", theme);
+}
+
 // YASGUI is loaded via CDN in index.html and available as a global variable
 if (typeof Yasgui !== "undefined") {
   const yasgui = new Yasgui(document.getElementById("yasgui"), {
@@ -70,5 +76,22 @@ if (typeof Yasgui !== "undefined") {
         source.appendChild(contentDiv);
       },
     },
+  });
+
+  // Sync theme immediately after initialization
+  syncThemeWithBody();
+
+  // Watch for theme changes on document.documentElement
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "attributes" && mutation.attributeName === "data-theme") {
+        syncThemeWithBody();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
   });
 }

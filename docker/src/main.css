@@ -7,6 +7,13 @@ body {
     "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  transition: background-color 0.3s ease;
+}
+
+/* Dark theme styles */
+[data-theme="dark"] body {
+  background-color: #1e1e1e;
 }
 
 /* YASGUI container */
@@ -28,7 +35,15 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  transition: transform 0.3s ease-in-out;
+  transition:
+    transform 0.3s ease-in-out,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+[data-theme="dark"] #footer {
+  background-color: #2d2d30;
+  border-top: 1px solid #3e3e42;
 }
 
 .footer-left {
@@ -43,13 +58,22 @@ body {
 }
 
 #logo {
-  height: 35px;
+  height: 20px;
   width: auto;
   transition: opacity 0.2s;
 }
 
 #logo:hover {
   opacity: 0.8;
+}
+
+.logo-primary {
+  fill: #2384eb;
+  transition: fill 0.3s ease;
+}
+
+[data-theme="dark"] .logo-primary {
+  fill: #4fc3f7;
 }
 
 #footer a {
@@ -59,6 +83,18 @@ body {
 
 #footer a:hover {
   text-decoration: underline;
+}
+
+[data-theme="dark"] #footer {
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] #footer a {
+  color: #4fc3f7;
+}
+
+[data-theme="dark"] #footer a:hover {
+  color: #81d4fa;
 }
 
 /* Footer toggle button */
