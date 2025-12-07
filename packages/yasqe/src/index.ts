@@ -127,6 +127,17 @@ export class Yasqe extends CodeMirror {
   }
   private handleCursorActivity() {
     this.autocomplete(true);
+
+    // Check if cursor is on a URI and show DESCRIBE hint
+    const cursor = this.getDoc().getCursor();
+    const token = this.getTokenAt(cursor);
+
+    if (token && token.type === "variable-3") {
+      // Token type "variable-3" represents URIs (IRI_REF)
+      this.showNotification("uri-describe-hint", "Hold CTRL - left mouse click on URI to DESCRIBE");
+    } else {
+      this.hideNotification("uri-describe-hint");
+    }
   }
   private handleQuery(_yasqe: Yasqe, req: Request, abortController?: AbortController) {
     this.req = req;
