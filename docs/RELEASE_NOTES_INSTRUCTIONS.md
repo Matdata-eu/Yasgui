@@ -5,3 +5,9 @@
     - fix: commits go into 'Fixes' are only related to user facing bug fixes of previously added features
     - chore: commits go into 'Chores' and are related to maintenance tasks and non-user facing changes
 - Do not add any doc: or ci: commits to the release notes
+
+Start each line with the word "Added", "Fixed" or "Updated" depending on the type of change.
+
+Do not include references to the commits themselves. 
+
+Fixes for features that were added during the time period, should not be included.
