@@ -28,6 +28,8 @@ export default function initialize(): Config<CatalogueItem> {
     persistenceLabelConfig: "config",
     yasqe: Yasqe.defaults,
     yasr: Yasr.defaults,
+    theme: undefined,
+    showThemeToggle: true,
     endpointCatalogueOptions: {
       getData: () => {
         return [

@@ -1,0 +1,329 @@
+// Theme variables and styles for Yasgui
+// Supports light (default) and dark themes
+
+:root {
+  // Light theme colors (default)
+  --yasgui-bg-primary: #ffffff;
+  --yasgui-bg-secondary: #f7f7f7;
+  --yasgui-bg-tertiary: #eee;
+  --yasgui-text-primary: rgba(0, 0, 0, 0.87);
+  --yasgui-text-secondary: #505050;
+  --yasgui-text-muted: #999;
+  --yasgui-border-color: #ddd;
+  --yasgui-border-color-secondary: rgba(0, 0, 0, 0.26);
+  --yasgui-border-color-light: #d1d1d1;
+  --yasgui-link-color: #337ab7;
+  --yasgui-link-hover: #2a6496;
+  --yasgui-accent-color: #337ab7;
+  --yasgui-button-text: #505050;
+  --yasgui-button-hover: #000;
+  --yasgui-chip-bg: #f5f5f5;
+  --yasgui-chip-text: #505050;
+  --yasgui-tab-bg: #ffffff;
+  --yasgui-tab-bg-active: #f9f9f9;
+  --yasgui-tab-border: #ddd;
+  --yasgui-input-border: rgba(0, 0, 0, 0.26);
+  --yasgui-input-focus: #337ab7;
+  --yasgui-label-color: rgba(0, 0, 0, 0.54);
+  --yasgui-tooltip-bg: rgba(0, 0, 0, 0.8);
+  --yasgui-tooltip-text: #fff;
+  --yasgui-error-color: #d32f2f;
+  --yasgui-notification-bg: #eee;
+  --yasgui-notification-text: #999;
+  --yasgui-help-bg: #dff0ff;
+  --yasgui-help-text: #428bca;
+  --yasgui-fallback-bg: #f7f7f7;
+  --yasgui-fallback-border: #d1d1d1;
+  --yasgui-resize-handle: #d1d1d1;
+  --yasgui-nav-bg: #eee;
+}
+
+[data-theme="dark"] {
+  // Dark theme colors
+  --yasgui-bg-primary: #1e1e1e;
+  --yasgui-bg-secondary: #252526;
+  --yasgui-bg-tertiary: #2d2d30;
+  --yasgui-text-primary: #d4d4d4;
+  --yasgui-text-secondary: #cccccc;
+  --yasgui-text-muted: #858585;
+  --yasgui-border-color: #3e3e42;
+  --yasgui-border-color-secondary: rgba(255, 255, 255, 0.15);
+  --yasgui-border-color-light: #3e3e42;
+  --yasgui-link-color: #4fc3f7;
+  --yasgui-link-hover: #81d4fa;
+  --yasgui-accent-color: #4fc3f7;
+  --yasgui-button-text: #cccccc;
+  --yasgui-button-hover: #ffffff;
+  --yasgui-chip-bg: #2d2d30;
+  --yasgui-chip-text: #cccccc;
+  --yasgui-tab-bg: #2d2d30;
+  --yasgui-tab-bg-active: #1e1e1e;
+  --yasgui-tab-border: #3e3e42;
+  --yasgui-input-border: rgba(255, 255, 255, 0.15);
+  --yasgui-input-focus: #4fc3f7;
+  --yasgui-label-color: rgba(255, 255, 255, 0.6);
+  --yasgui-tooltip-bg: rgba(55, 55, 55, 0.95);
+  --yasgui-tooltip-text: #d4d4d4;
+  --yasgui-error-color: #f48771;
+  --yasgui-notification-bg: #2d2d30;
+  --yasgui-notification-text: #858585;
+  --yasgui-help-bg: #1a4d5e;
+  --yasgui-help-text: #4fc3f7;
+  --yasgui-fallback-bg: #252526;
+  --yasgui-fallback-border: #3e3e42;
+  --yasgui-resize-handle: #3e3e42;
+  --yasgui-nav-bg: #2d2d30;
+}
+
+// Apply theme colors to Yasgui components
+.yasgui {
+  background-color: var(--yasgui-bg-primary);
+  color: var(--yasgui-text-primary);
+
+  a {
+    color: var(--yasgui-link-color);
+
+    &:hover,
+    &:active {
+      color: var(--yasgui-link-hover);
+    }
+  }
+
+  // Tabs styling
+  .tabsList {
+    background: var(--yasgui-bg-primary);
+    border-bottom: 1px solid var(--yasgui-border-color);
+  }
+
+  .tab {
+    background: var(--yasgui-tab-bg);
+    color: var(--yasgui-text-primary);
+    border-color: var(--yasgui-tab-border);
+
+    &.active {
+      background: var(--yasgui-tab-bg-active);
+      border-bottom-color: var(--yasgui-tab-bg-active);
+    }
+
+    &:hover:not(.active) {
+      background: var(--yasgui-bg-secondary);
+    }
+  }
+
+  // Text fields
+  .yasgui_textfield {
+    > label {
+      color: var(--yasgui-label-color);
+    }
+
+    > input,
+    > textarea {
+      color: var(--yasgui-text-primary);
+      border-bottom-color: var(--yasgui-input-border);
+      background-color: transparent;
+
+      &:focus {
+        border-color: var(--yasgui-input-focus);
+      }
+    }
+
+    > input:focus ~ label,
+    > textarea:focus ~ label {
+      color: var(--yasgui-input-focus);
+    }
+  }
+
+  // Theme toggle button
+  .themeToggle {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 6px 8px;
+    color: var(--yasgui-button-text);
+    fill: var(--yasgui-button-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin-left: 5px;
+
+    &:hover {
+      color: var(--yasgui-button-hover);
+      fill: var(--yasgui-button-hover);
+      background: var(--yasgui-bg-secondary);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Yasqe (editor) theming
+.yasqe {
+  background-color: var(--yasgui-bg-primary);
+
+  .CodeMirror {
+    background-color: var(--yasgui-bg-primary);
+    color: var(--yasgui-text-primary);
+  }
+
+  .notification {
+    color: var(--yasgui-notification-text);
+    background-color: var(--yasgui-notification-bg);
+  }
+
+  .yasqe_tooltip {
+    background: var(--yasgui-tooltip-bg);
+    color: var(--yasgui-tooltip-text);
+  }
+
+  .resizeChip {
+    background-color: var(--yasgui-resize-handle);
+  }
+
+  .parseErrorIcon svg g {
+    fill: var(--yasgui-error-color);
+  }
+}
+
+// Yasr (results) theming
+.yasr {
+  background-color: var(--yasgui-bg-primary);
+  color: var(--yasgui-text-primary);
+
+  a {
+    color: var(--yasgui-link-color);
+
+    &:hover,
+    &:active {
+      color: var(--yasgui-link-hover);
+    }
+  }
+
+  .yasr_btn {
+    color: var(--yasgui-button-text);
+    fill: var(--yasgui-button-text);
+
+    &.selected {
+      border-bottom-color: var(--yasgui-accent-color);
+    }
+
+    &:not(.disabled):hover {
+      fill: var(--yasgui-button-hover);
+      color: var(--yasgui-button-hover);
+    }
+  }
+
+  .yasr_response_chip {
+    color: var(--yasgui-chip-text);
+    background: var(--yasgui-chip-bg);
+  }
+
+  .yasr_fallback_info:not(:empty) {
+    border-color: var(--yasgui-fallback-border);
+    background: var(--yasgui-fallback-bg);
+  }
+
+  .yasr_help_variable {
+    background: var(--yasgui-help-bg);
+    color: var(--yasgui-help-text);
+  }
+
+  &.fullscreen {
+    background: var(--yasgui-bg-primary);
+  }
+
+  .yasr_loading_spinner {
+    border-color: var(--yasgui-bg-secondary);
+    border-top-color: var(--yasgui-accent-color);
+  }
+
+  // Table plugin theming
+  .dataTable {
+    background-color: var(--yasgui-bg-primary);
+    color: var(--yasgui-text-primary);
+
+    thead th {
+      background-color: var(--yasgui-bg-secondary);
+      color: var(--yasgui-text-primary);
+      border-bottom-color: var(--yasgui-border-color);
+    }
+
+    tbody td {
+      border-color: var(--yasgui-border-color-light);
+      color: var(--yasgui-text-primary);
+    }
+
+    tbody tr:hover {
+      background-color: var(--yasgui-bg-secondary);
+    }
+  }
+
+  .tableControls {
+    input,
+    select {
+      background-color: var(--yasgui-bg-secondary);
+      color: var(--yasgui-text-primary);
+      border-color: var(--yasgui-input-border);
+
+      &:focus {
+        border-color: var(--yasgui-input-focus);
+      }
+    }
+  }
+
+  // Error plugin theming
+  .errorResult {
+    .errorMessageContainer {
+      .errorMessage {
+        color: var(--yasgui-text-primary) !important;
+        background-color: var(--yasgui-bg-secondary) !important;
+        border-color: var(--yasgui-border-color) !important;
+      }
+    }
+
+    .redOutline {
+      color: var(--yasgui-error-color) !important;
+      background-color: var(--yasgui-bg-secondary) !important;
+      border-color: var(--yasgui-error-color) !important;
+    }
+  }
+
+  // Response plugin theming
+  .cm-s-default {
+    background-color: var(--yasgui-bg-primary);
+    color: var(--yasgui-text-primary);
+  }
+}
+
+// Modal theming
+.modal {
+  .modal-content {
+    background-color: var(--yasgui-bg-primary);
+    color: var(--yasgui-text-primary);
+    border-color: var(--yasgui-border-color);
+  }
+
+  .modal-header {
+    border-bottom-color: var(--yasgui-border-color);
+  }
+
+  .modal-footer {
+    border-top-color: var(--yasgui-border-color);
+  }
+
+  input,
+  textarea,
+  select {
+    background-color: var(--yasgui-bg-secondary);
+    color: var(--yasgui-text-primary);
+    border-color: var(--yasgui-input-border);
+
+    &:focus {
+      border-color: var(--yasgui-input-focus);
+      background-color: var(--yasgui-bg-primary);
+    }
+  }
+}

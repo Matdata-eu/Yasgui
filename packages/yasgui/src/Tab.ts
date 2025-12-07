@@ -356,8 +356,13 @@ export class Tab extends EventEmitter {
   }
 
   private initYasqe() {
+    // Set theme based on current yasgui theme
+    const currentTheme = this.yasgui.getTheme();
+    const cmTheme = currentTheme === "dark" ? "material-palenight" : "default";
+
     const yasqeConf: Partial<YasqeConfig> = {
       ...this.yasgui.config.yasqe,
+      theme: cmTheme,
       value: this.persistentJson.yasqe.value,
       editorHeight: this.persistentJson.yasqe.editorHeight ? this.persistentJson.yasqe.editorHeight : undefined,
       persistenceId: null, //yasgui handles persistent storing

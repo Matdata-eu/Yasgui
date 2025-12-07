@@ -12,8 +12,11 @@ import { default as Yasr, Config as YasrConfig } from "@matdata/yasr";
 import { addClass, removeClass } from "@matdata/yasgui-utils";
 import GeoPlugin from "yasgui-geo-tg";
 import GraphPlugin from "@matdata/yasgui-graph-plugin";
+import { ThemeManager, Theme } from "./ThemeManager";
 import "./index.scss";
+import "./themes.scss";
 import "../../yasr/src/scss/global.scss";
+import "codemirror/theme/material-palenight.css";
 
 // Register plugins to Yasr
 Yasr.registerPlugin("Geo", GeoPlugin);
@@ -50,6 +53,8 @@ export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {
   requestConfig: YasguiRequestConfig;
   contextMenuContainer: HTMLElement | undefined;
   nonSslDomain?: string;
+  theme?: Theme;
+  showThemeToggle?: boolean;
 }
 export type PartialConfig = {
   [P in keyof Config]?: Config[P] extends object ? Partial<Config[P]> : Config[P];
@@ -96,6 +101,7 @@ export class Yasgui extends EventEmitter {
   public tabPanelsEl: HTMLDivElement;
   public config: Config;
   public persistentConfig: PersistentConfig;
+  public themeManager: ThemeManager;
   public static Tab = Tab;
   constructor(parent: HTMLElement, config: PartialConfig) {
     super();
@@ -104,6 +110,13 @@ export class Yasgui extends EventEmitter {
     parent.appendChild(this.rootEl);
 
     this.config = merge({}, Yasgui.defaults, config);
+
+    // Initialize theme manager
+    this.themeManager = new ThemeManager(this.rootEl);
+    if (this.config.theme) {
+      this.themeManager.setTheme(this.config.theme);
+    }
+    this.themeManager.listenToSystemTheme();
     this.persistentConfig = new PersistentConfig(this);
 
     this.tabElements = new TabElements(this);
@@ -347,6 +360,24 @@ export class Yasgui extends EventEmitter {
     if (config) {
       this.addTab(true, config.tab, { atIndex: config.index });
     }
+  }
+  /**
+   * Get the current theme
+   */
+  public getTheme(): Theme {
+    return this.themeManager.getTheme();
+  }
+  /**
+   * Set the theme
+   */
+  public setTheme(theme: Theme): void {
+    this.themeManager.setTheme(theme);
+  }
+  /**
+   * Toggle between light and dark themes
+   */
+  public toggleTheme(): Theme {
+    return this.themeManager.toggleTheme();
   }
   public destroy() {
     this.removeAllListeners();
