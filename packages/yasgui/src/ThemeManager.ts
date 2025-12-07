@@ -63,8 +63,8 @@ export class ThemeManager {
   private updateCodeMirrorTheme(theme: Theme): void {
     const cmTheme = theme === "dark" ? "material-palenight" : "default";
 
-    // Find all CodeMirror instances within the root element and in document
-    const cmElements = document.querySelectorAll(".CodeMirror");
+    // Find all CodeMirror instances within the root element
+    const cmElements = this.rootElement.querySelectorAll(".CodeMirror");
     cmElements.forEach((element) => {
       const cm = (element as any).CodeMirror;
       if (cm && cm.setOption) {
@@ -104,6 +104,7 @@ export class ThemeManager {
         // Only update if user hasn't manually set a theme
         if (!this.storage.get(ThemeManager.STORAGE_KEY)) {
           const newTheme = e.matches ? "dark" : "light";
+          this.currentTheme = newTheme;
           this.applyTheme(newTheme);
         }
       });
