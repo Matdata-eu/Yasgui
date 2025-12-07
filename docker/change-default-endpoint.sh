@@ -5,7 +5,7 @@
 
 # Replace the default endpoint in the bundle.js file
 echo "Switching YASGUI default endpoint to: $YASGUI_DEFAULT_ENDPOINT"
-sed -i "s|https://change.to.default.endpoint/sparql|$YASGUI_DEFAULT_ENDPOINT|g" /usr/share/nginx/html/*.js
+sed -i "s|https://change.to.default.endpoint/sparql|$(printf '%s' "$YASGUI_DEFAULT_ENDPOINT" | sed 's/[&/\]/\\&/g')|g" /usr/share/nginx/html/*.js
 
 # Execute the command passed to the entrypoint
 exec "$@"
