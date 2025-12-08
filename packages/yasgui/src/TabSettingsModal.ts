@@ -126,8 +126,14 @@ export default class TabSettingsModal {
     addClass(prefixTab, "modalTabButton");
     prefixTab.onclick = () => this.switchTab("prefix");
 
+    const endpointsTab = document.createElement("button");
+    endpointsTab.textContent = "Endpoint Buttons";
+    addClass(endpointsTab, "modalTabButton");
+    endpointsTab.onclick = () => this.switchTab("endpoints");
+
     tabsContainer.appendChild(requestTab);
     tabsContainer.appendChild(prefixTab);
+    tabsContainer.appendChild(endpointsTab);
     body.appendChild(tabsContainer);
 
     // Tab content containers
@@ -141,8 +147,14 @@ export default class TabSettingsModal {
     prefixContent.id = "prefix-content";
     this.drawPrefixSettings(prefixContent);
 
+    const endpointsContent = document.createElement("div");
+    addClass(endpointsContent, "modalTabContent");
+    endpointsContent.id = "endpoints-content";
+    this.drawEndpointButtonsSettings(endpointsContent);
+
     body.appendChild(requestContent);
     body.appendChild(prefixContent);
+    body.appendChild(endpointsContent);
 
     this.modalContent.appendChild(body);
 
@@ -174,7 +186,11 @@ export default class TabSettingsModal {
     const contents = this.modalContent.querySelectorAll(".modalTabContent");
 
     buttons.forEach((btn, index) => {
-      if ((tabName === "request" && index === 0) || (tabName === "prefix" && index === 1)) {
+      if (
+        (tabName === "request" && index === 0) ||
+        (tabName === "prefix" && index === 1) ||
+        (tabName === "endpoints" && index === 2)
+      ) {
         addClass(btn as HTMLElement, "active");
       } else {
         removeClass(btn as HTMLElement, "active");
@@ -342,6 +358,9 @@ export default class TabSettingsModal {
       this.tab.setRequestConfig(updates);
     }
 
+    // Refresh endpoint buttons to show any changes
+    this.tab.refreshEndpointButtons();
+
     this.close();
   }
 
@@ -435,6 +454,117 @@ export default class TabSettingsModal {
     const deduplicated = this.deduplicatePrefixes(combined);
 
     this.tab.yasgui.persistentConfig.setPrefixes(deduplicated);
+  }
+
+  private drawEndpointButtonsSettings(container: HTMLElement) {
+    const section = document.createElement("div");
+    addClass(section, "settingsSection");
+
+    const label = document.createElement("label");
+    label.textContent = "Custom Endpoint Buttons";
+    addClass(label, "settingsLabel");
+
+    const help = document.createElement("div");
+    help.textContent = "Add custom endpoint buttons that will appear next to the endpoint textbox.";
+    addClass(help, "settingsHelp");
+
+    section.appendChild(label);
+    section.appendChild(help);
+
+    // List of existing buttons
+    const buttonsList = document.createElement("div");
+    addClass(buttonsList, "endpointButtonsList");
+    this.renderEndpointButtonsList(buttonsList);
+    section.appendChild(buttonsList);
+
+    // Form to add new button
+    const addForm = document.createElement("div");
+    addClass(addForm, "addEndpointButtonForm");
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.placeholder = "Button label (e.g., DBpedia)";
+    addClass(labelInput, "endpointButtonLabelInput");
+
+    const endpointInput = document.createElement("input");
+    endpointInput.type = "url";
+    endpointInput.placeholder = "Endpoint URL (e.g., https://dbpedia.org/sparql)";
+    addClass(endpointInput, "endpointButtonEndpointInput");
+
+    const addButton = document.createElement("button");
+    addButton.textContent = "+ Add Button";
+    addClass(addButton, "addEndpointButton");
+    addButton.type = "button";
+    addButton.onclick = () => {
+      const labelValue = labelInput.value.trim();
+      const endpointValue = endpointInput.value.trim();
+
+      if (!labelValue || !endpointValue) {
+        alert("Please enter both a label and an endpoint URL.");
+        return;
+      }
+
+      // Add to persistent config
+      const currentButtons = this.tab.yasgui.persistentConfig.getCustomEndpointButtons();
+      currentButtons.push({ label: labelValue, endpoint: endpointValue });
+      this.tab.yasgui.persistentConfig.setCustomEndpointButtons(currentButtons);
+
+      // Clear inputs
+      labelInput.value = "";
+      endpointInput.value = "";
+
+      // Refresh list
+      this.renderEndpointButtonsList(buttonsList);
+    };
+
+    addForm.appendChild(labelInput);
+    addForm.appendChild(endpointInput);
+    addForm.appendChild(addButton);
+    section.appendChild(addForm);
+
+    container.appendChild(section);
+  }
+
+  private renderEndpointButtonsList(container: HTMLElement) {
+    container.innerHTML = "";
+    const customButtons = this.tab.yasgui.persistentConfig.getCustomEndpointButtons();
+
+    if (customButtons.length === 0) {
+      const emptyMsg = document.createElement("div");
+      emptyMsg.textContent = "No custom buttons yet. Add one below.";
+      addClass(emptyMsg, "emptyMessage");
+      container.appendChild(emptyMsg);
+      return;
+    }
+
+    customButtons.forEach((btn, index) => {
+      const item = document.createElement("div");
+      addClass(item, "endpointButtonItem");
+
+      const labelSpan = document.createElement("span");
+      labelSpan.textContent = `${btn.label}`;
+      addClass(labelSpan, "buttonLabel");
+
+      const endpointSpan = document.createElement("span");
+      endpointSpan.textContent = btn.endpoint;
+      addClass(endpointSpan, "buttonEndpoint");
+
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      addClass(removeBtn, "removeButton");
+      removeBtn.type = "button";
+      removeBtn.onclick = () => {
+        const currentButtons = this.tab.yasgui.persistentConfig.getCustomEndpointButtons();
+        currentButtons.splice(index, 1);
+        this.tab.yasgui.persistentConfig.setCustomEndpointButtons(currentButtons);
+        this.renderEndpointButtonsList(container);
+      };
+
+      item.appendChild(labelSpan);
+      item.appendChild(endpointSpan);
+      item.appendChild(removeBtn);
+      container.appendChild(item);
+    });
   }
 
   private getThemeToggleIcon(): string {

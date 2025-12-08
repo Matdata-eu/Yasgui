@@ -57,6 +57,7 @@ export class Tab extends EventEmitter {
   private yasqeWrapperEl: HTMLDivElement | undefined;
   private yasrWrapperEl: HTMLDivElement | undefined;
   private endpointSelect: EndpointSelect | undefined;
+  private endpointButtonsContainer: HTMLDivElement | undefined;
   private settingsModal?: TabSettingsModal;
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
@@ -256,14 +257,38 @@ export class Tab extends EventEmitter {
 
   private initEndpointButtons() {
     if (!this.controlBarEl) throw new Error("Need to initialize wrapper elements before drawing endpoint buttons");
-    if (!this.yasgui.config.endpointButtons || this.yasgui.config.endpointButtons.length === 0) {
-      return; // No buttons to draw
+
+    // Create container if it doesn't exist
+    if (!this.endpointButtonsContainer) {
+      this.endpointButtonsContainer = document.createElement("div");
+      addClass(this.endpointButtonsContainer, "endpointButtonsContainer");
+      this.controlBarEl.appendChild(this.endpointButtonsContainer);
     }
 
-    const buttonsContainer = document.createElement("div");
-    addClass(buttonsContainer, "endpointButtonsContainer");
+    this.refreshEndpointButtons();
+  }
 
-    this.yasgui.config.endpointButtons.forEach((buttonConfig) => {
+  public refreshEndpointButtons() {
+    if (!this.endpointButtonsContainer) return;
+
+    // Clear existing buttons
+    this.endpointButtonsContainer.innerHTML = "";
+
+    // Merge config buttons with custom user buttons
+    const configButtons = this.yasgui.config.endpointButtons || [];
+    const customButtons = this.yasgui.persistentConfig.getCustomEndpointButtons();
+    const allButtons = [...configButtons, ...customButtons];
+
+    if (allButtons.length === 0) {
+      // Hide container if no buttons
+      this.endpointButtonsContainer.style.display = "none";
+      return;
+    }
+
+    // Show container
+    this.endpointButtonsContainer.style.display = "flex";
+
+    allButtons.forEach((buttonConfig) => {
       const button = document.createElement("button");
       addClass(button, "endpointButton");
       button.textContent = buttonConfig.label;
@@ -274,10 +299,8 @@ export class Tab extends EventEmitter {
         this.setEndpoint(buttonConfig.endpoint);
       });
 
-      buttonsContainer.appendChild(button);
+      this.endpointButtonsContainer!.appendChild(button);
     });
-
-    this.controlBarEl.appendChild(buttonsContainer);
   }
 
   private checkEndpointForCors(endpoint: string) {

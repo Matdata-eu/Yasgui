@@ -256,3 +256,105 @@
     background: var(--yasgui-border-color, #d0d0d0);
   }
 }
+
+.endpointButtonsList {
+  margin: 15px 0;
+  border: 1px solid var(--yasgui-border-color, #ddd);
+  border-radius: 4px;
+  padding: 10px;
+  background: var(--yasgui-bg-secondary, #f7f7f7);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.endpointButtonItem {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: var(--yasgui-bg-primary, #fff);
+  border: 1px solid var(--yasgui-border-color, #ddd);
+  border-radius: 3px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .buttonLabel {
+    font-weight: 600;
+    min-width: 100px;
+    color: var(--yasgui-text-primary, #333);
+  }
+
+  .buttonEndpoint {
+    flex: 1;
+    margin-left: 10px;
+    color: var(--yasgui-text-secondary, #666);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .removeButton {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--yasgui-error-color, #d32f2f);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
+
+    &:hover {
+      opacity: 0.7;
+    }
+  }
+}
+
+.emptyMessage {
+  color: var(--yasgui-text-muted, #999);
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.addEndpointButtonForm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--yasgui-border-color, #ddd);
+    border-radius: 3px;
+    background: var(--yasgui-bg-primary, #fff);
+    color: var(--yasgui-text-primary, #333);
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--yasgui-accent-color, #337ab7);
+    }
+
+    &::placeholder {
+      color: var(--yasgui-text-muted, #999);
+    }
+  }
+
+  .addEndpointButton {
+    padding: 8px 16px;
+    background: var(--yasgui-accent-color, #337ab7);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+
+    &:hover {
+      background: var(--yasgui-link-hover, #286090);
+    }
+  }
+}

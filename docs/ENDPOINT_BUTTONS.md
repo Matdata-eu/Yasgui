@@ -1,6 +1,6 @@
 # Endpoint Quick Switch Buttons
 
-The endpoint quick switch buttons feature allows you to configure a list of predefined SPARQL endpoints that users can quickly switch between with a single click.
+The endpoint quick switch buttons feature allows you to configure a list of predefined SPARQL endpoints that users can quickly switch between with a single click. Users can also add their own custom endpoint buttons through the settings interface, which are persisted in local storage.
 
 ## Configuration
 
@@ -15,6 +15,18 @@ new Yasgui(document.getElementById("yasgui"), {
   ]
 });
 ```
+
+## User-Defined Custom Buttons
+
+Users can add their own custom endpoint buttons through the Settings menu:
+
+1. Click the Settings button (⚙) in the controlbar
+2. Navigate to the "Endpoint Buttons" tab
+3. Enter a button label and endpoint URL
+4. Click "+ Add Button"
+5. Click "Save" to apply changes
+
+Custom buttons are persisted in local storage and will appear alongside the configured buttons. Users can also remove custom buttons by clicking the × button next to each entry.
 
 ## Interface
 
