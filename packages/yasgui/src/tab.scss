@@ -47,6 +47,18 @@
         overflow: hidden;
       }
 
+      // Make YASQE fill the vertical space in horizontal mode
+      .yasqe {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+
+        .CodeMirror {
+          height: 100% !important;
+        }
+      }
+
       .yasrWrapperEl {
         flex: 1;
         min-width: 0;
