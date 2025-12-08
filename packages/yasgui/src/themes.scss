@@ -36,6 +36,10 @@
   --yasgui-fallback-border: #d1d1d1;
   --yasgui-resize-handle: #d1d1d1;
   --yasgui-nav-bg: #eee;
+
+  // Layout dimensions (used for horizontal orientation)
+  --yasgui-header-height: 100px; // Height to subtract from viewport in horizontal layout
+  --yasgui-min-height: 400px; // Minimum height for horizontal layout panels
 }
 
 [data-theme="dark"] {

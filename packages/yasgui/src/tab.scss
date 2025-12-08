@@ -21,6 +21,42 @@
       background: white;
       border-bottom: 1px solid #ddd;
       padding: 5px;
+
+      // Hide the layout orientation toggle button in fullscreen mode
+      .orientationToggle {
+        display: none;
+      }
+    }
+
+    // Horizontal layout (side-by-side)
+    &.orientation-horizontal {
+      &.active {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        // Allow flexible height - can use 100vh or be constrained by parent
+        min-height: var(--yasgui-min-height);
+        height: calc(100vh - var(--yasgui-header-height));
+      }
+
+      .editorwrapper {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .yasrWrapperEl {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .yasr {
+        margin-top: 0;
+        height: 100%;
+      }
     }
   }
   .yasr {

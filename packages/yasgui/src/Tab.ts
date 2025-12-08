@@ -9,6 +9,17 @@ import * as shareLink from "./linkUtils";
 import EndpointSelect from "./endpointSelect";
 import "./tab.scss";
 import { getRandomId, default as Yasgui, YasguiRequestConfig } from "./";
+
+// Layout orientation toggle icons
+const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
+  <rect x="2" y="4" width="9" height="16" stroke="currentColor" stroke-width="2" fill="none"/>
+  <rect x="13" y="4" width="9" height="16" stroke="currentColor" stroke-width="2" fill="none"/>
+</svg>`;
+
+const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
+  <rect x="2" y="2" width="20" height="8" stroke="currentColor" stroke-width="2" fill="none"/>
+  <rect x="2" y="12" width="20" height="10" stroke="currentColor" stroke-width="2" fill="none"/>
+</svg>`;
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
 }
@@ -58,11 +69,14 @@ export class Tab extends EventEmitter {
   private yasrWrapperEl: HTMLDivElement | undefined;
   private endpointSelect: EndpointSelect | undefined;
   private settingsModal?: TabSettingsModal;
+  private currentOrientation: "vertical" | "horizontal";
+  private orientationToggleButton?: HTMLButtonElement;
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
     if (!conf || conf.id === undefined) throw new Error("Expected a valid configuration to initialize tab with");
     this.yasgui = yasgui;
     this.persistentJson = conf;
+    this.currentOrientation = this.yasgui.config.orientation || "vertical";
   }
   public name() {
     return this.persistentJson.name;
@@ -80,6 +94,9 @@ export class Tab extends EventEmitter {
     this.rootEl.id = this.persistentJson.id;
     this.rootEl.setAttribute("role", "tabpanel");
     this.rootEl.setAttribute("aria-labelledby", "tab-" + this.persistentJson.id);
+
+    // Apply orientation class
+    addClass(this.rootEl, `orientation-${this.currentOrientation}`);
 
     // We group controlbar and Yasqe, so that users can easily .appendChild() to the .editorwrapper div
     // to add a div that goes alongside the controlbar and editor, while YASR still goes full width
@@ -99,6 +116,7 @@ export class Tab extends EventEmitter {
 
     //yasr
     this.yasrWrapperEl = document.createElement("div");
+    this.yasrWrapperEl.className = "yasrWrapperEl";
 
     this.initTabSettingsMenu();
     this.rootEl.appendChild(editorWrapper);
@@ -222,8 +240,60 @@ export class Tab extends EventEmitter {
   }
   private initControlbar() {
     this.initEndpointSelectField();
+    this.initOrientationToggle();
     if (this.yasgui.config.endpointInfo && this.controlBarEl) {
       this.controlBarEl.appendChild(this.yasgui.config.endpointInfo());
+    }
+  }
+
+  private initOrientationToggle() {
+    if (!this.controlBarEl) return;
+
+    this.orientationToggleButton = document.createElement("button");
+    this.orientationToggleButton.className = "tabContextButton orientationToggle";
+    this.orientationToggleButton.setAttribute("aria-label", "Toggle layout orientation");
+    this.orientationToggleButton.title = "Toggle layout orientation";
+
+    this.updateOrientationToggleIcon();
+
+    this.orientationToggleButton.addEventListener("click", () => {
+      this.toggleOrientation();
+    });
+
+    this.controlBarEl.appendChild(this.orientationToggleButton);
+  }
+
+  private updateOrientationToggleIcon() {
+    if (!this.orientationToggleButton) return;
+
+    // Show the icon for the layout we'll switch TO (not the current layout)
+    this.orientationToggleButton.innerHTML =
+      this.currentOrientation === "vertical" ? HORIZONTAL_LAYOUT_ICON : VERTICAL_LAYOUT_ICON;
+    this.orientationToggleButton.title =
+      this.currentOrientation === "vertical" ? "Switch to horizontal layout" : "Switch to vertical layout";
+  }
+
+  public toggleOrientation() {
+    if (!this.rootEl) return;
+
+    // Remove old orientation class
+    removeClass(this.rootEl, `orientation-${this.currentOrientation}`);
+
+    // Toggle orientation
+    this.currentOrientation = this.currentOrientation === "vertical" ? "horizontal" : "vertical";
+
+    // Add new orientation class
+    addClass(this.rootEl, `orientation-${this.currentOrientation}`);
+
+    // Update button icon
+    this.updateOrientationToggleIcon();
+
+    // Refresh components to adjust to new layout
+    if (this.yasqe) {
+      this.yasqe.refresh();
+    }
+    if (this.yasr) {
+      this.yasr.refresh();
     }
   }
   public getYasqe() {
