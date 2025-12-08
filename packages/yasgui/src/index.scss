@@ -11,8 +11,8 @@
     left: 0;
     right: 0;
     z-index: 9999;
-    background: white;
-    border-bottom: 1px solid #ddd;
+    background: var(--yasgui-bg-primary);
+    border-bottom: 1px solid var(--yasgui-border-color);
     padding: 5px;
     margin: 0;
 
