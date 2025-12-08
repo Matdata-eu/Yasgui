@@ -28,7 +28,7 @@
       display: flex;
       flex-direction: row;
       gap: 10px;
-      height: calc(100vh - 100px); // Adjust based on your header height
+      height: calc(100vh - var(--yasgui-header-height, 100px));
 
       .editorwrapper {
         flex: 1;
