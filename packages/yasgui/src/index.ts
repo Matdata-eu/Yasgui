@@ -31,6 +31,10 @@ if (window) {
 export type YasguiRequestConfig = Omit<RequestConfig<Yasgui>, "adjustQueryBeforeRequest"> & {
   adjustQueryBeforeRequest: RequestConfig<Yasqe>["adjustQueryBeforeRequest"];
 };
+export interface EndpointButton {
+  endpoint: string;
+  label: string;
+}
 export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {
   /**
    * Autofocus yasqe on load or tab switch
@@ -41,6 +45,7 @@ export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {
   tabName: string;
   corsProxy: string | undefined;
   endpointCatalogueOptions: EndpointSelectConfig<EndpointObject>;
+  endpointButtons?: EndpointButton[];
   //The function allows us to modify the config before we pass it on to a tab
   populateFromUrl: boolean | ((configFromUrl: PersistedTabJson) => PersistedTabJson);
   autoAddOnInit: boolean;

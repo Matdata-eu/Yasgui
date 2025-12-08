@@ -108,6 +108,18 @@ Customize the header height used in the horizontal layout calculation by setting
 - **Default Prefixes**: Automatically includes `rdf:` and `rdfs:` prefixes for new users
 - **Prefix Autocomplete**: When typing a prefix declaration (e.g., `PREFIX foaf:`), the editor automatically queries [prefix.cc](https://prefix.cc) to suggest and auto-complete the full URI commonly associated with that prefix. This helps you quickly add standard prefixes without needing to remember their full URIs.
 
+### Endpoint Quick Switch Buttons
+
+Configure predefined SPARQL endpoint buttons for quick switching between different endpoints:
+
+- **Predefined Buttons**: Configure a list of endpoint buttons during Yasgui initialization
+- **User-Defined Buttons**: Users can add their own custom endpoint buttons through the Settings modal
+- **One-Click Switching**: Instantly switch to a different SPARQL endpoint with a single button click
+- **Persistent Custom Buttons**: User-defined buttons are saved in local storage
+- **Fully Themed**: Buttons automatically adapt to light and dark themes
+
+For detailed configuration options and examples, see the [Endpoint Buttons Guide](./docs/ENDPOINT_BUTTONS.md).
+
 ### Result Visualization Plugins (Yasr)
 
 Yasgui includes several built-in plugins to visualize SPARQL query results:

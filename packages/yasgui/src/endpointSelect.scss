@@ -119,4 +119,38 @@
       opacity: 0.8;
     }
   }
+
+  .endpointButtonsContainer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 4px;
+  }
+
+  .endpointButton {
+    border: 1px solid var(--yasgui-endpoint-button-border, #337ab7);
+    background-color: var(--yasgui-endpoint-button-bg, #337ab7);
+    color: var(--yasgui-endpoint-button-text, #ffffff);
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--yasgui-endpoint-button-hover-bg, #286090);
+      border-color: var(--yasgui-endpoint-button-hover-border, #286090);
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+
+    &:focus {
+      outline: 2px solid var(--yasgui-endpoint-button-focus, #5cb3fd);
+      outline-offset: 2px;
+    }
+  }
 }

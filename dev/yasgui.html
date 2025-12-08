@@ -74,7 +74,12 @@
         corsProxy: "",
         requestConfig: {
           endpoint: "https://dbpedia.org/sparql",
-        }
+        },
+        endpointButtons: [
+          { endpoint: "https://dbpedia.org/sparql", label: "DBpedia" },
+          { endpoint: "https://query.wikidata.org/sparql", label: "Wikidata" },
+          { endpoint: "https://data-interop.era.europa.eu/api/sparql", label: "ERA" }
+        ]
       });
       
       // Sync theme immediately after initialization

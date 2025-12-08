@@ -68,6 +68,7 @@ export class Tab extends EventEmitter {
   private yasqeWrapperEl: HTMLDivElement | undefined;
   private yasrWrapperEl: HTMLDivElement | undefined;
   private endpointSelect: EndpointSelect | undefined;
+  private endpointButtonsContainer: HTMLDivElement | undefined;
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
@@ -241,6 +242,7 @@ export class Tab extends EventEmitter {
   private initControlbar() {
     this.initEndpointSelectField();
     this.initOrientationToggle();
+    this.initEndpointButtons();
     if (this.yasgui.config.endpointInfo && this.controlBarEl) {
       this.controlBarEl.appendChild(this.yasgui.config.endpointInfo());
     }
@@ -320,6 +322,54 @@ export class Tab extends EventEmitter {
     });
     this.endpointSelect.on("remove", (endpoint, endpointHistory) => {
       this.setEndpoint(endpoint, endpointHistory);
+    });
+  }
+
+  private initEndpointButtons() {
+    if (!this.controlBarEl) throw new Error("Need to initialize wrapper elements before drawing endpoint buttons");
+
+    // Create container if it doesn't exist
+    if (!this.endpointButtonsContainer) {
+      this.endpointButtonsContainer = document.createElement("div");
+      addClass(this.endpointButtonsContainer, "endpointButtonsContainer");
+      this.controlBarEl.appendChild(this.endpointButtonsContainer);
+    }
+
+    this.refreshEndpointButtons();
+  }
+
+  public refreshEndpointButtons() {
+    if (!this.endpointButtonsContainer) return;
+
+    // Clear existing buttons
+    this.endpointButtonsContainer.innerHTML = "";
+
+    // Merge config buttons with custom user buttons
+    const configButtons = this.yasgui.config.endpointButtons || [];
+    const customButtons = this.yasgui.persistentConfig.getCustomEndpointButtons();
+    const allButtons = [...configButtons, ...customButtons];
+
+    if (allButtons.length === 0) {
+      // Hide container if no buttons
+      this.endpointButtonsContainer.style.display = "none";
+      return;
+    }
+
+    // Show container
+    this.endpointButtonsContainer.style.display = "flex";
+
+    allButtons.forEach((buttonConfig) => {
+      const button = document.createElement("button");
+      addClass(button, "endpointButton");
+      button.textContent = buttonConfig.label;
+      button.title = `Set endpoint to ${buttonConfig.endpoint}`;
+      button.setAttribute("aria-label", `Set endpoint to ${buttonConfig.endpoint}`);
+
+      button.addEventListener("click", () => {
+        this.setEndpoint(buttonConfig.endpoint);
+      });
+
+      this.endpointButtonsContainer!.appendChild(button);
     });
   }
 
