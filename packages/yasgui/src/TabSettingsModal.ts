@@ -427,10 +427,10 @@ export default class TabSettingsModal {
     // If we didn't find a non-PREFIX line, all lines are PREFIX or empty
     if (firstNonPrefixLine === 0 && lines.length > 0) {
       // Check if there's any content at all
-      const hasContent = lines.some((line: string) => line.trim().length > 0);
+      const hasContent = lines.some((line) => line.trim().length > 0);
       if (
         !hasContent ||
-        lines.every((line: string) => line.trim().length === 0 || line.trim().toUpperCase().startsWith("PREFIX"))
+        lines.every((line) => line.trim().length === 0 || line.trim().toUpperCase().startsWith("PREFIX"))
       ) {
         firstNonPrefixLine = lines.length;
       }

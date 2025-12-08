@@ -82,8 +82,10 @@ export default class ConstructValidationDisplay {
       const missingList = document.createElement("ul");
       missingPatterns.forEach((result) => {
         const item = document.createElement("li");
+        const code = document.createElement("code");
         const patternText = this.formatPattern(result.pattern);
-        item.innerHTML = `<code>${patternText}</code>`;
+        code.textContent = patternText;
+        item.appendChild(code);
         if (result.pattern.description) {
           const desc = document.createElement("span");
           addClass(desc, "pattern-description");
@@ -108,8 +110,10 @@ export default class ConstructValidationDisplay {
       const foundList = document.createElement("ul");
       foundPatterns.forEach((result) => {
         const item = document.createElement("li");
+        const code = document.createElement("code");
         const patternText = this.formatPattern(result.pattern);
-        item.innerHTML = `<code>${patternText}</code>`;
+        code.textContent = patternText;
+        item.appendChild(code);
         if (result.pattern.description) {
           const desc = document.createElement("span");
           addClass(desc, "pattern-description");
@@ -149,16 +153,7 @@ export default class ConstructValidationDisplay {
     const s = pattern.subject || "*";
     const p = pattern.predicate || "*";
     const o = pattern.object || "*";
-    return `${this.escapeHtml(s)} ${this.escapeHtml(p)} ${this.escapeHtml(o)}`;
-  }
-
-  /**
-   * Escape HTML to prevent XSS
-   */
-  private escapeHtml(text: string): string {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+    return `${s} ${p} ${o}`;
   }
 
   /**
