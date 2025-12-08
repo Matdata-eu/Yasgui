@@ -24,7 +24,7 @@ stephen.cresswell@tso.co.uk
 
 :-dynamic '==>'/2.
 
-sparql11 ==> [prologue,(queryAll or updateAll), $].
+sparql12 ==> [prologue,(queryAll or updateAll), $].
 queryUnit ==> [query,$].
 updateUnit ==> [update,$].
 

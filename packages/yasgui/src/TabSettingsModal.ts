@@ -239,7 +239,8 @@ export default class TabSettingsModal {
     const versionSection = this.createSection("SPARQL Version");
     const versionHelp = document.createElement("div");
     addClass(versionHelp, "settingsHelp");
-    versionHelp.textContent = "Note: SPARQL 1.2 is based on a working draft and is still evolving.";
+    versionHelp.textContent =
+      "Note: SPARQL 1.2 is based on a working draft and may change. Some features may not be supported by all endpoints.";
     const versionSelect = this.createSelect(["1.1", "1.2"], yasqe?.config.sparqlVersion || "1.1");
     versionSelect.setAttribute("data-config", "sparqlVersion");
     versionSection.appendChild(versionHelp);
