@@ -25,10 +25,14 @@
 
     // Horizontal layout (side-by-side)
     &.orientation-horizontal {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
-      height: calc(100vh - var(--yasgui-header-height, 100px));
+      &.active {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        // Allow flexible height - can use 100vh or be constrained by parent
+        min-height: 400px; // Ensure minimum usable height
+        height: calc(100vh - var(--yasgui-header-height, 100px));
+      }
 
       .editorwrapper {
         flex: 1;
@@ -47,10 +51,6 @@
       .yasr {
         margin-top: 0;
         height: 100%;
-      }
-
-      &.active {
-        display: flex;
       }
     }
   }
