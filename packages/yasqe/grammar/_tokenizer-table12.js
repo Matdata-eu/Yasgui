@@ -2753,6 +2753,10 @@ export const table = {
     BLANK_NODE_LABEL: ["blankNode"],
     ANON: ["blankNode"],
     NIL: ["NIL"],
+    "<<": ["quotedTriple"],
+  },
+  quotedTriple: {
+    "<<": ["<<", "varOrTerm", "or([varOrIRIref,'a'])", "varOrTerm", ">>"],
   },
   groupClause: {
     GROUP: ["GROUP", "BY", "+groupCondition"],
@@ -4322,7 +4326,7 @@ export const table = {
     PNAME_LN: ["iriRef"],
     PNAME_NS: ["iriRef"],
   },
-  sparql11: {
+  sparql12: {
     $: ["prologue", "or([queryAll,updateAll])", "$"],
     CONSTRUCT: ["prologue", "or([queryAll,updateAll])", "$"],
     DESCRIBE: ["prologue", "or([queryAll,updateAll])", "$"],
