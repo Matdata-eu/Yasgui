@@ -30,8 +30,8 @@
         flex-direction: row;
         gap: 10px;
         // Allow flexible height - can use 100vh or be constrained by parent
-        min-height: 400px; // Ensure minimum usable height
-        height: calc(100vh - var(--yasgui-header-height, 100px));
+        min-height: var(--yasgui-min-height);
+        height: calc(100vh - var(--yasgui-header-height));
       }
 
       .editorwrapper {
