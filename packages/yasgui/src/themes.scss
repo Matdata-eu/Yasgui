@@ -36,11 +36,12 @@
   --yasgui-fallback-border: #d1d1d1;
   --yasgui-resize-handle: #d1d1d1;
   --yasgui-nav-bg: #eee;
+  --yasgui-match-highlight-bg: #dbdeed;
 
   // Layout dimensions (used for horizontal orientation)
   --yasgui-header-height: 100px; // Height to subtract from viewport in horizontal layout
   --yasgui-min-height: 400px; // Minimum height for horizontal layout panels
-  
+
   --yasgui-endpoint-button-bg: #337ab7;
   --yasgui-endpoint-button-border: #337ab7;
   --yasgui-endpoint-button-text: #ffffff;
@@ -84,6 +85,7 @@
   --yasgui-fallback-border: #3e3e42;
   --yasgui-resize-handle: #3e3e42;
   --yasgui-nav-bg: #2d2d30;
+  --yasgui-match-highlight-bg: #3a4a5a;
   --yasgui-endpoint-button-bg: #4fc3f7;
   --yasgui-endpoint-button-border: #4fc3f7;
   --yasgui-endpoint-button-text: #1e1e1e;
@@ -270,6 +272,10 @@
 
   .parseErrorIcon svg g {
     fill: var(--yasgui-error-color);
+  }
+
+  .cm-matchhighlight {
+    background-color: var(--yasgui-match-highlight-bg);
   }
 
   // Yasqe buttons theming (share, query, fullscreen)

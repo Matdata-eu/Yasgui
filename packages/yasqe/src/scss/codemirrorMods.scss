@@ -14,11 +14,12 @@
 
   .CodeMirror-foldmarker {
     color: #6e2500;
-    text-shadow: #ff935e 1px 1px 2px, #ff935e -1px -1px 2px, #ff935e 1px -1px 2px, #ff935e -1px 1px 2px;
+    text-shadow:
+      #ff935e 1px 1px 2px,
+      #ff935e -1px -1px 2px,
+      #ff935e 1px -1px 2px,
+      #ff935e -1px 1px 2px;
     font-size: 19px;
-  }
-  .cm-matchhighlight {
-    background-color: #dbdeed;
   }
 }
 // Put these outside of yasqe as the root element can be changed
