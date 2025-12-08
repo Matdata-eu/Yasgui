@@ -13,7 +13,7 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Build the React app
+# Build the app
 RUN npm run build
 
 # Use the official Nginx image to serve the React app
