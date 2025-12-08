@@ -742,7 +742,7 @@ SELECT ?person WHERE {
       it("Should reject incorrect triple term function usage", async function () {
         const query = `PREFIX ex: <http://example.org/>
 SELECT ?subject WHERE {
-  BIND(TRIPLE(?s) AS ?triple)
+  BIND(TRIPLE(?s, ?p) AS ?triple)
   BIND(SUBJECT(?triple) AS ?subject)
 }`;
         const isValid = await page.evaluate((q) => {
@@ -756,7 +756,7 @@ SELECT ?subject WHERE {
       it("Should reject malformed annotation blocks", async function () {
         const query = `PREFIX ex: <http://example.org/>
 SELECT * WHERE {
-  ?s ?p ?o {| ex:confidence 0.9 |
+  ?s ?p ?o {| ex:confidence 0.9 | .
 }`;
         const isValid = await page.evaluate((q) => {
           window.yasqe.setValue(q);
@@ -800,7 +800,7 @@ SELECT * WHERE {
           const tokens: string[] = [];
           for (let i = 0; i < window.yasqe.lineCount(); i++) {
             const line = window.yasqe.getLineTokens(i);
-            line.forEach((token: any) => {
+            line.forEach((token: { type?: string; string: string }) => {
               if (token.type && token.type.includes("keyword")) {
                 tokens.push(token.string.toUpperCase());
               }
