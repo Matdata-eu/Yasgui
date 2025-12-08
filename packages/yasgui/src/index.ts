@@ -55,6 +55,12 @@ export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {
   nonSslDomain?: string;
   theme?: Theme;
   showThemeToggle?: boolean;
+  /**
+   * Layout orientation: 'vertical' (default) or 'horizontal' (side-by-side)
+   * 'vertical': YASQE on top, YASR below
+   * 'horizontal': YASQE on left, YASR on right
+   */
+  orientation?: "vertical" | "horizontal";
 }
 export type PartialConfig = {
   [P in keyof Config]?: Config[P] extends object ? Partial<Config[P]> : Config[P];

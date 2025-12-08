@@ -22,6 +22,37 @@
       border-bottom: 1px solid #ddd;
       padding: 5px;
     }
+
+    // Horizontal layout (side-by-side)
+    &.orientation-horizontal {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      height: calc(100vh - 100px); // Adjust based on your header height
+
+      .editorwrapper {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .yasrWrapperEl {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .yasr {
+        margin-top: 0;
+        height: 100%;
+      }
+
+      &.active {
+        display: flex;
+      }
+    }
   }
   .yasr {
     margin-top: 5px;
