@@ -1,11 +1,7 @@
 import { Storage as YStorage } from "@matdata/yasgui-utils";
-import Yasgui from "./";
+import Yasgui, { EndpointButton } from "./";
 import * as Tab from "./Tab";
 export var storageNamespace = "triply";
-export interface EndpointButtonConfig {
-  endpoint: string;
-  label: string;
-}
 export interface PersistedJson {
   endpointHistory: string[];
   tabs: string[];
@@ -14,7 +10,7 @@ export interface PersistedJson {
   lastClosedTab: { index: number; tab: Tab.PersistedJson } | undefined;
   prefixes?: string;
   autoCaptureEnabled?: boolean;
-  customEndpointButtons?: EndpointButtonConfig[];
+  customEndpointButtons?: EndpointButton[];
 }
 function getDefaults(): PersistedJson {
   return {
@@ -158,10 +154,10 @@ export default class PersistentConfig {
     this.persistedJson.autoCaptureEnabled = enabled;
     this.toStorage();
   }
-  public getCustomEndpointButtons(): EndpointButtonConfig[] {
+  public getCustomEndpointButtons(): EndpointButton[] {
     return this.persistedJson.customEndpointButtons || [];
   }
-  public setCustomEndpointButtons(buttons: EndpointButtonConfig[]) {
+  public setCustomEndpointButtons(buttons: EndpointButton[]) {
     this.persistedJson.customEndpointButtons = buttons;
     this.toStorage();
   }
