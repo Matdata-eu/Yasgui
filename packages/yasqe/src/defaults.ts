@@ -11,6 +11,7 @@ import CodeMirror from "codemirror";
 export default function get() {
   const prefixCcApi = "https://prefix.cc/popular/all.file.json";
   const config: Omit<Config, "requestConfig"> = {
+    sparqlVersion: "1.1", // Default to SPARQL 1.1
     mode: "sparql11",
     value: `PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

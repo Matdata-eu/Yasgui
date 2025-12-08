@@ -557,7 +557,7 @@ export class Yasqe extends CodeMirror {
     var formattedQuery = "";
     var currentLine = "";
     var stackTrace: string[] = [];
-    (<any>Yasqe).runMode(text, "sparql11", function (stringVal: string, type: string) {
+    (<any>Yasqe).runMode(text, this.config.mode, function (stringVal: string, type: string) {
       stackTrace.push(type);
       var breakType = getBreakType(stringVal);
       if (breakType != 0) {
@@ -682,7 +682,7 @@ export class Yasqe extends CodeMirror {
     var gotSelect = false;
     (<any>Yasqe).runMode(
       this.getValue(),
-      "sparql11",
+      this.config.mode,
       function (stringVal: string, className: string, _row: number, _col: number, _state: TokenizerState) {
         if (className === "keyword" && stringVal.toLowerCase() === "select") gotSelect = true;
         newQuery += stringVal;
@@ -698,7 +698,7 @@ export class Yasqe extends CodeMirror {
 
   public getValueWithoutComments() {
     var cleanedQuery = "";
-    (<any>Yasqe).runMode(this.getValue(), "sparql11", function (stringVal: string, className: string) {
+    (<any>Yasqe).runMode(this.getValue(), this.config.mode, function (stringVal: string, className: string) {
       if (className != "comment") {
         cleanedQuery += stringVal;
       }
@@ -710,6 +710,15 @@ export class Yasqe extends CodeMirror {
     this.config.syntaxErrorCheck = isEnabled;
     this.checkSyntax();
   }
+
+  public setSparqlVersion(version: "1.1" | "1.2") {
+    this.config.sparqlVersion = version;
+    const mode = version === "1.2" ? "sparql12" : "sparql11";
+    this.config.mode = mode;
+    this.setOption("mode", mode);
+    this.checkSyntax();
+  }
+
   public checkSyntax() {
     this.queryValid = true;
 
@@ -1046,6 +1055,7 @@ export type PartialConfig = {
 };
 export interface Config extends Partial<CodeMirror.EditorConfiguration> {
   mode: string;
+  sparqlVersion: "1.1" | "1.2"; // SPARQL version to use
   collapsePrefixesOnLoad: boolean;
   syntaxErrorCheck: boolean;
   /**

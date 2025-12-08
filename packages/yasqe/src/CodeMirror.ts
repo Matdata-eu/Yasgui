@@ -11,6 +11,7 @@ import {
 import _CodeMirror from "codemirror";
 
 import * as sparql11Mode from "../grammar/tokenizer";
+import * as sparql12Mode from "../grammar/tokenizer12";
 import { default as prefixFold } from "./prefixFold";
 import { TokenizerState } from "./index";
 
@@ -29,6 +30,7 @@ import "./scss/codemirrorMods.scss";
 
 _CodeMirror.registerHelper("fold", "prefix", prefixFold);
 _CodeMirror.defineMode("sparql11", sparql11Mode.default);
+_CodeMirror.defineMode("sparql12", sparql12Mode.default);
 
 namespace CodeMirror {
   export type Doc = CmDoc;

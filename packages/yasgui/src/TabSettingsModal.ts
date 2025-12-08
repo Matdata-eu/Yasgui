@@ -234,6 +234,18 @@ export default class TabSettingsModal {
     // This is a simplified version - you can expand based on TabPanel.ts
     const reqConfig = this.tab.getRequestConfig();
 
+    // SPARQL Version section
+    const yasqe = this.tab.getYasqe();
+    const versionSection = this.createSection("SPARQL Version");
+    const versionHelp = document.createElement("div");
+    addClass(versionHelp, "settingsHelp");
+    versionHelp.textContent = "Note: SPARQL 1.2 is based on a working draft and is still evolving.";
+    const versionSelect = this.createSelect(["1.1", "1.2"], yasqe?.config.sparqlVersion || "1.1");
+    versionSelect.setAttribute("data-config", "sparqlVersion");
+    versionSection.appendChild(versionHelp);
+    versionSection.appendChild(versionSelect);
+    container.appendChild(versionSection);
+
     // Request Method section
     const methodSection = this.createSection("Request Method");
     const methodSelect = this.createSelect(
@@ -336,7 +348,16 @@ export default class TabSettingsModal {
       selects.forEach((select) => {
         const config = (select as HTMLSelectElement).getAttribute("data-config");
         if (config) {
-          updates[config] = (select as HTMLSelectElement).value;
+          if (config === "sparqlVersion") {
+            // Handle SPARQL version change
+            const version = (select as HTMLSelectElement).value as "1.1" | "1.2";
+            const yasqe = this.tab.getYasqe();
+            if (yasqe) {
+              yasqe.setSparqlVersion(version);
+            }
+          } else {
+            updates[config] = (select as HTMLSelectElement).value;
+          }
         }
       });
       this.tab.setRequestConfig(updates);
