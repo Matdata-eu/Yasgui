@@ -52,7 +52,15 @@ Yasgui supports two layout orientations to optimize screen space usage:
 
 The horizontal layout is particularly useful for wide monitors, allowing you to dedicate the complete height to both the query editor and results viewer.
 
-To use the horizontal layout, configure Yasgui with the `orientation` option:
+#### Runtime Toggle
+
+Users can switch between vertical and horizontal layouts at any time using the **layout toggle button** in the control bar (next to the endpoint selector). This button shows:
+- **Side-by-side rectangles icon** when in vertical mode (click to switch to horizontal)
+- **Stacked rectangles icon** when in horizontal mode (click to switch to vertical)
+
+#### Initial Configuration
+
+You can also set the initial layout orientation when creating a Yasgui instance:
 
 ```javascript
 new Yasgui(document.getElementById("yasgui"), {
@@ -60,11 +68,14 @@ new Yasgui(document.getElementById("yasgui"), {
 });
 ```
 
-You can also customize the header height used in the horizontal layout calculation by setting the CSS custom property:
+#### CSS Customization
+
+Customize the header height used in the horizontal layout calculation by setting the CSS custom property:
 
 ```css
 .yasgui {
   --yasgui-header-height: 120px; /* Adjust based on your header height */
+  --yasgui-min-height: 500px; /* Minimum height for horizontal layout panels */
 }
 ```
 
