@@ -659,7 +659,7 @@ export class Tab extends EventEmitter {
     }
 
     // Get the bindings from the results
-    const bindings = this.yasr.results.getBindings();
+    const bindings = this.yasr.results.getBindings() || undefined;
 
     // Validate the results
     const validationResults = validateConstructResults(bindings, patterns);
