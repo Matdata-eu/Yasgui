@@ -43,6 +43,31 @@ See the [Theme Guide](./docs/THEME_GUIDE.md) for detailed configuration options 
 
 See the [Theme Implementation Guide](./docs/THEME_IMPLEMENTATION_GUIDE.md) for detailed instructions on how to implement theme support in your own Yasgui plugins.
 
+### Layout Orientation
+
+Yasgui supports two layout orientations to optimize screen space usage:
+
+- **Vertical Layout (Default)**: YASQE (query editor) positioned above YASR (results viewer)
+- **Horizontal Layout**: YASQE and YASR positioned side-by-side
+
+The horizontal layout is particularly useful for wide monitors, allowing you to dedicate the complete height to both the query editor and results viewer.
+
+To use the horizontal layout, configure Yasgui with the `orientation` option:
+
+```javascript
+new Yasgui(document.getElementById("yasgui"), {
+  orientation: "horizontal" // or "vertical" (default)
+});
+```
+
+You can also customize the header height used in the horizontal layout calculation by setting the CSS custom property:
+
+```css
+.yasgui {
+  --yasgui-header-height: 120px; /* Adjust based on your header height */
+}
+```
+
 ### Keyboard Shortcuts
 
 #### Query Editor (Yasqe)
