@@ -138,20 +138,42 @@ The container that brings YASQE and YASR together with additional functionality.
 
 ### Themes
 
-Switch between light and dark modes to match your preference or environment.
+YASGUI supports both light and dark themes, allowing you to customize the appearance of the SPARQL IDE according to your preferences.
+
+**Features:**
+- **Light Theme**: Default bright theme suitable for well-lit environments with high contrast and blue accents
+- **Dark Theme**: Easy-on-the-eyes dark theme with Material Palenight syntax highlighting and cyan accents
+- **Theme Toggle**: Quick switching between themes via UI button in the tab bar
+- **Persistence**: Your theme preference is automatically saved in browser storage
+- **System Preference**: Automatically detects and applies your system's theme preference on first visit
 
 **How to Change Theme:**
-- Click the theme toggle button (☀️/🌙) in the top-right area of the tab bar
-- Theme preference is automatically saved
+- Click the theme toggle button in the top-right area of the tab bar
+  - **Light Mode**: Shows a sun icon (☀️) - clicking switches to dark mode
+  - **Dark Mode**: Shows a moon icon (🌙) - clicking switches to light mode
+- Your theme preference persists across page reloads and browser sessions
 
-**Theme Characteristics:**
-- **Light Theme**: Bright, high-contrast interface ideal for well-lit environments
-- **Dark Theme**: Easy-on-the-eyes interface perfect for low-light conditions or extended use
+**Theme Details:**
 
-Both themes include:
-- Consistent styling across all components
-- Syntax highlighting optimized for readability
-- Themed modal dialogs and controls
+Light Theme characteristics:
+- Clean, bright interface with high contrast
+- Default CodeMirror syntax highlighting
+- White backgrounds with dark text
+- Blue accent color (#337ab7)
+
+Dark Theme characteristics:
+- Dark backgrounds with light text
+- Material Palenight CodeMirror theme for syntax highlighting
+- Reduced eye strain in low-light environments
+- Cyan accent color (#4fc3f7)
+
+**System Theme Detection:**
+
+If you haven't manually selected a theme, YASGUI will:
+1. Check your system's color scheme preference
+2. Apply dark theme if your system prefers dark mode
+3. Apply light theme otherwise
+4. Automatically update if you change your system preference
 
 ### Layout Orientation
 
@@ -238,26 +260,36 @@ PREFIX foaf: <  # Auto-suggests http://xmlns.com/foaf/0.1/
 
 ### Endpoint Quick Switch
 
-Quickly switch between different SPARQL endpoints with predefined buttons.
+The endpoint quick switch buttons feature allows you to quickly switch between different SPARQL endpoints with a single click. You can use predefined endpoints or add your own custom buttons.
 
 **Features:**
-- One-click endpoint switching
-- Predefined endpoint buttons (configured by administrators)
-- Custom user-defined endpoints (saved in local storage)
-- Fully themed buttons
+- **One-click switching**: Instantly switch to a different SPARQL endpoint
+- **Predefined buttons**: Administrators can configure endpoint buttons during initialization
+- **User-defined buttons**: Add your own custom endpoint buttons through the Settings interface
+- **Persistent storage**: Custom buttons are saved in local storage and persist across sessions
+- **Fully themed**: Buttons automatically adapt to light and dark themes
+- **Accessible**: Buttons are fully accessible with ARIA labels
 
 **How to Add Custom Endpoints:**
-1. Click Settings (⚙) in the control bar
-2. Navigate to "Endpoint Buttons" tab
-3. Enter label and endpoint URL
+1. Click the Settings button (⚙) in the control bar
+2. Navigate to the "Endpoint Buttons" tab
+3. Enter a button label and endpoint URL
 4. Click "+ Add Button"
-5. Click "Save"
+5. Click "Save" to apply changes
 
-Your custom endpoints appear alongside predefined buttons and persist across sessions.
+Custom buttons appear alongside predefined buttons and persist across browser sessions. You can remove custom buttons by clicking the × button next to each entry.
 
 **How to Switch Endpoints:**
+- Buttons are displayed next to the endpoint textbox in the control bar
 - Click any endpoint button to immediately update the endpoint field
-- The new endpoint is used for subsequent queries
+- The endpoint change triggers the same behavior as manually entering an endpoint
+- The new endpoint is used for all subsequent queries
+
+**Behavior:**
+- Clicking a button updates the endpoint textbox with the configured endpoint
+- The endpoint change is immediate and doesn't require confirmation
+- Multiple buttons can be displayed for different endpoints
+- Each button shows its label for easy identification
 
 ### URI Explorer
 

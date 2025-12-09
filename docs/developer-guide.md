@@ -793,41 +793,175 @@ const config = {
 
 ### Endpoint Buttons Configuration
 
-Configure quick-switch endpoint buttons:
+The endpoint quick switch buttons feature allows you to configure a list of predefined SPARQL endpoints that users can quickly switch between with a single click.
+
+**Interface:**
 
 ```typescript
 interface EndpointButton {
-  endpoint: string;  // SPARQL endpoint URL
-  label: string;     // Button text
+  endpoint: string;  // SPARQL endpoint URL (required)
+  label: string;     // Button text displayed to user (required)
 }
 ```
 
+**Configuration:**
+
 ```javascript
-const yasgui = new Yasgui(element, {
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
   endpointButtons: [
-    { endpoint: 'https://dbpedia.org/sparql', label: 'DBpedia' },
-    { endpoint: 'https://query.wikidata.org/sparql', label: 'Wikidata' },
-    { endpoint: 'https://lod.openaire.eu/sparql', label: 'OpenAIRE' }
+    { endpoint: "https://dbpedia.org/sparql", label: "DBpedia" },
+    { endpoint: "https://query.wikidata.org/sparql", label: "Wikidata" },
+    { endpoint: "https://example.com/sparql", label: "Custom" }
   ]
 });
 ```
 
+**Complete Example:**
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://dbpedia.org/sparql"
+  },
+  endpointButtons: [
+    { endpoint: "https://dbpedia.org/sparql", label: "DBpedia" },
+    { endpoint: "https://query.wikidata.org/bigdata/namespace/wdq/sparql", label: "Wikidata" },
+    { endpoint: "https://data-interop.era.europa.eu/api/sparql", label: "ERA" }
+  ]
+});
+```
+
+**Features:**
+
+- **Predefined Buttons**: Configure endpoint buttons during YASGUI initialization
+- **User-Defined Buttons**: Users can add their own custom buttons through the Settings modal
+- **One-Click Switching**: Instantly switch to a different SPARQL endpoint with a single click
+- **Persistent Storage**: User-defined buttons are saved in local storage
+- **Fully Themed**: Buttons automatically adapt to light and dark themes
+- **Accessible**: Buttons include ARIA labels for accessibility
+
+**Behavior:**
+
+- Buttons are displayed next to the endpoint textbox in the controlbar
+- Clicking a button immediately updates the endpoint textbox with the configured endpoint
+- The endpoint change triggers the same behavior as manually entering an endpoint
+- Buttons are fully accessible with ARIA labels
+
+**User-Defined Custom Buttons:**
+
+Users can add their own custom endpoint buttons through the Settings menu:
+1. Click the Settings button (⚙) in the controlbar
+2. Navigate to the "Endpoint Buttons" tab
+3. Enter a button label and endpoint URL
+4. Click "+ Add Button"
+5. Click "Save" to apply changes
+
+Custom buttons are persisted in local storage and will appear alongside the configured buttons.
+
+**CSS Customization:**
+
+You can customize button appearance using CSS variables:
+
+```css
+:root {
+  --yasgui-endpoint-button-bg: #f0f0f0;
+  --yasgui-endpoint-button-border: #ccc;
+  --yasgui-endpoint-button-text: #333;
+  --yasgui-endpoint-button-hover-bg: #e0e0e0;
+  --yasgui-endpoint-button-hover-border: #999;
+  --yasgui-endpoint-button-focus: #0066cc;
+}
+```
+
 ### Theme Configuration
 
-Configure theme settings:
+YASGUI supports both light and dark themes with comprehensive customization options.
+
+**Configuration Options:**
 
 ```javascript
 // Set initial theme
 const yasgui = new Yasgui(element, {
   theme: 'dark',           // 'light' or 'dark'
-  showThemeToggle: true    // Show/hide theme toggle button
+  showThemeToggle: true    // Show/hide theme toggle button (default: true)
 });
-
-// Programmatic theme control
-yasgui.setTheme('dark');
-const current = yasgui.getTheme();  // Returns 'light' or 'dark'
-yasgui.toggleTheme();               // Switch theme
 ```
+
+**Programmatic Theme Control:**
+
+```javascript
+// Get current theme
+const currentTheme = yasgui.getTheme(); // Returns 'light' or 'dark'
+
+// Set theme
+yasgui.setTheme('dark');  // Switch to dark theme
+yasgui.setTheme('light'); // Switch to light theme
+
+// Toggle theme
+const newTheme = yasgui.toggleTheme(); // Switch and return new theme
+```
+
+**TypeScript Support:**
+
+```typescript
+import Yasgui, { Theme } from '@matdata/yasgui';
+
+const theme: Theme = 'dark'; // Type-safe: only 'light' or 'dark' allowed
+yasgui.setTheme(theme);
+```
+
+**Theme Persistence:**
+
+The selected theme is automatically saved to localStorage under the key `yasgui_theme`:
+- Theme preference persists across page reloads
+- Each user's preference is independent
+- No server-side configuration needed
+
+**System Theme Detection:**
+
+If no theme is explicitly set and no saved preference exists, YASGUI will:
+1. Check the system's color scheme preference (`prefers-color-scheme` media query)
+2. Apply dark theme if system prefers dark mode
+3. Apply light theme otherwise
+4. Automatically update if the user changes their system preference
+
+**CSS Customization:**
+
+You can customize theme colors by overriding CSS custom properties:
+
+```css
+/* Custom dark theme colors */
+[data-theme="dark"] {
+  --yasgui-bg-primary: #0d1117;
+  --yasgui-accent-color: #58a6ff;
+  /* Override other variables as needed */
+}
+```
+
+**Available CSS Custom Properties:**
+
+```css
+--yasgui-bg-primary       /* Primary background color */
+--yasgui-bg-secondary     /* Secondary background (hover states, etc.) */
+--yasgui-bg-tertiary      /* Tertiary background */
+--yasgui-text-primary     /* Primary text color */
+--yasgui-text-secondary   /* Secondary text color */
+--yasgui-text-muted       /* Muted text color */
+--yasgui-border-color     /* Primary border color */
+--yasgui-link-color       /* Link color */
+--yasgui-accent-color     /* Accent color for highlights */
+--yasgui-error-color      /* Error message color */
+/* ... and more */
+```
+
+**Browser Compatibility:**
+
+Themes work in all modern browsers that support:
+- CSS Custom Properties
+- localStorage
+- Media Queries (for system theme detection)
+
+This includes all recent versions of Chrome, Firefox, Safari, and Edge.
 
 ---
 
@@ -1735,6 +1869,140 @@ export default class ChartPlugin implements Plugin {
 6. **Documentation**: Provide clear documentation and examples
 7. **TypeScript**: Use TypeScript for better type safety
 8. **Testing**: Write unit tests for your plugin
+
+### Theme Support for Plugins
+
+YASGUI uses a centralized theme system that plugins should integrate with to provide a consistent user experience across light and dark modes.
+
+#### Implementation Steps
+
+**1. Detect the Current Theme**
+
+Read the `data-theme` attribute on `document.documentElement`:
+
+```javascript
+const currentTheme = document.documentElement.getAttribute('data-theme');
+// Returns: "light" or "dark"
+```
+
+**2. Use CSS Custom Properties**
+
+Use YASGUI's CSS custom properties for consistent theming:
+
+```css
+/* Light mode (default) */
+.my-plugin-container {
+  background-color: var(--yasgui-bg-primary);
+  color: var(--yasgui-text-primary);
+  border: 1px solid var(--yasgui-border-color);
+}
+
+.my-plugin-element {
+  fill: var(--yasgui-accent-color);
+  stroke: var(--yasgui-border-color);
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .my-plugin-tooltip {
+  background-color: var(--yasgui-bg-secondary);
+  color: var(--yasgui-text-primary);
+  border-color: var(--yasgui-border-color);
+}
+```
+
+**Available CSS Custom Properties:**
+
+- **Background Colors**: `--yasgui-bg-primary`, `--yasgui-bg-secondary`, `--yasgui-bg-tertiary`
+- **Text Colors**: `--yasgui-text-primary`, `--yasgui-text-secondary`
+- **Accent Colors**: `--yasgui-accent-color`, `--yasgui-link-hover`
+- **Border Colors**: `--yasgui-border-color`, `--yasgui-input-border`, `--yasgui-input-focus`
+- **Button Colors**: `--yasgui-button-text`, `--yasgui-button-hover`
+- **Other Colors**: `--yasgui-notification-bg`, `--yasgui-notification-text`
+
+**3. Watch for Theme Changes**
+
+Use a `MutationObserver` to detect theme changes:
+
+```javascript
+class MyPlugin {
+  constructor(yasr) {
+    this.yasr = yasr;
+    this.initializeTheme();
+    this.watchThemeChanges();
+  }
+
+  initializeTheme() {
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    this.applyTheme(theme);
+  }
+
+  watchThemeChanges() {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          const theme = document.documentElement.getAttribute('data-theme');
+          this.applyTheme(theme);
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+  }
+
+  applyTheme(theme) {
+    const styles = getComputedStyle(document.documentElement);
+    
+    // Extract colors from CSS custom properties
+    this.config.colors = {
+      background: styles.getPropertyValue('--yasgui-bg-primary').trim(),
+      text: styles.getPropertyValue('--yasgui-text-primary').trim(),
+      accent: styles.getPropertyValue('--yasgui-accent-color').trim(),
+      border: styles.getPropertyValue('--yasgui-border-color').trim()
+    };
+
+    // Update your visualization
+    this.redraw();
+  }
+}
+```
+
+**4. Add Smooth Transitions**
+
+Include CSS transitions for smooth theme switching:
+
+```css
+.my-plugin-container,
+.my-plugin-node,
+.my-plugin-link,
+.my-plugin-text {
+  transition: fill 0.3s ease, stroke 0.3s ease, 
+              background-color 0.3s ease, color 0.3s ease;
+}
+```
+
+**Elements to Theme:**
+
+Ensure you apply theme colors to all visual elements:
+- Graph/Visualization backgrounds
+- Nodes/Points and their borders
+- Edges/Links between nodes
+- Text labels and annotations
+- Tooltips (background, text, and borders)
+- Control buttons (zoom, pan, etc.)
+- Legends and explanatory text
+- Loading indicators and error messages
+- Selection highlights
+
+**Testing:**
+
+Test your plugin in both themes:
+1. **Light Mode**: Verify proper contrast and readability
+2. **Dark Mode**: Ensure colors work well on dark backgrounds
+3. **Theme Switching**: Verify smooth transitions without visual glitches
+4. **Theme Persistence**: Check that the theme persists across page reloads
 
 ### Distributing Your Plugin
 
