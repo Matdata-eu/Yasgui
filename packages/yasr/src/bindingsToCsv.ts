@@ -13,6 +13,6 @@ export default function (result: Parser.SparqlResults) {
       ? querySolutions.map((s) => {
           return mapValues(s, (binding) => binding.value);
         })
-      : []
+      : [],
   );
 }

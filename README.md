@@ -79,13 +79,24 @@ Customize the header height used in the horizontal layout calculation by setting
 }
 ```
 
+### SPARQL Query Formatting
+
+Yasqe now uses the [sparql-formatter](https://github.com/sparqling/sparql-formatter) library (replacing the legacy built-in formatter) to provide standards-compliant SPARQL formatting:
+
+- **Format Button**: Click the format button in the editor toolbar to instantly format your query
+- **Keyboard Shortcut**: Use **Shift+Ctrl+F** to format the current query
+- **Formatter Selection**: Choose between `sparql-formatter` (default) or the legacy formatter in the Settings modal
+- **Auto-format on Query Execution**: Enable automatic formatting before query execution in the Settings modal
+
+Both formatter options and auto-format settings are saved persistently in your browser's local storage.
+
 ### Keyboard Shortcuts
 
 #### Query Editor (Yasqe)
 - **Ctrl+Enter** / **Cmd+Enter**: Execute the current query
 - **Ctrl+Space**: Trigger autocomplete
 - **Ctrl+S**: Save query to local storage
-- **Shift+Ctrl+F**: Auto-format the query
+- **Shift+Ctrl+F**: Format query (uses selected formatter from Settings)
 - **Ctrl+/**: Comment/uncomment selected lines
 - **Shift+Ctrl+D**: Duplicate the current line
 - **Shift+Ctrl+K**: Delete the current line
@@ -94,7 +105,7 @@ Customize the header height used in the horizontal layout calculation by setting
 #### Fullscreen Mode
 - **F11**: Toggle fullscreen mode for the query editor (Yasqe)
 - **F10**: Toggle fullscreen mode for the results viewer (Yasr)
-- **Ctrl+Shift+F**: Switch between Yasqe and Yasr fullscreen modes
+- **F9**: Switch between Yasqe and Yasr fullscreen modes
 
 #### URI Explorer
 - **Ctrl+Click** on any URI in the query editor: Automatically executes a CONSTRUCT query to explore the clicked URI's connections (incoming and outgoing triples). The query runs in the background without modifying your current query in the editor.

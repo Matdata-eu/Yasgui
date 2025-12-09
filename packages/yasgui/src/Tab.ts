@@ -170,8 +170,8 @@ export class Tab extends EventEmitter {
         }
       }
     }
-    // Ctrl+Shift+F - Switch between fullscreen modes
-    else if (event.ctrlKey && event.shiftKey && event.key === "F") {
+    // F9 - Switch between fullscreen modes
+    else if (event.key === "F9") {
       event.preventDefault();
       const yasqeFullscreen = this.yasqe?.getIsFullscreen();
       const yasrFullscreen = this.yasr?.getIsFullscreen();

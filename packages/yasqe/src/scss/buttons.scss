@@ -212,6 +212,26 @@
       }
     }
 
+    .yasqe_formatButton {
+      display: inline-block;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 5px;
+
+      svg {
+        height: 25px;
+        width: 25px;
+      }
+
+      &:hover {
+        svg {
+          fill: #337ab7;
+        }
+      }
+    }
+
     .yasqe_fullscreenButton {
       display: inline-block;
       border: none;

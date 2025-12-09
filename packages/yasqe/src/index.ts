@@ -16,6 +16,7 @@ import { merge, escape } from "lodash-es";
 import getDefaults from "./defaults";
 import CodeMirror from "./CodeMirror";
 import { YasqeAjaxConfig } from "./sparql";
+import { spfmt } from "sparql-formatter";
 
 export interface Yasqe {
   on(eventName: "query", handler: (instance: Yasqe, req: Request, abortController?: AbortController) => void): void;
@@ -84,13 +85,30 @@ export class Yasqe extends CodeMirror {
     if (storageId) {
       const persConf = this.storage.get<any>(storageId);
       if (persConf && typeof persConf === "string") {
-        this.persistentConfig = { query: persConf, editorHeight: this.config.editorHeight }; // Migrate to object based localstorage
+        this.persistentConfig = { query: persConf, editorHeight: this.config.editorHeight };
       } else {
         this.persistentConfig = persConf;
       }
       if (!this.persistentConfig)
         this.persistentConfig = { query: this.getValue(), editorHeight: this.config.editorHeight };
+
+      // Ensure autoformatOnQuery is true by default
+      if (this.persistentConfig && typeof this.persistentConfig.autoformatOnQuery === "undefined") {
+        this.persistentConfig.autoformatOnQuery = true;
+      }
+
       if (this.persistentConfig && this.persistentConfig.query) this.setValue(this.persistentConfig.query);
+    } else {
+      // If no storage, ensure persistentConfig exists and autoformatOnQuery is true
+      if (!this.persistentConfig) {
+        this.persistentConfig = {
+          query: this.getValue(),
+          editorHeight: this.config.editorHeight,
+          autoformatOnQuery: true,
+        };
+      } else if (typeof this.persistentConfig.autoformatOnQuery === "undefined") {
+        this.persistentConfig.autoformatOnQuery = true;
+      }
     }
     this.config.autocompleters.forEach((c) => this.enableCompleter(c).then(() => {}, console.warn));
     if (this.config.consumeShareLink) {
@@ -345,6 +363,23 @@ export class Yasqe extends CodeMirror {
 
       buttons.appendChild(this.queryBtn);
       this.updateQueryButton();
+    }
+
+    /**
+     * Draw format btn
+     */
+    if (this.config.showFormatButton) {
+      const formatBtn = document.createElement("button");
+      addClass(formatBtn, "yasqe_formatButton");
+      const formatIcon = drawSvgStringAsElement(imgs.format);
+      addClass(formatIcon, "formatIcon");
+      formatBtn.appendChild(formatIcon);
+      formatBtn.onclick = () => {
+        this.format();
+      };
+      formatBtn.title = "Format query (Shift+Ctrl+F)";
+      formatBtn.setAttribute("aria-label", "Format query");
+      buttons.appendChild(formatBtn);
     }
 
     /**
@@ -643,6 +678,32 @@ export class Yasqe extends CodeMirror {
       }
     });
   }
+
+  public formatQuery() {
+    try {
+      const currentQuery = this.getValue();
+      const formatted = spfmt.format(currentQuery);
+      this.setValue(formatted);
+      // Collapse prefixes after formatting
+      this.collapsePrefixes(true);
+    } catch (error) {
+      console.warn(
+        "Failed to format SPARQL query using sparql-formatter. This may be due to syntax errors in the query. Falling back to legacy formatter.",
+        error,
+      );
+      // If formatting fails, fall back to the built-in autoformat
+      this.autoformat();
+    }
+  }
+
+  public format() {
+    const formatterType = this.persistentConfig?.formatterType || "sparql-formatter";
+    if (formatterType === "legacy") {
+      this.autoformat();
+    } else {
+      this.formatQuery();
+    }
+  }
   //values in the form of {?var: 'value'}, or [{?var: 'value'}]
   public getQueryWithValues(values: string | { [varName: string]: string } | Array<{ [varName: string]: string }>) {
     if (!values) return this.getValue();
@@ -875,6 +936,10 @@ export class Yasqe extends CodeMirror {
    */
   public query(config?: Sparql.YasqeAjaxConfig) {
     if (this.config.queryingDisabled) return Promise.reject("Querying is disabled.");
+    // Auto-format query before execution if enabled in persistent config
+    if (this.persistentConfig?.autoformatOnQuery) {
+      this.format();
+    }
     // Abort previous request
     this.abortQuery();
     return Sparql.executeQuery(this, config);
@@ -1081,10 +1146,13 @@ export interface Config extends Partial<CodeMirror.EditorConfiguration> {
   editorHeight: string;
   queryingDisabled: string | undefined; // The string will be the message displayed when hovered
   prefixCcApi: string; // the suggested default prefixes URL API getter
+  showFormatButton: boolean; // Show a button to format the query
 }
 export interface PersistentConfig {
   query: string;
   editorHeight: string;
+  formatterType?: "sparql-formatter" | "legacy"; // Which formatter to use
+  autoformatOnQuery?: boolean; // Auto-format query on execution
 }
 // export var _Yasqe = _Yasqe;
 

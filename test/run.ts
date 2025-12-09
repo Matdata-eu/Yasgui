@@ -102,6 +102,103 @@ select * {
 }`);
     });
   });
+
+  describe("SPARQL Formatter", function () {
+    it("Should format with sparql-formatter", async function () {
+      const value = await page.evaluate(() => {
+        window.yasqe.setValue(
+          `PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT * WHERE {?sub ?pred ?obj .} LIMIT 10`,
+        );
+        window.yasqe.formatQuery();
+        return window.yasqe.getValue();
+      });
+      // sparql-formatter produces formatted output with proper line breaks
+      expect(value).to.contain("PREFIX rdf:");
+      expect(value).to.contain("SELECT *");
+      expect(value).to.contain("WHERE {");
+      expect(value).to.contain("LIMIT 10");
+      // Verify it's multi-line (not on one line)
+      expect(value.split("\n").length).to.be.greaterThan(3);
+    });
+
+    it("Should format with legacy formatter when selected", async function () {
+      const value = await page.evaluate(() => {
+        // Set formatter type to legacy
+        if (!window.yasqe.persistentConfig) {
+          window.yasqe.persistentConfig = { query: "", editorHeight: "300px" };
+        }
+        window.yasqe.persistentConfig.formatterType = "legacy";
+
+        window.yasqe.setValue(`PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> select * {   ?a rdf:b ?c .}`);
+        window.yasqe.format();
+        return window.yasqe.getValue();
+      });
+      // Legacy formatter produces specific formatting
+      expect(value).to.contain("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>");
+      expect(value).to.contain("select * {");
+      expect(value.split("\n").length).to.be.greaterThan(1);
+    });
+
+    it("Should auto-format on query execution when enabled", async function () {
+      const executed = await page.evaluate(() => {
+        // Set up auto-format on query
+        if (!window.yasqe.persistentConfig) {
+          window.yasqe.persistentConfig = { query: "", editorHeight: "300px" };
+        }
+        window.yasqe.persistentConfig.autoformatOnQuery = true;
+        window.yasqe.persistentConfig.formatterType = "sparql-formatter";
+
+        // Set unformatted query
+        window.yasqe.setValue(
+          `PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT * WHERE {?sub ?pred ?obj} LIMIT 10`,
+        );
+
+        // Trigger query (it will fail but that's ok, we're testing formatting)
+        window.yasqe.query().catch(() => {});
+
+        // Wait a moment for format to apply
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            const formatted = window.yasqe.getValue();
+            resolve({
+              isFormatted: formatted.split("\n").length > 3,
+              value: formatted,
+            });
+          }, 100);
+        });
+      });
+
+      expect((executed as any).isFormatted).to.be.true;
+      expect((executed as any).value).to.contain("SELECT *");
+      expect((executed as any).value).to.contain("WHERE {");
+    });
+
+    it("Should not auto-format on query execution when disabled", async function () {
+      const result = await page.evaluate(() => {
+        // Disable auto-format on query
+        if (!window.yasqe.persistentConfig) {
+          window.yasqe.persistentConfig = { query: "", editorHeight: "300px" };
+        }
+        window.yasqe.persistentConfig.autoformatOnQuery = false;
+
+        // Set unformatted query
+        const originalQuery = `PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT * WHERE {?sub ?pred ?obj} LIMIT 10`;
+        window.yasqe.setValue(originalQuery);
+
+        // Trigger query (it will fail but that's ok)
+        window.yasqe.query().catch(() => {});
+
+        // Check immediately - should not be formatted
+        const afterQuery = window.yasqe.getValue();
+        return {
+          unchanged: originalQuery === afterQuery,
+          value: afterQuery,
+        };
+      });
+
+      expect((result as any).unchanged).to.be.true;
+    });
+  });
   describe("Autoadd prefixes", function () {
     //note: this test also covers the infinite loop issue described here:
     //https://github.com/TriplyDB/YASGUI.YASQE/issues/135
