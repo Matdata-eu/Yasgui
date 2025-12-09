@@ -318,7 +318,7 @@ export default class TabSettingsModal {
     const autoformatCheckbox = document.createElement("input");
     autoformatCheckbox.type = "checkbox";
     autoformatCheckbox.id = "autoformatOnQuery";
-    autoformatCheckbox.checked = yasqe.persistentConfig?.autoformatOnQuery || false;
+    autoformatCheckbox.checked = yasqe.persistentConfig?.autoformatOnQuery || true;
 
     const autoformatLabel = document.createElement("label");
     autoformatLabel.htmlFor = "autoformatOnQuery";

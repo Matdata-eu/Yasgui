@@ -85,24 +85,30 @@ export class Yasqe extends CodeMirror {
     if (storageId) {
       const persConf = this.storage.get<any>(storageId);
       if (persConf && typeof persConf === "string") {
-        this.persistentConfig = { query: persConf, editorHeight: this.config.editorHeight }; // Migrate to object based localstorage
+        this.persistentConfig = { query: persConf, editorHeight: this.config.editorHeight };
       } else {
         this.persistentConfig = persConf;
       }
       if (!this.persistentConfig)
         this.persistentConfig = { query: this.getValue(), editorHeight: this.config.editorHeight };
 
-      // Ensure new properties have default values if not present
-      if (this.persistentConfig) {
-        if (this.persistentConfig.formatterType === undefined) {
-          this.persistentConfig.formatterType = "sparql-formatter";
-        }
-        if (this.persistentConfig.autoformatOnQuery === undefined) {
-          this.persistentConfig.autoformatOnQuery = false;
-        }
+      // Ensure autoformatOnQuery is true by default
+      if (this.persistentConfig && typeof this.persistentConfig.autoformatOnQuery === "undefined") {
+        this.persistentConfig.autoformatOnQuery = true;
       }
 
       if (this.persistentConfig && this.persistentConfig.query) this.setValue(this.persistentConfig.query);
+    } else {
+      // If no storage, ensure persistentConfig exists and autoformatOnQuery is true
+      if (!this.persistentConfig) {
+        this.persistentConfig = {
+          query: this.getValue(),
+          editorHeight: this.config.editorHeight,
+          autoformatOnQuery: true,
+        };
+      } else if (typeof this.persistentConfig.autoformatOnQuery === "undefined") {
+        this.persistentConfig.autoformatOnQuery = true;
+      }
     }
     this.config.autocompleters.forEach((c) => this.enableCompleter(c).then(() => {}, console.warn));
     if (this.config.consumeShareLink) {
