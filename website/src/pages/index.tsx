@@ -20,8 +20,14 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            to="/docs/">
+            Get Started 📚
+          </Link>
+          <Link
+            className="button button--primary button--lg"
+            to="https://yasgui.matdata.eu/"
+            style={{ marginLeft: '1rem' }}>
+            Try Live Demo 🚀
           </Link>
         </div>
       </div>
@@ -33,8 +39,8 @@ export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title={`${siteConfig.title} - SPARQL Query Interface`}
+      description="YASGUI is a powerful, user-friendly web-based interface for querying and exploring RDF data using SPARQL.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
