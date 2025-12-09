@@ -23,12 +23,32 @@
 
 ## Documentation
 
-The **documentation for YASGUI is now hosted on GitHub Pages**:
+The **documentation for YASGUI is hosted on GitHub Pages**:
 
-- **Documentation Website**: [https://matdata-eu.github.io/Yasgui/](https://matdata-eu.github.io/Yasgui/) (coming soon with Docusaurus)
-- **Development Environment**: [https://matdata-eu.github.io/Yasgui/dev/main/](https://matdata-eu.github.io/Yasgui/dev/main/) - Live build from the main branch
+- **📚 Documentation Website**: [https://matdata-eu.github.io/Yasgui/](https://matdata-eu.github.io/Yasgui/)
+  - User Guide, Developer Guide, API Reference
+  - Built with Docusaurus
+  - Version-tagged with the repository
 
-The documentation is version-tagged with the repository, ensuring consistency between code and docs.
+- **🚀 Development Build**: [https://matdata-eu.github.io/Yasgui/dev/main/](https://matdata-eu.github.io/Yasgui/dev/main/)
+  - Live build from the main branch
+  - Updated automatically with every commit
+  - Test latest features before release
+
+### GitHub Pages Structure
+
+```
+https://matdata-eu.github.io/Yasgui/
+├── /                    # Documentation (Docusaurus)
+│   ├── docs/
+│   │   ├── user-guide
+│   │   └── developer-guide
+│   └── ...
+└── /dev/main/          # Development build of YASGUI app
+    └── index.html
+```
+
+The documentation is version-tagged with the repository, ensuring consistency between code and documentation across releases.
 
 ## Features
 
