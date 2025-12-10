@@ -23,7 +23,7 @@
 PUPPETEER_SKIP_DOWNLOAD=1 npm ci
 ```
 
-Regular `npm ci` will fail due to puppeteer trying to download Chrome. The CI environment uses AppArmor disabling and installs Chrome separately.
+Regular `npm ci` will fail due to puppeteer trying to download Chrome. The CI environment uses AppArmor disabling to allow puppeteer to use system Chrome.
 
 ### Build Process
 
@@ -110,7 +110,7 @@ npm run util:prettify  # Format TypeScript and CSS with Prettier
 - **esbuild.config.js** - Production build (bundles to IIFE format, minifies)
 - **vite.config.ts** - Dev server (port 4000, aliases to source files)
 - **distributeBuildFiles.js** - Copies build artifacts to package directories
-- **.eslintrc.cjs** - Strict in CI (CI_PIPELINE_ID) or with ESLINT_STRICT=true
+- **.eslintrc.cjs** - Strict mode when ESLINT_STRICT=true or CI_PIPELINE_ID is set
 
 ### Package Structure
 
@@ -154,9 +154,9 @@ Triggered on GitHub releases. Uses Changesets for versioning.
 
 **Solution:** Install Chrome manually or run only `npm run unit-test` to skip E2E tests.
 
-### Issue: ESLint pattern error "No files matching packages/*/test/**"
+### Issue: ESLint shows "No files matching the pattern 'packages/*/test/**/*.{ts,tsx}' were found"
 
-**Expected:** Not an error - packages don't have test subdirectories. Tests are in root `test/` directory.
+**Expected Behavior:** This is not an error - it's an informational message. The packages don't have test subdirectories; tests are in the root `test/` directory instead. The linter still successfully checks source files.
 
 ### Issue: AppArmor restrictions prevent Chrome from starting
 
@@ -191,8 +191,8 @@ Uses CSS custom properties for theming. Data attribute `data-theme="light|dark"`
 Before submitting changes:
 
 1. **Build:** `npm run build` (must complete in ~5-10 seconds)
-2. **Lint:** `npm run util:lint` (ignore test pattern error)
-3. **Type Check:** `npm run util:validateTs`
+2. **Lint:** `npm run util:lint` (will show "No files matching packages/*/test/**/*.{ts,tsx}" - this is expected as tests are in root test/ directory, not per-package)
+3. **Type Check:** `npm run util:validateTs` (existing TypeScript errors in dependencies are expected)
 4. **Tests:** `npm test` (or `npm run unit-test` if Chrome unavailable)
 5. **Format:** `npm run util:prettify` (or let pre-commit hook handle it)
 
