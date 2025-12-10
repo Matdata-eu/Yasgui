@@ -3,3 +3,7 @@ build
 yarn.lock
 .vscode
 build.old
+# Docusaurus
+website/node_modules
+website/build
+website/.docusaurus

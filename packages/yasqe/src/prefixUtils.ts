@@ -30,7 +30,10 @@ export function removePrefixes(yasqe: Yasqe, prefixes: Prefixes) {
     yasqe.setValue(
       yasqe
         .getValue()
-        .replace(new RegExp("PREFIX\\s*" + pref + ":\\s*" + escapeRegex("<" + prefixes[pref] + ">") + "\\s*", "ig"), "")
+        .replace(
+          new RegExp("PREFIX\\s*" + pref + ":\\s*" + escapeRegex("<" + prefixes[pref] + ">") + "\\s*", "ig"),
+          "",
+        ),
     );
   }
   yasqe.collapsePrefixes(false);
@@ -48,7 +51,7 @@ export function getPrefixesFromQuery(yasqe: Yasqe): Token["state"]["prefixes"] {
   //as https://github.com/TriplyDB/YASGUI/issues/84)
   return yasqe.getTokenAt(
     { line: yasqe.getDoc().lastLine(), ch: yasqe.getDoc().getLine(yasqe.getDoc().lastLine()).length },
-    true
+    true,
   ).state.prefixes;
 }
 

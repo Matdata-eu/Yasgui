@@ -126,6 +126,11 @@ export default class TabSettingsModal {
     addClass(prefixTab, "modalTabButton");
     prefixTab.onclick = () => this.switchTab("prefix");
 
+    const editorTab = document.createElement("button");
+    editorTab.textContent = "Editor";
+    addClass(editorTab, "modalTabButton");
+    editorTab.onclick = () => this.switchTab("editor");
+
     const endpointsTab = document.createElement("button");
     endpointsTab.textContent = "Endpoint Buttons";
     addClass(endpointsTab, "modalTabButton");
@@ -133,6 +138,7 @@ export default class TabSettingsModal {
 
     tabsContainer.appendChild(requestTab);
     tabsContainer.appendChild(prefixTab);
+    tabsContainer.appendChild(editorTab);
     tabsContainer.appendChild(endpointsTab);
     body.appendChild(tabsContainer);
 
@@ -147,6 +153,11 @@ export default class TabSettingsModal {
     prefixContent.id = "prefix-content";
     this.drawPrefixSettings(prefixContent);
 
+    const editorContent = document.createElement("div");
+    addClass(editorContent, "modalTabContent");
+    editorContent.id = "editor-content";
+    this.drawEditorSettings(editorContent);
+
     const endpointsContent = document.createElement("div");
     addClass(endpointsContent, "modalTabContent");
     endpointsContent.id = "endpoints-content";
@@ -154,6 +165,7 @@ export default class TabSettingsModal {
 
     body.appendChild(requestContent);
     body.appendChild(prefixContent);
+    body.appendChild(editorContent);
     body.appendChild(endpointsContent);
 
     this.modalContent.appendChild(body);
@@ -189,7 +201,8 @@ export default class TabSettingsModal {
       if (
         (tabName === "request" && index === 0) ||
         (tabName === "prefix" && index === 1) ||
-        (tabName === "endpoints" && index === 2)
+        (tabName === "editor" && index === 2) ||
+        (tabName === "endpoints" && index === 3)
       ) {
         addClass(btn as HTMLElement, "active");
       } else {
@@ -200,6 +213,11 @@ export default class TabSettingsModal {
     contents.forEach((content) => {
       if (content.id === `${tabName}-content`) {
         addClass(content as HTMLElement, "active");
+        // Reload editor settings if switching to editor tab and it hasn't been loaded yet
+        if (tabName === "editor" && content.innerHTML.indexOf("not yet initialized") > -1) {
+          content.innerHTML = "";
+          this.drawEditorSettings(content as HTMLElement);
+        }
       } else {
         removeClass(content as HTMLElement, "active");
       }
@@ -244,6 +262,79 @@ export default class TabSettingsModal {
     section.appendChild(checkboxContainer);
 
     container.appendChild(section);
+  }
+
+  private drawEditorSettings(container: HTMLElement) {
+    const yasqe = this.tab.getYasqe();
+    if (!yasqe) {
+      const notice = document.createElement("div");
+      notice.textContent = "Query editor is not yet initialized.";
+      addClass(notice, "settingsHelp");
+      container.appendChild(notice);
+      return;
+    }
+
+    // Formatter Type Section
+    const formatterSection = document.createElement("div");
+    addClass(formatterSection, "settingsSection");
+
+    const formatterLabel = document.createElement("label");
+    formatterLabel.textContent = "Query Formatter";
+    addClass(formatterLabel, "settingsLabel");
+
+    const formatterHelp = document.createElement("div");
+    formatterHelp.textContent = "Choose which formatter to use when formatting SPARQL queries (Shift+Ctrl+F).";
+    addClass(formatterHelp, "settingsHelp");
+
+    const formatterSelect = document.createElement("select");
+    formatterSelect.id = "formatterTypeSelect";
+    addClass(formatterSelect, "settingsSelect");
+
+    const sparqlFormatterOption = document.createElement("option");
+    sparqlFormatterOption.value = "sparql-formatter";
+    sparqlFormatterOption.textContent = "SPARQL Formatter (external library)";
+    formatterSelect.appendChild(sparqlFormatterOption);
+
+    const legacyOption = document.createElement("option");
+    legacyOption.value = "legacy";
+    legacyOption.textContent = "Legacy Formatter (built-in)";
+    formatterSelect.appendChild(legacyOption);
+
+    const currentFormatter = yasqe.persistentConfig?.formatterType || "sparql-formatter";
+    formatterSelect.value = currentFormatter;
+
+    formatterSection.appendChild(formatterLabel);
+    formatterSection.appendChild(formatterHelp);
+    formatterSection.appendChild(formatterSelect);
+    container.appendChild(formatterSection);
+
+    // Auto-format on Query Section
+    const autoformatSection = document.createElement("div");
+    addClass(autoformatSection, "settingsSection");
+
+    const autoformatCheckboxContainer = document.createElement("div");
+    addClass(autoformatCheckboxContainer, "checkboxContainer");
+
+    const autoformatCheckbox = document.createElement("input");
+    autoformatCheckbox.type = "checkbox";
+    autoformatCheckbox.id = "autoformatOnQuery";
+    autoformatCheckbox.checked = yasqe.persistentConfig?.autoformatOnQuery || true;
+
+    const autoformatLabel = document.createElement("label");
+    autoformatLabel.htmlFor = "autoformatOnQuery";
+    autoformatLabel.textContent = "Auto-format query before execution";
+
+    const autoformatHelp = document.createElement("div");
+    autoformatHelp.textContent = "Automatically format the query using the selected formatter before executing it.";
+    addClass(autoformatHelp, "settingsHelp");
+    autoformatHelp.style.marginTop = "5px";
+
+    autoformatCheckboxContainer.appendChild(autoformatCheckbox);
+    autoformatCheckboxContainer.appendChild(autoformatLabel);
+
+    autoformatSection.appendChild(autoformatCheckboxContainer);
+    autoformatSection.appendChild(autoformatHelp);
+    container.appendChild(autoformatSection);
   }
 
   private drawRequestSettings(container: HTMLElement) {
@@ -312,6 +403,11 @@ export default class TabSettingsModal {
 
   public open() {
     this.loadSettings();
+    // Reload editor settings in case yasqe wasn't available during init
+    const editorContent = this.modalContent.querySelector("#editor-content");
+    if (editorContent && editorContent.innerHTML === "") {
+      this.drawEditorSettings(editorContent as HTMLElement);
+    }
     addClass(this.modalOverlay, "open");
   }
 
@@ -343,6 +439,21 @@ export default class TabSettingsModal {
     const deduplicated = this.deduplicatePrefixes(prefixText);
     this.tab.yasgui.persistentConfig.setPrefixes(deduplicated);
     this.tab.yasgui.persistentConfig.setAutoCaptureEnabled(autoCapture);
+
+    // Save editor settings
+    const yasqe = this.tab.getYasqe();
+    if (yasqe && yasqe.persistentConfig) {
+      const formatterSelect = document.getElementById("formatterTypeSelect") as HTMLSelectElement;
+      const autoformatCheckbox = document.getElementById("autoformatOnQuery") as HTMLInputElement;
+
+      if (formatterSelect) {
+        yasqe.persistentConfig.formatterType = formatterSelect.value as "sparql-formatter" | "legacy";
+      }
+      if (autoformatCheckbox) {
+        yasqe.persistentConfig.autoformatOnQuery = autoformatCheckbox.checked;
+      }
+      yasqe.saveQuery();
+    }
 
     // Save request settings
     const requestContent = this.modalContent.querySelector("#request-content");

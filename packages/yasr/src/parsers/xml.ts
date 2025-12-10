@@ -57,7 +57,7 @@ function parseBoolean(node: Element) {
 }
 export default function (
   xmlString: string,
-  postProcessBinding: Parser.PostProcessBinding
+  postProcessBinding: Parser.PostProcessBinding,
 ): Parser.SparqlResults | undefined {
   if (typeof xmlString !== "string") return;
   const domParser = new DOMParser();

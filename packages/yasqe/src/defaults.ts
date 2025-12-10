@@ -68,7 +68,7 @@ SELECT * WHERE {
       },
       "Shift-Ctrl-F": function (_yasqe: any) {
         const yasqe: Yasqe = _yasqe;
-        yasqe.autoformat();
+        yasqe.format();
       },
       "Ctrl-S": function (_yasqe: any) {
         const yasqe: Yasqe = _yasqe;
@@ -130,6 +130,7 @@ SELECT * WHERE {
     editorHeight: "300px",
     queryingDisabled: undefined,
     prefixCcApi: prefixCcApi,
+    showFormatButton: true,
   };
   const requestConfig: PlainRequestConfig = {
     queryArgument: undefined, //undefined means: get query argument based on query mode

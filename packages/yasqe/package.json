@@ -27,7 +27,8 @@
     "@matdata/yasgui-utils": "^4.6.1",
     "codemirror": "^5.51.0",
     "lodash-es": "^4.17.15",
-    "query-string": "^6.10.1"
+    "query-string": "^6.10.1",
+    "sparql-formatter": "^1.0.2"
   },
   "devDependencies": {
     "@types/codemirror": "0.0.100",
