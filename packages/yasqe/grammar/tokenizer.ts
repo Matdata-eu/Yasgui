@@ -37,6 +37,7 @@ export interface State {
   currentPnameNs: string | undefined;
   possibleFullIri: boolean;
   inConstructTemplate: boolean;
+  seenWhereClause: boolean;
   constructVariables: { [varName: string]: string };
   whereVariables: { [varName: string]: string };
 }
@@ -475,6 +476,7 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
           break;
         case "whereClause":
           state.inConstructTemplate = false;
+          state.seenWhereClause = true;
           break;
       }
     }
@@ -532,7 +534,8 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
           if (state.queryType === "CONSTRUCT") {
             if (state.inConstructTemplate) {
               state.constructVariables[tokenOb.string] = tokenOb.string;
-            } else {
+            } else if (state.seenWhereClause) {
+              // Only track as WHERE variable if we've actually entered the WHERE clause
               state.whereVariables[tokenOb.string] = tokenOb.string;
             }
           }
@@ -741,6 +744,7 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
         inPrefixDecl: false,
         possibleFullIri: false,
         inConstructTemplate: false,
+        seenWhereClause: false,
         constructVariables: {},
         whereVariables: {},
       };

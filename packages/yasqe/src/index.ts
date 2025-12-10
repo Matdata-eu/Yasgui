@@ -842,12 +842,13 @@ export class Yasqe extends CodeMirror {
   }
 
   public checkConstructVariables() {
+    // Clear any existing warnings first
+    this.clearGutter("gutterConstructWarning");
+
     // Only check if enabled, query is valid, and it's a CONSTRUCT query
     if (!this.config.checkConstructVariables || !this.queryValid || this.getQueryType() !== "CONSTRUCT") {
       return;
     }
-
-    this.clearGutter("gutterConstructWarning");
 
     // Get the final state after parsing the entire query
     const lastLine = this.getDoc().lastLine();
@@ -868,6 +869,8 @@ export class Yasqe extends CodeMirror {
     }
 
     // Find lines where undefined variables are used in CONSTRUCT template
+    // Note: This iterates through all lines but filters by inConstructTemplate flag
+    // For large queries, this could be optimized by tracking line ranges during tokenization
     for (let l = 0; l < this.getDoc().lineCount(); ++l) {
       const lineToken: Token = this.getTokenAt({ line: l, ch: this.getDoc().getLine(l).length }, true);
       const lineState = lineToken.state as TokenizerState;
@@ -875,9 +878,14 @@ export class Yasqe extends CodeMirror {
       // Only mark variables in the CONSTRUCT template
       if (lineState.queryType === "CONSTRUCT" && lineState.inConstructTemplate) {
         const line = this.getDoc().getLine(l);
-        // Check if this line contains any undefined variable
+        // Check if this line contains any undefined variable (use word boundary to avoid partial matches)
         for (const undefinedVar of undefinedVars) {
-          if (line.indexOf(undefinedVar) >= 0) {
+          // Escape special regex characters in variable name
+          // Use negative lookbehind/lookahead to ensure we match the full variable name
+          // Variables can be followed by whitespace, punctuation, or end of line
+          const escapedVar = undefinedVar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const varRegex = new RegExp(`${escapedVar}(?![a-zA-Z0-9_])`);
+          if (varRegex.test(line)) {
             const warningEl = drawSvgStringAsElement(imgs.warning);
             warningEl.className = "constructVariableWarning";
             tooltip(
