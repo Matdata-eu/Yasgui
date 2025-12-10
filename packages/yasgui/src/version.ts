@@ -1,3 +1,3 @@
 // Version information for YASGUI
-// This should be kept in sync with package.json
+// This file is auto-generated during build - do not edit manually
 export const VERSION = "4.6.1";
