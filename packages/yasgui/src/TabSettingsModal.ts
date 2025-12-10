@@ -904,12 +904,12 @@ export default class TabSettingsModal {
         category: "Query Editor (YASQE)",
         shortcuts: [
           { keys: ["Ctrl+Enter", "Cmd+Enter"], description: "Execute query" },
-          { keys: ["Ctrl+Space"], description: "Trigger autocomplete" },
-          { keys: ["Ctrl+S"], description: "Save query to local storage" },
-          { keys: ["Ctrl+Shift+F"], description: "Format query" },
-          { keys: ["Ctrl+/"], description: "Toggle comment on selected lines" },
-          { keys: ["Ctrl+Shift+D"], description: "Duplicate current line" },
-          { keys: ["Ctrl+Shift+K"], description: "Delete current line" },
+          { keys: ["Ctrl+Space", "Cmd+Space"], description: "Trigger autocomplete" },
+          { keys: ["Ctrl+S", "Cmd+S"], description: "Save query to local storage" },
+          { keys: ["Ctrl+Shift+F", "Cmd+Shift+F"], description: "Format query" },
+          { keys: ["Ctrl+/", "Cmd+/"], description: "Toggle comment on selected lines" },
+          { keys: ["Ctrl+Shift+D", "Cmd+Shift+D"], description: "Duplicate current line" },
+          { keys: ["Ctrl+Shift+K", "Cmd+Shift+K"], description: "Delete current line" },
           { keys: ["Esc"], description: "Remove focus from editor" },
           { keys: ["Ctrl+Click"], description: "Explore URI connections (on URI)" },
         ],
@@ -936,6 +936,40 @@ export default class TabSettingsModal {
 
       const table = document.createElement("table");
       addClass(table, "shortcutsTable");
+      table.setAttribute("role", "table");
+      table.setAttribute("aria-label", `${section.category} keyboard shortcuts`);
+
+      // Add table caption for screen readers
+      const caption = document.createElement("caption");
+      caption.textContent = `${section.category} keyboard shortcuts`;
+      caption.style.position = "absolute";
+      caption.style.left = "-10000px";
+      caption.style.width = "1px";
+      caption.style.height = "1px";
+      caption.style.overflow = "hidden";
+      table.appendChild(caption);
+
+      // Add thead with proper headers
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+
+      const keysHeader = document.createElement("th");
+      keysHeader.textContent = "Keys";
+      keysHeader.setAttribute("scope", "col");
+      addClass(keysHeader, "shortcutsKeysHeader");
+      headerRow.appendChild(keysHeader);
+
+      const descHeader = document.createElement("th");
+      descHeader.textContent = "Description";
+      descHeader.setAttribute("scope", "col");
+      addClass(descHeader, "shortcutsDescHeader");
+      headerRow.appendChild(descHeader);
+
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      // Add tbody
+      const tbody = document.createElement("tbody");
 
       section.shortcuts.forEach((shortcut) => {
         const row = document.createElement("tr");
@@ -960,8 +994,10 @@ export default class TabSettingsModal {
         descCell.textContent = shortcut.description;
         row.appendChild(descCell);
 
-        table.appendChild(row);
+        tbody.appendChild(row);
       });
+
+      table.appendChild(tbody);
 
       sectionEl.appendChild(table);
       container.appendChild(sectionEl);
