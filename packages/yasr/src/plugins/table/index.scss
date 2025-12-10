@@ -158,6 +158,7 @@ Delimiters used by datatables
           // Don't override the disabled grayed out style
           &:not(.disabled) {
             font-weight: bold;
+            color: var(--yasgui-text-secondary, #505050) !important;
           }
         }
       }
