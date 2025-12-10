@@ -455,15 +455,29 @@
   width: 100%;
   border-collapse: collapse;
 
-  tr {
-    border-bottom: 1px solid var(--yasgui-border-color, #e8e8e8);
-
-    &:last-child {
-      border-bottom: none;
+  thead {
+    th {
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--yasgui-text-primary, #333);
+      background-color: var(--yasgui-bg-secondary, #f5f5f5);
+      border-bottom: 2px solid var(--yasgui-border-color, #e0e0e0);
     }
+  }
 
-    &:hover {
-      background-color: var(--yasgui-bg-secondary, #f9f9f9);
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--yasgui-border-color, #e8e8e8);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: var(--yasgui-bg-secondary, #f9f9f9);
+      }
     }
   }
 
