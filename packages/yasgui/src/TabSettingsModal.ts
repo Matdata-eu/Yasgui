@@ -988,7 +988,7 @@ export default class TabSettingsModal {
     // Documentation Link
     const docsLink = this.createAboutLink(
       "📚 Documentation",
-      "https://yasgui-docs.matdata.eu/",
+      "https://yasgui-doc.matdata.eu/docs/",
       "View the complete documentation and guides",
     );
     linksSection.appendChild(docsLink);
