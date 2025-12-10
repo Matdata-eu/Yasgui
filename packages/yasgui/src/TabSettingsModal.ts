@@ -1,6 +1,6 @@
 import { addClass, removeClass } from "@matdata/yasgui-utils";
 import "./TabSettingsModal.scss";
-import Tab from "./Tab";
+import Tab, { ValidationPattern } from "./Tab";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -136,10 +136,16 @@ export default class TabSettingsModal {
     addClass(endpointsTab, "modalTabButton");
     endpointsTab.onclick = () => this.switchTab("endpoints");
 
+    const validationTab = document.createElement("button");
+    validationTab.textContent = "Validation";
+    addClass(validationTab, "modalTabButton");
+    validationTab.onclick = () => this.switchTab("validation");
+
     tabsContainer.appendChild(requestTab);
     tabsContainer.appendChild(prefixTab);
     tabsContainer.appendChild(editorTab);
     tabsContainer.appendChild(endpointsTab);
+    tabsContainer.appendChild(validationTab);
     body.appendChild(tabsContainer);
 
     // Tab content containers
@@ -163,10 +169,16 @@ export default class TabSettingsModal {
     endpointsContent.id = "endpoints-content";
     this.drawEndpointButtonsSettings(endpointsContent);
 
+    const validationContent = document.createElement("div");
+    addClass(validationContent, "modalTabContent");
+    validationContent.id = "validation-content";
+    this.drawValidationSettings(validationContent);
+
     body.appendChild(requestContent);
     body.appendChild(prefixContent);
     body.appendChild(editorContent);
     body.appendChild(endpointsContent);
+    body.appendChild(validationContent);
 
     this.modalContent.appendChild(body);
 
@@ -202,7 +214,8 @@ export default class TabSettingsModal {
         (tabName === "request" && index === 0) ||
         (tabName === "prefix" && index === 1) ||
         (tabName === "editor" && index === 2) ||
-        (tabName === "endpoints" && index === 3)
+        (tabName === "endpoints" && index === 3) ||
+        (tabName === "validation" && index === 4)
       ) {
         addClass(btn as HTMLElement, "active");
       } else {
@@ -683,6 +696,167 @@ export default class TabSettingsModal {
     // In dark mode, show moon icon (clicking will switch to light)
     // In light mode, show sun icon (clicking will switch to dark)
     return currentTheme === "dark" ? MOON_ICON : SUN_ICON;
+  }
+
+  private drawValidationSettings(container: HTMLElement) {
+    const section = document.createElement("div");
+    addClass(section, "settingsSection");
+
+    const label = document.createElement("label");
+    label.textContent = "CONSTRUCT Result Validation";
+    addClass(label, "settingsLabel");
+
+    const help = document.createElement("div");
+    help.textContent =
+      "Define expected patterns for CONSTRUCT query results. Yasgui will check if these patterns exist in the results and show warnings for missing patterns. This is useful for validating inference rules.";
+    addClass(help, "settingsHelp");
+
+    section.appendChild(label);
+    section.appendChild(help);
+
+    // List of existing patterns
+    const patternsList = document.createElement("div");
+    addClass(patternsList, "validationPatternsList");
+    this.renderValidationPatternsList(patternsList);
+    section.appendChild(patternsList);
+
+    // Form to add new pattern
+    const addForm = document.createElement("div");
+    addClass(addForm, "addValidationPatternForm");
+
+    const formLabel = document.createElement("div");
+    formLabel.textContent = "Add Expected Pattern:";
+    addClass(formLabel, "formLabel");
+    addForm.appendChild(formLabel);
+
+    const inputsContainer = document.createElement("div");
+    addClass(inputsContainer, "validationInputs");
+
+    const subjectInput = document.createElement("input");
+    subjectInput.type = "text";
+    subjectInput.placeholder = "Subject (or * for any)";
+    addClass(subjectInput, "validationPatternInput");
+    inputsContainer.appendChild(subjectInput);
+
+    const predicateInput = document.createElement("input");
+    predicateInput.type = "text";
+    predicateInput.placeholder = "Predicate (or * for any)";
+    addClass(predicateInput, "validationPatternInput");
+    inputsContainer.appendChild(predicateInput);
+
+    const objectInput = document.createElement("input");
+    objectInput.type = "text";
+    objectInput.placeholder = "Object (or * for any)";
+    addClass(objectInput, "validationPatternInput");
+    inputsContainer.appendChild(objectInput);
+
+    addForm.appendChild(inputsContainer);
+
+    const descriptionInput = document.createElement("input");
+    descriptionInput.type = "text";
+    descriptionInput.placeholder = "Optional description";
+    addClass(descriptionInput, "validationDescriptionInput");
+    addForm.appendChild(descriptionInput);
+
+    const addButton = document.createElement("button");
+    addButton.textContent = "+ Add Pattern";
+    addClass(addButton, "addValidationPatternButton");
+    addButton.type = "button";
+    addButton.onclick = () => {
+      const subject = subjectInput.value.trim();
+      const predicate = predicateInput.value.trim();
+      const object = objectInput.value.trim();
+      const description = descriptionInput.value.trim();
+
+      if (!subject && !predicate && !object) {
+        alert("Please specify at least one field (subject, predicate, or object)");
+        return;
+      }
+
+      const pattern: ValidationPattern = {};
+      if (subject) pattern.subject = subject;
+      if (predicate) pattern.predicate = predicate;
+      if (object) pattern.object = object;
+      if (description) pattern.description = description;
+
+      this.addValidationPattern(pattern);
+      this.renderValidationPatternsList(patternsList);
+
+      // Clear inputs
+      subjectInput.value = "";
+      predicateInput.value = "";
+      objectInput.value = "";
+      descriptionInput.value = "";
+    };
+    addForm.appendChild(addButton);
+
+    section.appendChild(addForm);
+    container.appendChild(section);
+  }
+
+  private renderValidationPatternsList(container: HTMLElement) {
+    container.innerHTML = "";
+
+    const patterns = this.tab.getValidationPatterns();
+    if (!patterns || patterns.length === 0) {
+      const empty = document.createElement("div");
+      addClass(empty, "emptyValidationList");
+      empty.textContent = "No validation patterns defined. Add patterns below to validate CONSTRUCT results.";
+      container.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement("ul");
+    addClass(list, "validationList");
+
+    patterns.forEach((pattern, index) => {
+      const item = document.createElement("li");
+      addClass(item, "validationListItem");
+
+      const patternInfo = document.createElement("div");
+      addClass(patternInfo, "patternInfo");
+
+      const patternText = document.createElement("code");
+      const s = pattern.subject || "*";
+      const p = pattern.predicate || "*";
+      const o = pattern.object || "*";
+      patternText.textContent = `${s} ${p} ${o}`;
+      patternInfo.appendChild(patternText);
+
+      if (pattern.description) {
+        const desc = document.createElement("span");
+        addClass(desc, "patternDescription");
+        desc.textContent = pattern.description;
+        patternInfo.appendChild(desc);
+      }
+
+      item.appendChild(patternInfo);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      addClass(deleteBtn, "deletePatternButton");
+      deleteBtn.onclick = () => {
+        this.removeValidationPattern(index);
+        this.renderValidationPatternsList(container);
+      };
+      item.appendChild(deleteBtn);
+
+      list.appendChild(item);
+    });
+
+    container.appendChild(list);
+  }
+
+  private addValidationPattern(pattern: ValidationPattern) {
+    const patterns = this.tab.getValidationPatterns() || [];
+    patterns.push(pattern);
+    this.tab.setValidationPatterns(patterns);
+  }
+
+  private removeValidationPattern(index: number) {
+    const patterns = this.tab.getValidationPatterns() || [];
+    patterns.splice(index, 1);
+    this.tab.setValidationPatterns(patterns);
   }
 
   public destroy() {

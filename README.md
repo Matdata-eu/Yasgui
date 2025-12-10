@@ -11,13 +11,21 @@
 
 ## Quick Links
 
-- 📖 **[User Guide](./docs/user-guide.md)** - Complete guide for end users
-- 🛠️ **[Developer Guide](./docs/developer-guide.md)** - API reference and integration guide
-- 🚀 **[Production Environment](https://yasgui.matdata.eu/)** - Live instance
-- 📦 **[npm Package](https://www.npmjs.com/package/@matdata/yasgui)**
-- 🐳 **[Docker Hub](https://hub.docker.com/r/mathiasvda/yasgui)**
-- 📝 **[Releases & Changelog](https://github.com/Matdata-eu/Yasgui/releases)**
-- 💻 **[GitHub Repository](https://github.com/Matdata-eu/Yasgui)**
+### CONSTRUCT Query Validation
+- **Pattern-Based Validation**: Define expected triple patterns for CONSTRUCT query results
+- **Visual Feedback**: Automatic warnings when expected patterns are missing from results
+- **Inference Rule Testing**: Ideal for validating SPARQL inference rules and catching typos
+- **Flexible Matching**: Supports exact matching, wildcards (*), and prefix matching
+- See the [CONSTRUCT Validation Guide](./docs/CONSTRUCT_VALIDATION.md) for detailed usage instructions
+
+### Prefix Management
+- **PREFIX Button**: Insert saved prefix declarations into your query (replaces existing PREFIX lines at the beginning)
+- **Settings Modal**: Access via the settings button (⚙) to manage:
+  - **Saved Prefixes**: Define reusable PREFIX declarations
+  - **Auto-capture**: Automatically captures new prefixes from your queries (enabled by default)
+  - **Request Configuration**: Configure HTTP request method, accept headers, arguments, headers, and named/default graphs
+- **Default Prefixes**: Automatically includes `rdf:` and `rdfs:` prefixes for new users
+- **Prefix Autocomplete**: When typing a prefix declaration (e.g., `PREFIX foaf:`), the editor automatically queries [prefix.cc](https://prefix.cc) to suggest and auto-complete the full URI commonly associated with that prefix. This helps you quickly add standard prefixes without needing to remember their full URIs.
 
 ---
 

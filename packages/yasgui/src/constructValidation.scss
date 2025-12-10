@@ -1,0 +1,190 @@
+.construct-validation {
+  margin: 10px 0;
+  border-radius: 4px;
+  overflow: hidden;
+
+  .validation-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+
+    &.has-missing {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    &.has-found {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .validation-icon {
+      font-size: 16px;
+      font-weight: bold;
+
+      &.warning {
+        color: #f39c12;
+      }
+
+      &.success {
+        color: #27ae60;
+      }
+    }
+
+    .validation-toggle {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 8px;
+      color: inherit;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .validation-details {
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    max-height: 400px;
+    overflow-y: auto;
+
+    &.collapsed {
+      display: none;
+    }
+
+    .validation-section {
+      margin-bottom: 16px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h4 {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      &.missing h4 {
+        color: #856404;
+      }
+
+      &.found h4 {
+        color: #155724;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          padding: 6px 8px;
+          margin-bottom: 4px;
+          background-color: white;
+          border-radius: 3px;
+          font-size: 13px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+            font-size: 12px;
+            flex-shrink: 0;
+          }
+
+          .pattern-description {
+            color: #666;
+            flex-grow: 1;
+          }
+
+          .match-count {
+            color: #27ae60;
+            font-weight: 500;
+            font-size: 12px;
+            flex-shrink: 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Dark theme support */
+[data-theme="dark"] {
+  .construct-validation {
+    .validation-summary {
+      &.has-missing {
+        background-color: #3d3419;
+        color: #ffc107;
+        border-color: #5a4a1f;
+      }
+
+      &.has-found {
+        background-color: #1e3a2a;
+        color: #4caf50;
+        border-color: #2d5a3e;
+      }
+
+      .validation-icon {
+        &.warning {
+          color: #ffc107;
+        }
+
+        &.success {
+          color: #4caf50;
+        }
+      }
+    }
+
+    .validation-details {
+      background-color: #2a2a2a;
+      border-top-color: #444;
+
+      .validation-section {
+        &.missing h4 {
+          color: #ffc107;
+        }
+
+        &.found h4 {
+          color: #4caf50;
+        }
+
+        ul li {
+          background-color: #333;
+
+          code {
+            background-color: #444;
+            color: #e0e0e0;
+          }
+
+          .pattern-description {
+            color: #aaa;
+          }
+
+          .match-count {
+            color: #4caf50;
+          }
+        }
+      }
+    }
+  }
+}

@@ -358,3 +358,166 @@
     }
   }
 }
+
+// Validation patterns styles
+.validationPatternsList {
+  margin: 16px 0;
+  min-height: 100px;
+
+  .emptyValidationList {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+
+  .validationList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    .validationListItem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      margin-bottom: 8px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+
+      .patternInfo {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        code {
+          background-color: white;
+          padding: 4px 8px;
+          border-radius: 3px;
+          font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+          font-size: 13px;
+          display: inline-block;
+        }
+
+        .patternDescription {
+          color: #666;
+          font-size: 12px;
+        }
+      }
+
+      .deletePatternButton {
+        padding: 6px 12px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+
+        &:hover {
+          background-color: #c82333;
+        }
+      }
+    }
+  }
+}
+
+.addValidationPatternForm {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+
+  .formLabel {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+
+  .validationInputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .validationPatternInput,
+  .validationDescriptionInput {
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 13px;
+
+    &:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+  }
+
+  .validationDescriptionInput {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .addValidationPatternButton {
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+
+    &:hover {
+      background-color: #218838;
+    }
+  }
+}
+
+// Dark theme support for validation
+[data-theme="dark"] {
+  .validationPatternsList {
+    .emptyValidationList {
+      background-color: #2a2a2a;
+      color: #aaa;
+    }
+
+    .validationList .validationListItem {
+      background-color: #2a2a2a;
+      border-color: #444;
+
+      .patternInfo {
+        code {
+          background-color: #333;
+          color: #e0e0e0;
+        }
+
+        .patternDescription {
+          color: #aaa;
+        }
+      }
+    }
+  }
+
+  .addValidationPatternForm {
+    background-color: #2a2a2a;
+    border-color: #444;
+
+    .validationPatternInput,
+    .validationDescriptionInput {
+      background-color: #333;
+      color: #e0e0e0;
+      border-color: #555;
+
+      &:focus {
+        border-color: #007bff;
+      }
+    }
+  }
+}

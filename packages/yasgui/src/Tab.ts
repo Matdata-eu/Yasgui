@@ -9,6 +9,8 @@ import * as shareLink from "./linkUtils";
 import EndpointSelect from "./endpointSelect";
 import "./tab.scss";
 import { getRandomId, default as Yasgui, YasguiRequestConfig } from "./";
+import { validateConstructResults } from "./constructValidator";
+import ConstructValidationDisplay from "./ConstructValidationDisplay";
 
 // Layout orientation toggle icons
 const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
@@ -23,6 +25,14 @@ const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
 }
+
+export interface ValidationPattern {
+  subject?: string;
+  predicate?: string;
+  object?: string;
+  description?: string;
+}
+
 export interface PersistedJson {
   name: string;
   id: string;
@@ -35,6 +45,7 @@ export interface PersistedJson {
     response: Parser.ResponseSummary | undefined;
   };
   requestConfig: YasguiRequestConfig;
+  validationPatterns?: ValidationPattern[];
 }
 export interface Tab {
   on(event: string | symbol, listener: (...args: any[]) => void): this;
@@ -72,6 +83,7 @@ export class Tab extends EventEmitter {
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
+  private validationDisplay?: ConstructValidationDisplay;
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
     if (!conf || conf.id === undefined) throw new Error("Expected a valid configuration to initialize tab with");
@@ -449,6 +461,15 @@ export class Tab extends EventEmitter {
     this.emit("change", this, this.persistentJson);
   }
 
+  public getValidationPatterns(): ValidationPattern[] {
+    return this.persistentJson.validationPatterns || [];
+  }
+
+  public setValidationPatterns(patterns: ValidationPattern[]) {
+    this.persistentJson.validationPatterns = patterns;
+    this.emit("change", this, this.persistentJson);
+  }
+
   /**
    * The Yasgui configuration object may contain a custom request config
    * This request config object can contain getter functions, or plain json
@@ -610,12 +631,47 @@ export class Tab extends EventEmitter {
       this.persistentJson.yasr.response = this.yasr.results.getAsStoreObject(
         this.yasgui.config.yasr.maxPersistentResponseSize,
       );
+      // Validate CONSTRUCT results if patterns are defined
+      this.performValidation();
     } else {
       // Don't persist if there is an error and remove the previous result
       this.persistentJson.yasr.response = undefined;
+      // Clear validation display on error
+      this.validationDisplay?.clear();
     }
     this.emit("change", this, this.persistentJson);
   };
+
+  private performValidation() {
+    if (!this.yasqe || !this.yasr || !this.yasr.results) return;
+
+    // Only validate CONSTRUCT queries
+    const queryType = this.yasqe.getQueryType();
+    if (queryType !== "CONSTRUCT") {
+      this.validationDisplay?.clear();
+      return;
+    }
+
+    const patterns = this.getValidationPatterns();
+    if (!patterns || patterns.length === 0) {
+      this.validationDisplay?.clear();
+      return;
+    }
+
+    // Get the bindings from the results
+    const bindings = this.yasr.results.getBindings() || undefined;
+
+    // Validate the results
+    const validationResults = validateConstructResults(bindings, patterns);
+
+    // Initialize validation display if needed
+    if (!this.validationDisplay && this.yasr.headerEl) {
+      this.validationDisplay = new ConstructValidationDisplay(this.yasr.headerEl);
+    }
+
+    // Display validation results
+    this.validationDisplay?.show(validationResults);
+  }
 
   private handleYasqeMouseDown = (event: MouseEvent) => {
     // Only handle Ctrl+Click
