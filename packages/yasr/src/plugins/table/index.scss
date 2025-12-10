@@ -28,15 +28,34 @@ Delimiters used by datatables
       align-items: center;
       margin-right: 10px;
     }
+    .copyMarkdownBtn {
+      margin-right: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border: 1px solid var(--yasgui-border-color, #ddd);
+      background-color: var(--yasgui-bg-secondary, #f7f7f7);
+      color: var(--yasgui-text-primary, #000);
+      border-radius: 3px;
+      font-size: 0.9em;
+      white-space: nowrap;
+
+      &:hover {
+        background-color: var(--yasgui-bg-tertiary, #eee);
+      }
+
+      &:active {
+        background-color: var(--yasgui-bg-primary, #fff);
+      }
+    }
   }
-  .dataTable.ellipseTable {
+  .dataTable.compactTable {
     white-space: nowrap;
     div:not(.expanded) {
       overflow: hidden;
       text-overflow: ellipsis;
     }
   }
-  .dataTable:not(.ellipseTable) {
+  .dataTable:not(.compactTable) {
     div:not(.expanded) {
       word-break: break-all;
     }
@@ -52,7 +71,7 @@ Delimiters used by datatables
     }
   }
 
-  .dataTables_wrapper {
+  .dt-container {
     font-size: 0.9em;
     min-width: 100%;
     .grip-container {
@@ -72,7 +91,7 @@ Delimiters used by datatables
       }
 
       tbody tr:hover {
-        background-color: #f9f9f9;
+        background-color: var(--yasgui-bg-tertiary, #f9f9f9);
       }
 
       thead tr th {
@@ -92,7 +111,7 @@ Delimiters used by datatables
           padding-right: 18px; //space for sort icon
         }
         &:hover {
-          background-color: #f9f9f9;
+          background-color: var(--yasgui-tab-bg, #f9f9f9);
         }
       }
 
@@ -119,34 +138,28 @@ Delimiters used by datatables
     /**
       Selector for pagination element
     */
-    div.dataTables_paginate.paging_simple_numbers {
-      a.paginate_button {
+    div.dt-paging {
+      button.dt-paging-button {
         border: none;
         background: transparent;
+        color: var(--yasgui-text-secondary, #505050);
 
         // When the buttons are disabled show the default YASR disabled color
-        .disabled {
-          color: #505050;
+        &.disabled {
+          color: var(--yasgui-text-muted, #999) !important;
         }
 
         &.current {
-          border: none;
-          background: transparent;
           text-decoration: underline !important; // dataTables made the text-decoration important
+          color: var(--yasgui-accent-color, #337ab7);
         }
 
         &:hover {
-          border: none;
-          background: transparent;
-
           // Don't override the disabled grayed out style
           &:not(.disabled) {
-            color: black !important; // dataTables made the color important
+            font-weight: bold;
+            color: var(--yasgui-text-secondary, #505050) !important;
           }
-        }
-
-        &:active {
-          box-shadow: none;
         }
       }
     }

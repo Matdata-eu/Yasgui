@@ -227,10 +227,9 @@ const getHtml = (plugin) => `
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.0.0/polyfill.js"></script>
   <style>
     body {
-	 font-family: 'Roboto', sans-serif;
+	 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 	}
 	</style>
-  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" />
   <link rel="stylesheet" href="build/yasr.min.css" />
   <link rel="stylesheet" href="build/pro-gallery.min.css">
   <link rel="stylesheet" href="build/pro-geo.min.css">
@@ -302,7 +301,7 @@ const getScreenWidth = (plugin) => {
 };
 
 let staticFileServer = new static.Server("./");
-function setupServer () {
+function setupServer() {
   return new Promise((resolve, reject) => {
     var server = http
       .createServer(function (request, response) {
@@ -319,10 +318,10 @@ function setupServer () {
       .on("error", (e) => reject(e));
   });
 }
-function wait (time) {
+function wait(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
-function waitForImagesToLoad (page) {
+function waitForImagesToLoad(page) {
   return page.evaluate(() => {
     const selectors = Array.from(document.querySelectorAll("img"));
     return Promise.all(
@@ -332,7 +331,7 @@ function waitForImagesToLoad (page) {
           img.addEventListener("load", resolve);
           img.addEventListener("error", reject);
         });
-      })
+      }),
     );
   });
 }
