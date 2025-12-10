@@ -109,8 +109,20 @@ async function buildTypeDeclarations() {
   }
 }
 
+async function updateVersion() {
+  console.log("Updating version.ts...");
+  try {
+    execSync("node updateVersion.js", { stdio: "inherit" });
+  } catch (error) {
+    console.warn("Failed to update version.ts, continuing...");
+  }
+}
+
 async function build() {
   try {
+    // Update version.ts from package.json
+    await updateVersion();
+
     // Build TypeScript declarations first
     await buildTypeDeclarations();
 
