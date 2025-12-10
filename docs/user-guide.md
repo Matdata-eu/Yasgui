@@ -528,17 +528,34 @@ Displays SELECT query results in an interactive table.
 - **Column Resizing**: Drag column borders to resize
 - **Filtering**: Filter rows by column values
 - **Cell Formatting**: URIs are clickable links, literals shown with datatypes
-- **Export**: Download results as CSV
+- **Export**: Download results as CSV or copy as Markdown
+- **Customizable Display**:
+  - **Simple View**: Toggle compact mode for cleaner display
+  - **Ellipse**: Toggle text ellipsis for long values
+  - **Prefixes**: Show/hide URI prefixes (enabled by default)
+  - **Datatypes**: Show/hide datatype annotations on literals (enabled by default)
+
+**Controls:**
+- **Simple view**: Enables compact mode without datatypes and URI brackets
+- **Ellipse**: When enabled, long cell values are truncated with "..." and can be expanded by clicking
+- **Prefixes**: When enabled, URIs are displayed with namespace prefixes (e.g., `foaf:name` instead of full URI)
+- **Datatypes**: When enabled, literals show their datatype (e.g., `"42"^^xsd:integer`)
+- **Filter**: Text field to filter rows across all columns
+- **Page size**: Dropdown to select number of rows per page (10, 50, 100, 1000, or All)
+- **Copy as Markdown**: Button to copy the entire table in Markdown format to clipboard
 
 **Best For:**
 - SELECT queries
 - Exploring structured data
 - Comparing values across multiple rows
+- Sharing results in documentation (using Markdown copy)
 
 **Usage:**
 - Execute a SELECT query
 - Table plugin activates automatically
 - Click column headers to sort
+- Use toggles to customize display
+- Click "Copy as Markdown" to copy table for pasting in Markdown documents
 - Use pagination controls at the bottom
 - Export via the download button
 
