@@ -41,9 +41,12 @@ jobs:
       - name: Build YASGUI
         run: npm run build
         env:
-          PUBLIC_PATH: /Yasgui/dev/main/
+          PUBLIC_PATH: /dev/main/
 
       # Build Docusaurus documentation
+      - name: Copy documentation files
+        run: cp -r docs/* website/docs/
+        
       - name: Install Docusaurus dependencies
         working-directory: ./website
         run: npm ci
