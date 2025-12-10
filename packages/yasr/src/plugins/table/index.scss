@@ -28,6 +28,25 @@ Delimiters used by datatables
       align-items: center;
       margin-right: 10px;
     }
+    .copyMarkdownBtn {
+      margin-right: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border: 1px solid var(--yasgui-border-color, #ddd);
+      background-color: var(--yasgui-bg-secondary, #f7f7f7);
+      color: var(--yasgui-text-primary, #000);
+      border-radius: 3px;
+      font-size: 0.9em;
+      white-space: nowrap;
+
+      &:hover {
+        background-color: var(--yasgui-bg-tertiary, #eee);
+      }
+
+      &:active {
+        background-color: var(--yasgui-bg-primary, #fff);
+      }
+    }
   }
   .dataTable.ellipseTable {
     white-space: nowrap;
@@ -123,16 +142,19 @@ Delimiters used by datatables
       a.paginate_button {
         border: none;
         background: transparent;
+        color: var(--yasgui-text-secondary, #505050);
 
         // When the buttons are disabled show the default YASR disabled color
-        .disabled {
-          color: #505050;
+        &.disabled {
+          color: var(--yasgui-text-muted, #999);
+          cursor: default;
         }
 
         &.current {
           border: none;
           background: transparent;
           text-decoration: underline !important; // dataTables made the text-decoration important
+          color: var(--yasgui-accent-color, #337ab7);
         }
 
         &:hover {
@@ -141,7 +163,7 @@ Delimiters used by datatables
 
           // Don't override the disabled grayed out style
           &:not(.disabled) {
-            color: black !important; // dataTables made the color important
+            color: var(--yasgui-button-hover, black) !important; // dataTables made the color important
           }
         }
 

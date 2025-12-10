@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 20px;
+    }
+    #theme-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    #yasr {
+      margin-top: 50px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+  <title>Yasr Table Test</title>
+</head>
+<body>
+  <button id="theme-toggle">Toggle Dark Mode</button>
+  <h1>YASR Table Plugin Test</h1>
+  <div id="yasr"></div>
+
+  <script type="module">
+    import Yasr from '../packages/yasr/src/index.ts';
+    
+    // Mock SPARQL results with different data types
+    const mockResults = {
+      "head": {
+        "vars": ["subject", "predicate", "object", "datatype", "language"]
+      },
+      "results": {
+        "bindings": [
+          {
+            "subject": { "type": "uri", "value": "http://example.org/resource/1" },
+            "predicate": { "type": "uri", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" },
+            "object": { "type": "uri", "value": "http://example.org/Thing" },
+            "datatype": { "type": "literal", "value": "Some text", "datatype": "http://www.w3.org/2001/XMLSchema#string" },
+            "language": { "type": "literal", "value": "Hello", "xml:lang": "en" }
+          },
+          {
+            "subject": { "type": "uri", "value": "http://example.org/resource/2" },
+            "predicate": { "type": "uri", "value": "http://xmlns.com/foaf/0.1/name" },
+            "object": { "type": "literal", "value": "John Doe" },
+            "datatype": { "type": "literal", "value": "42", "datatype": "http://www.w3.org/2001/XMLSchema#integer" },
+            "language": { "type": "literal", "value": "Bonjour", "xml:lang": "fr" }
+          },
+          {
+            "subject": { "type": "uri", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" },
+            "predicate": { "type": "uri", "value": "http://www.w3.org/2000/01/rdf-schema#label" },
+            "object": { "type": "literal", "value": "type" },
+            "datatype": { "type": "literal", "value": "3.14", "datatype": "http://www.w3.org/2001/XMLSchema#decimal" },
+            "language": { "type": "literal", "value": "Hola", "xml:lang": "es" }
+          }
+        ]
+      }
+    };
+
+    // Add some prefixes for testing
+    const mockPrefixes = {
+      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+      "foaf": "http://xmlns.com/foaf/0.1/",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "ex": "http://example.org/"
+    };
+
+    window.onload = function () {
+      window.yasr = new Yasr(document.getElementById("yasr"), {
+        prefixes: mockPrefixes
+      });
+      
+      // Set the mock results
+      window.yasr.setResponse({
+        response: JSON.stringify(mockResults),
+        status: 200,
+        contentType: "application/sparql-results+json"
+      }, 1000);
+
+      // Theme toggle
+      const themeToggle = document.getElementById('theme-toggle');
+      themeToggle.addEventListener('click', () => {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        themeToggle.textContent = newTheme === 'dark' ? 'Toggle Light Mode' : 'Toggle Dark Mode';
+      });
+    };
+  </script>
+</body>
+</html>

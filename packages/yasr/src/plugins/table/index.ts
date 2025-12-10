@@ -29,6 +29,8 @@ export interface PersistentConfig {
   pageSize?: number;
   compact?: boolean;
   isEllipsed?: boolean;
+  showUriPrefixes?: boolean;
+  showDatatypes?: boolean;
 }
 
 type DataRow = [number, ...(Parser.BindingValue | "")[]];
@@ -49,6 +51,8 @@ export default class Table implements Plugin<PluginConfig> {
   private tableSizeField: HTMLSelectElement | undefined;
   private tableCompactSwitch: HTMLInputElement | undefined;
   private tableEllipseSwitch: HTMLInputElement | undefined;
+  private tableUriPrefixSwitch: HTMLInputElement | undefined;
+  private tableDatatypeSwitch: HTMLInputElement | undefined;
   private tableResizer:
     | {
         reset: (options: {
@@ -109,11 +113,40 @@ export default class Table implements Plugin<PluginConfig> {
     return bindings.map((binding, rowId) => [rowId + 1, ...vars.map((variable) => binding[variable] ?? "")]);
   }
 
+  private getMarkdownTable(): string {
+    if (!this.yasr.results) return "";
+    const bindings = this.yasr.results.getBindings();
+    if (!bindings) return "";
+    const vars = this.yasr.results.getVariables();
+
+    // Helper to escape pipe characters in markdown
+    const escapePipe = (str: string) => str.replace(/\|/g, "\\|");
+
+    // Helper to get plain text value from binding
+    const getPlainValue = (binding: Parser.BindingValue | ""): string => {
+      if (binding === "") return "";
+      return escapePipe(binding.value);
+    };
+
+    // Create header row
+    let markdown = "| " + vars.map(escapePipe).join(" | ") + " |\n";
+    // Create separator row
+    markdown += "| " + vars.map(() => "---").join(" | ") + " |\n";
+    // Create data rows
+    bindings.forEach((binding) => {
+      const row = vars.map((variable) => getPlainValue(binding[variable] ?? ""));
+      markdown += "| " + row.join(" | ") + " |\n";
+    });
+
+    return markdown;
+  }
+
   private getUriLinkFromBinding(binding: Parser.BindingValue, prefixes?: { [key: string]: string }) {
     const href = sanitize(binding.value);
     let visibleString = href;
     let prefixed = false;
-    if (prefixes) {
+    // Apply URI prefixing if enabled (default true)
+    if (this.persistentConfig.showUriPrefixes !== false && prefixes) {
       for (const prefixLabel in prefixes) {
         if (visibleString.indexOf(prefixes[prefixLabel]) == 0) {
           visibleString = prefixLabel + ":" + href.substring(prefixes[prefixLabel].length);
@@ -146,11 +179,14 @@ export default class Table implements Plugin<PluginConfig> {
     // Return now when in compact mode.
     if (this.persistentConfig.compact) return stringRepresentation;
 
-    if (literalBinding["xml:lang"]) {
-      stringRepresentation = `"${stringRepresentation}"<sup>@${literalBinding["xml:lang"]}</sup>`;
-    } else if (literalBinding.datatype) {
-      const dataType = this.getUriLinkFromBinding({ type: "uri", value: literalBinding.datatype }, prefixes);
-      stringRepresentation = `"${stringRepresentation}"<sup>^^${dataType}</sup>`;
+    // Show datatypes if enabled (default true)
+    if (this.persistentConfig.showDatatypes !== false) {
+      if (literalBinding["xml:lang"]) {
+        stringRepresentation = `"${stringRepresentation}"<sup>@${literalBinding["xml:lang"]}</sup>`;
+      } else if (literalBinding.datatype) {
+        const dataType = this.getUriLinkFromBinding({ type: "uri", value: literalBinding.datatype }, prefixes);
+        stringRepresentation = `"${stringRepresentation}"<sup>^^${dataType}</sup>`;
+      }
     }
     return stringRepresentation;
   }
@@ -314,6 +350,30 @@ export default class Table implements Plugin<PluginConfig> {
     this.draw(this.persistentConfig);
     this.yasr.storePluginConfig("table", this.persistentConfig);
   };
+  private handleSetUriPrefixToggle = (event: Event) => {
+    // Store in persistentConfig
+    this.persistentConfig.showUriPrefixes = (event.target as HTMLInputElement).checked;
+    // Update the table
+    this.draw(this.persistentConfig);
+    this.yasr.storePluginConfig("table", this.persistentConfig);
+  };
+  private handleSetDatatypeToggle = (event: Event) => {
+    // Store in persistentConfig
+    this.persistentConfig.showDatatypes = (event.target as HTMLInputElement).checked;
+    // Update the table
+    this.draw(this.persistentConfig);
+    this.yasr.storePluginConfig("table", this.persistentConfig);
+  };
+  private handleCopyMarkdown = async () => {
+    const markdown = this.getMarkdownTable();
+    try {
+      await navigator.clipboard.writeText(markdown);
+      // Provide visual feedback (could be improved with a toast notification)
+      console.log("Table copied as markdown");
+    } catch (err) {
+      console.error("Failed to copy markdown:", err);
+    }
+  };
   /**
    * Draws controls on each update
    */
@@ -355,6 +415,38 @@ export default class Table implements Plugin<PluginConfig> {
     this.tableEllipseSwitch.defaultChecked = this.persistentConfig.isEllipsed !== false;
     this.tableControls.appendChild(ellipseToggleWrapper);
 
+    // URI Prefix switch
+    const uriPrefixToggleWrapper = document.createElement("div");
+    const uriPrefixSwitchComponent = document.createElement("label");
+    const uriPrefixTextComponent = document.createElement("span");
+    uriPrefixTextComponent.innerText = "Prefixes";
+    addClass(uriPrefixTextComponent, "label");
+    uriPrefixSwitchComponent.appendChild(uriPrefixTextComponent);
+    addClass(uriPrefixSwitchComponent, "switch");
+    uriPrefixToggleWrapper.appendChild(uriPrefixSwitchComponent);
+    this.tableUriPrefixSwitch = document.createElement("input");
+    uriPrefixSwitchComponent.addEventListener("change", this.handleSetUriPrefixToggle);
+    this.tableUriPrefixSwitch.type = "checkbox";
+    uriPrefixSwitchComponent.appendChild(this.tableUriPrefixSwitch);
+    this.tableUriPrefixSwitch.defaultChecked = this.persistentConfig.showUriPrefixes !== false;
+    this.tableControls.appendChild(uriPrefixToggleWrapper);
+
+    // Datatype switch
+    const datatypeToggleWrapper = document.createElement("div");
+    const datatypeSwitchComponent = document.createElement("label");
+    const datatypeTextComponent = document.createElement("span");
+    datatypeTextComponent.innerText = "Datatypes";
+    addClass(datatypeTextComponent, "label");
+    datatypeSwitchComponent.appendChild(datatypeTextComponent);
+    addClass(datatypeSwitchComponent, "switch");
+    datatypeToggleWrapper.appendChild(datatypeSwitchComponent);
+    this.tableDatatypeSwitch = document.createElement("input");
+    datatypeSwitchComponent.addEventListener("change", this.handleSetDatatypeToggle);
+    this.tableDatatypeSwitch.type = "checkbox";
+    datatypeSwitchComponent.appendChild(this.tableDatatypeSwitch);
+    this.tableDatatypeSwitch.defaultChecked = this.persistentConfig.showDatatypes !== false;
+    this.tableControls.appendChild(datatypeToggleWrapper);
+
     // Create table filter
     this.tableFilterField = document.createElement("input");
     this.tableFilterField.className = "tableFilter";
@@ -362,6 +454,14 @@ export default class Table implements Plugin<PluginConfig> {
     this.tableFilterField.setAttribute("aria-label", "Filter query results");
     this.tableControls.appendChild(this.tableFilterField);
     this.tableFilterField.addEventListener("keyup", this.handleTableSearch);
+
+    // Create markdown copy button
+    const markdownButton = document.createElement("button");
+    markdownButton.className = "copyMarkdownBtn";
+    markdownButton.textContent = "Copy as Markdown";
+    markdownButton.setAttribute("aria-label", "Copy table as markdown");
+    markdownButton.addEventListener("click", this.handleCopyMarkdown);
+    this.tableControls.appendChild(markdownButton);
 
     // Create page wrapper
     const pageSizerWrapper = document.createElement("div");
@@ -415,6 +515,10 @@ export default class Table implements Plugin<PluginConfig> {
     this.tableCompactSwitch = undefined;
     this.tableEllipseSwitch?.removeEventListener("change", this.handleSetEllipsisToggle);
     this.tableEllipseSwitch = undefined;
+    this.tableUriPrefixSwitch?.removeEventListener("change", this.handleSetUriPrefixToggle);
+    this.tableUriPrefixSwitch = undefined;
+    this.tableDatatypeSwitch?.removeEventListener("change", this.handleSetDatatypeToggle);
+    this.tableDatatypeSwitch = undefined;
     // Empty controls
     while (this.tableControls?.firstChild) this.tableControls.firstChild.remove();
     this.tableControls?.remove();
