@@ -266,7 +266,7 @@ export class Tab extends EventEmitter {
     this.controlBarEl.appendChild(this.orientationToggleButton);
   }
 
-  private updateOrientationToggleIcon() {
+  public updateOrientationToggleIcon() {
     if (!this.orientationToggleButton) return;
 
     // Show the icon for the layout we'll switch TO (not the current layout)
@@ -279,24 +279,38 @@ export class Tab extends EventEmitter {
   public toggleOrientation() {
     if (!this.rootEl) return;
 
-    // Remove old orientation class
-    removeClass(this.rootEl, `orientation-${this.currentOrientation}`);
-
     // Toggle orientation
-    this.currentOrientation = this.currentOrientation === "vertical" ? "horizontal" : "vertical";
+    const newOrientation = this.currentOrientation === "vertical" ? "horizontal" : "vertical";
 
-    // Add new orientation class
-    addClass(this.rootEl, `orientation-${this.currentOrientation}`);
+    // Update global config
+    this.yasgui.config.orientation = newOrientation;
 
-    // Update button icon
-    this.updateOrientationToggleIcon();
+    // Apply to all tabs
+    for (const tabId in this.yasgui._tabs) {
+      const tab = this.yasgui._tabs[tabId];
+      if (tab && tab.rootEl) {
+        // Remove old orientation class
+        removeClass(tab.rootEl, `orientation-${tab.currentOrientation}`);
 
-    // Refresh components to adjust to new layout
-    if (this.yasqe) {
-      this.yasqe.refresh();
-    }
-    if (this.yasr) {
-      this.yasr.refresh();
+        // Update tab's orientation
+        tab.currentOrientation = newOrientation;
+
+        // Add new orientation class
+        addClass(tab.rootEl, `orientation-${newOrientation}`);
+
+        // Update button icon if it exists
+        if (tab.orientationToggleButton) {
+          tab.updateOrientationToggleIcon();
+        }
+
+        // Refresh components to adjust to new layout
+        if (tab.yasqe) {
+          tab.yasqe.refresh();
+        }
+        if (tab.yasr) {
+          tab.yasr.refresh();
+        }
+      }
     }
   }
   public getYasqe() {
