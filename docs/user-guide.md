@@ -331,6 +331,83 @@ Custom buttons appear alongside predefined buttons and persist across browser se
 - Multiple buttons can be displayed for different endpoints
 - Each button shows its label for easy identification
 
+### Configuration Import/Export
+
+Backup, share, and migrate your YASGUI configuration using RDF Turtle format. This feature allows you to export all your settings, tabs, queries, and preferences, then import them on another device or browser.
+
+**Features:**
+- **Export to file**: Download your configuration as a `.ttl` file
+- **Copy to clipboard**: Quickly copy configuration for sharing
+- **Import from file**: Upload a previously exported configuration
+- **Paste from clipboard**: Import configuration directly from clipboard
+- **Drag & drop**: Drop a `.ttl` file to import configuration
+- **RDF/Turtle format**: Standard, semantic format for configuration data
+
+**Configuration Ontology:**
+
+YASGUI uses a custom RDF ontology to represent configuration:
+- Namespace: `http://yasgui.org/ontology#`
+- Classes: `Configuration`, `Tab`
+- Properties: `activeTab`, `prefixes`, `endpoint`, `query`, `tabName`, etc.
+
+**What Gets Exported:**
+- All query tabs and their content
+- Endpoint configurations
+- Saved prefixes
+- Custom endpoint buttons
+- Auto-capture settings
+- Editor preferences
+
+**How to Export Configuration:**
+1. Click the Settings button (⚙) in the control bar
+2. Navigate to the "Import/Export" tab
+3. Choose export method:
+   - **📋 Copy to Clipboard**: Copies configuration as RDF Turtle text
+   - **💾 Download as File**: Downloads as `yasgui-config.ttl`
+4. Share the file or clipboard content with others, or save it for backup
+
+**How to Import Configuration:**
+1. Click the Settings button (⚙) in the control bar
+2. Navigate to the "Import/Export" tab
+3. Choose import method:
+   - **Drag & drop**: Drag a `.ttl` file onto the drop zone
+   - **📂 Browse Files**: Click to select a file from your computer
+   - **📋 Paste from Clipboard**: Import directly from clipboard
+4. Confirm the import when prompted
+5. Reload the page to see the imported configuration
+
+**Example Configuration (RDF Turtle):**
+```turtle
+@prefix yasgui: <http://yasgui.org/ontology#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+[] a yasgui:Configuration ;
+  yasgui:activeTab "tab1" ;
+  yasgui:prefixes """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>""" ;
+  yasgui:autoCaptureEnabled "true"^^xsd:boolean ;
+  yasgui:tab [
+    yasgui:tabId "tab1" ;
+    yasgui:tabName "My Query" ;
+    yasgui:query "SELECT * WHERE { ?s ?p ?o } LIMIT 10" ;
+    yasgui:endpoint "https://dbpedia.org/sparql" ;
+    yasgui:requestMethod "POST"
+  ] .
+```
+
+**Use Cases:**
+- **Backup**: Export configuration before clearing browser data
+- **Migration**: Move your setup to a different browser or device
+- **Sharing**: Share query collections with colleagues
+- **Version Control**: Track configuration changes over time
+- **Collaboration**: Distribute standardized query setups to teams
+
+**Important Notes:**
+- Import will replace your current configuration (confirm before proceeding)
+- Page reload is required to fully apply imported configuration
+- Configuration is stored in browser's local storage
+- Export includes all tabs and queries, but not query execution results
+
 ### URI Explorer
 
 Quickly explore RDF resources by Ctrl+clicking on URIs in your query.

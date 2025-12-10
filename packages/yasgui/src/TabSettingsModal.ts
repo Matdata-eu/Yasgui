@@ -1,6 +1,7 @@
 import { addClass, removeClass } from "@matdata/yasgui-utils";
 import "./TabSettingsModal.scss";
 import Tab from "./Tab";
+import * as ConfigExportImport from "./ConfigExportImport";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -136,10 +137,16 @@ export default class TabSettingsModal {
     addClass(endpointsTab, "modalTabButton");
     endpointsTab.onclick = () => this.switchTab("endpoints");
 
+    const importExportTab = document.createElement("button");
+    importExportTab.textContent = "Import/Export";
+    addClass(importExportTab, "modalTabButton");
+    importExportTab.onclick = () => this.switchTab("importexport");
+
     tabsContainer.appendChild(requestTab);
     tabsContainer.appendChild(prefixTab);
     tabsContainer.appendChild(editorTab);
     tabsContainer.appendChild(endpointsTab);
+    tabsContainer.appendChild(importExportTab);
     body.appendChild(tabsContainer);
 
     // Tab content containers
@@ -163,10 +170,16 @@ export default class TabSettingsModal {
     endpointsContent.id = "endpoints-content";
     this.drawEndpointButtonsSettings(endpointsContent);
 
+    const importExportContent = document.createElement("div");
+    addClass(importExportContent, "modalTabContent");
+    importExportContent.id = "importexport-content";
+    this.drawImportExportSettings(importExportContent);
+
     body.appendChild(requestContent);
     body.appendChild(prefixContent);
     body.appendChild(editorContent);
     body.appendChild(endpointsContent);
+    body.appendChild(importExportContent);
 
     this.modalContent.appendChild(body);
 
@@ -202,7 +215,8 @@ export default class TabSettingsModal {
         (tabName === "request" && index === 0) ||
         (tabName === "prefix" && index === 1) ||
         (tabName === "editor" && index === 2) ||
-        (tabName === "endpoints" && index === 3)
+        (tabName === "endpoints" && index === 3) ||
+        (tabName === "importexport" && index === 4)
       ) {
         addClass(btn as HTMLElement, "active");
       } else {
@@ -716,6 +730,214 @@ export default class TabSettingsModal {
     // In dark mode, show moon icon (clicking will switch to light)
     // In light mode, show sun icon (clicking will switch to dark)
     return currentTheme === "dark" ? MOON_ICON : SUN_ICON;
+  }
+
+  private drawImportExportSettings(container: HTMLElement) {
+    // Export Section
+    const exportSection = document.createElement("div");
+    addClass(exportSection, "settingsSection");
+
+    const exportLabel = document.createElement("label");
+    exportLabel.textContent = "Export Configuration";
+    addClass(exportLabel, "settingsLabel");
+
+    const exportHelp = document.createElement("div");
+    exportHelp.textContent =
+      "Export your YASGUI configuration in RDF Turtle format. This includes tabs, queries, endpoints, and preferences.";
+    addClass(exportHelp, "settingsHelp");
+
+    const exportButtonsContainer = document.createElement("div");
+    addClass(exportButtonsContainer, "exportButtons");
+
+    const copyButton = document.createElement("button");
+    copyButton.textContent = "📋 Copy to Clipboard";
+    copyButton.type = "button";
+    addClass(copyButton, "secondaryButton");
+    copyButton.onclick = async () => {
+      try {
+        const config = this.tab.yasgui.persistentConfig["persistedJson"];
+        await ConfigExportImport.copyConfigToClipboard(config);
+        this.showNotification("Configuration copied to clipboard!", "success");
+      } catch (error) {
+        this.showNotification("Failed to copy to clipboard: " + (error as Error).message, "error");
+      }
+    };
+
+    const downloadButton = document.createElement("button");
+    downloadButton.textContent = "💾 Download as File";
+    downloadButton.type = "button";
+    addClass(downloadButton, "primaryButton");
+    downloadButton.onclick = () => {
+      try {
+        const config = this.tab.yasgui.persistentConfig["persistedJson"];
+        ConfigExportImport.downloadConfigAsFile(config);
+        this.showNotification("Configuration downloaded!", "success");
+      } catch (error) {
+        this.showNotification("Failed to download: " + (error as Error).message, "error");
+      }
+    };
+
+    exportButtonsContainer.appendChild(copyButton);
+    exportButtonsContainer.appendChild(downloadButton);
+
+    exportSection.appendChild(exportLabel);
+    exportSection.appendChild(exportHelp);
+    exportSection.appendChild(exportButtonsContainer);
+    container.appendChild(exportSection);
+
+    // Import Section
+    const importSection = document.createElement("div");
+    addClass(importSection, "settingsSection");
+
+    const importLabel = document.createElement("label");
+    importLabel.textContent = "Import Configuration";
+    addClass(importLabel, "settingsLabel");
+
+    const importHelp = document.createElement("div");
+    importHelp.textContent = "Import a previously exported configuration in RDF Turtle format.";
+    addClass(importHelp, "settingsHelp");
+
+    // Drag and drop area
+    const dropZone = document.createElement("div");
+    addClass(dropZone, "dropZone");
+    dropZone.innerHTML = `
+      <div class="dropZoneContent">
+        <div class="dropZoneIcon">📁</div>
+        <div class="dropZoneText">Drag & drop a .ttl file here</div>
+        <div class="dropZoneOr">or</div>
+      </div>
+    `;
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".ttl,.turtle,text/turtle";
+    fileInput.style.display = "none";
+    fileInput.id = "config-file-input";
+
+    const browseButton = document.createElement("button");
+    browseButton.textContent = "📂 Browse Files";
+    browseButton.type = "button";
+    addClass(browseButton, "secondaryButton");
+    browseButton.onclick = () => fileInput.click();
+
+    const pasteButton = document.createElement("button");
+    pasteButton.textContent = "📋 Paste from Clipboard";
+    pasteButton.type = "button";
+    addClass(pasteButton, "secondaryButton");
+    pasteButton.onclick = async () => {
+      try {
+        const content = await ConfigExportImport.readConfigFromClipboard();
+        await this.importConfiguration(content);
+      } catch (error) {
+        this.showNotification("Failed to read from clipboard: " + (error as Error).message, "error");
+      }
+    };
+
+    // File input change handler
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          const content = await ConfigExportImport.readConfigFromFile(file);
+          await this.importConfiguration(content);
+        } catch (error) {
+          this.showNotification("Failed to read file: " + (error as Error).message, "error");
+        }
+      }
+    };
+
+    // Drag and drop handlers
+    dropZone.ondragover = (e) => {
+      e.preventDefault();
+      addClass(dropZone, "dragover");
+    };
+
+    dropZone.ondragleave = () => {
+      removeClass(dropZone, "dragover");
+    };
+
+    dropZone.ondrop = async (e) => {
+      e.preventDefault();
+      removeClass(dropZone, "dragover");
+
+      const file = e.dataTransfer?.files?.[0];
+      if (file) {
+        try {
+          const content = await ConfigExportImport.readConfigFromFile(file);
+          await this.importConfiguration(content);
+        } catch (error) {
+          this.showNotification("Failed to read file: " + (error as Error).message, "error");
+        }
+      }
+    };
+
+    const importButtonsContainer = document.createElement("div");
+    addClass(importButtonsContainer, "importButtons");
+    importButtonsContainer.appendChild(browseButton);
+    importButtonsContainer.appendChild(pasteButton);
+
+    dropZone.appendChild(importButtonsContainer);
+
+    importSection.appendChild(importLabel);
+    importSection.appendChild(importHelp);
+    importSection.appendChild(dropZone);
+    importSection.appendChild(fileInput);
+    container.appendChild(importSection);
+  }
+
+  private async importConfiguration(turtleContent: string) {
+    try {
+      const parsedConfig = ConfigExportImport.parseFromTurtle(turtleContent);
+
+      // Confirm with user before importing
+      const confirmMsg = `This will replace your current configuration with ${parsedConfig.tabs?.length || 0} tab(s). Continue?`;
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      // Merge the parsed config with existing config
+      const currentConfig = this.tab.yasgui.persistentConfig["persistedJson"];
+
+      // Update the configuration
+      if (parsedConfig.endpointHistory) {
+        currentConfig.endpointHistory = parsedConfig.endpointHistory;
+      }
+      if (parsedConfig.prefixes !== undefined) {
+        currentConfig.prefixes = parsedConfig.prefixes;
+      }
+      if (parsedConfig.autoCaptureEnabled !== undefined) {
+        currentConfig.autoCaptureEnabled = parsedConfig.autoCaptureEnabled;
+      }
+      if (parsedConfig.customEndpointButtons) {
+        currentConfig.customEndpointButtons = parsedConfig.customEndpointButtons;
+      }
+      if (parsedConfig.tabs && parsedConfig.tabConfig) {
+        currentConfig.tabs = parsedConfig.tabs;
+        currentConfig.tabConfig = parsedConfig.tabConfig;
+        currentConfig.active = parsedConfig.active;
+      }
+
+      // Save to storage
+      this.tab.yasgui.persistentConfig["toStorage"]();
+
+      this.showNotification("Configuration imported successfully! Reload the page to see changes.", "success");
+    } catch (error) {
+      this.showNotification("Failed to import configuration: " + (error as Error).message, "error");
+    }
+  }
+
+  private showNotification(message: string, type: "success" | "error") {
+    const notification = document.createElement("div");
+    addClass(notification, "importExportNotification", type);
+    notification.textContent = message;
+
+    this.modalContent.appendChild(notification);
+
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 5000);
   }
 
   public destroy() {
