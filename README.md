@@ -25,39 +25,21 @@
 
 The **documentation for YASGUI is hosted on GitHub Pages**:
 
-- **📚 Documentation Website**: [https://matdata-eu.github.io/Yasgui/](https://matdata-eu.github.io/Yasgui/)
+- **📚 Documentation Website**: [https://yasgui-doc.matdata.eu/](https://matdata-eu.github.io/Yasgui/)
   - User Guide, Developer Guide, API Reference
   - Built with Docusaurus
   - Version-tagged with the repository
 
-- **🚀 Development Build**: [https://matdata-eu.github.io/Yasgui/dev/main/](https://matdata-eu.github.io/Yasgui/dev/main/)
+- **🚀 Development Build**: [https://yasgui-doc.matdata.eu/dev/main/](https://matdata-eu.github.io/Yasgui/dev/main/)
   - Live build from the main branch
   - Updated automatically with every commit
   - Test latest features before release
-
-### GitHub Pages Structure
-
-```
-https://matdata-eu.github.io/Yasgui/
-├── /                    # Documentation (Docusaurus)
-│   ├── docs/
-│   │   ├── user-guide
-│   │   └── developer-guide
-│   └── ...
-└── /dev/main/          # Development build of YASGUI app
-    └── index.html
-```
 
 The documentation is version-tagged with the repository, ensuring consistency between code and documentation across releases.
 
 ## Features
 
 YASGUI provides a complete SPARQL development environment with powerful features:
-
-### 🎨 Themes & Layouts
-- **[Light & Dark Themes](./docs/user-guide.md#themes)** - Seamless theme switching with persistent preferences
-- **[Flexible Layouts](./docs/user-guide.md#layout-orientation)** - Vertical or horizontal editor/results arrangement
-- **System Detection** - Automatically matches your OS theme preference
 
 ### ✏️ Advanced Query Editor
 - **[SPARQL Syntax Highlighting](./docs/user-guide.md#yasqe-query-editor)** - Color-coded SPARQL with error detection
@@ -75,7 +57,11 @@ YASGUI provides a complete SPARQL development environment with powerful features
 - **[Boolean Plugin](./docs/user-guide.md#boolean-plugin)** - Visual true/false indicators for ASK queries
 - **[Error Plugin](./docs/user-guide.md#error-plugin)** - Detailed error diagnostics
 
-### 🔧 Developer Features
+### 🎨 Themes & Layouts
+- **[Light & Dark Themes](./docs/user-guide.md#themes)** - Seamless theme switching with persistent preferences
+- **[Flexible Layouts](./docs/user-guide.md#layout-orientation)** - Vertical or horizontal editor/results arrangement
+
+### 🔧 Expert Features
 - **[Multiple Tabs](./docs/user-guide.md#query-tabs)** - Work on multiple queries simultaneously
 - **[Endpoint Management](./docs/user-guide.md#endpoint-quick-switch)** - Quick-switch between SPARQL endpoints
 - **[Persistent Storage](./docs/user-guide.md#query-history-and-persistence)** - Auto-save queries and preferences
@@ -191,4 +177,4 @@ This is a fork from [Zazuko](https://github.com/zazuko/Yasgui) who forked it fro
 
 Release notes and changelog are available in the [Releases](https://github.com/Matdata-eu/Yasgui/releases) section.
 
-For instructions on writing release notes, see [RELEASE_NOTES_INSTRUCTIONS.md](./docs/RELEASE_NOTES_INSTRUCTIONS.md)
+For instructions on writing release notes, see [release_notes_instructions.md](./docs/release_notes_instructions.md)

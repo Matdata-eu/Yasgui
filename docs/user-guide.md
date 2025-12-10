@@ -304,7 +304,7 @@ Quickly explore RDF resources by Ctrl+clicking on URIs in your query.
 4. View the resource's connections in the results viewer
 
 **Example:**
-Ctrl+clicking on `http://dbpedia.org/resource/Amsterdam` automatically queries for all triples related to Amsterdam.
+Ctrl+clicking on `http://dbpedia.org/resource/European_Union` automatically queries for all triples related to the European Union.
 
 ### Query Tabs
 
@@ -587,10 +587,10 @@ Master YASGUI with these keyboard shortcuts for faster querying.
 | `Ctrl+Enter` / `Cmd+Enter` | Execute query |
 | `Ctrl+Space` | Trigger autocomplete |
 | `Ctrl+S` | Save query to local storage |
-| `Shift+Ctrl+F` | Format query |
+| `Ctrl+Shift+F` | Format query |
 | `Ctrl+/` | Toggle comment on selected lines |
-| `Shift+Ctrl+D` | Duplicate current line |
-| `Shift+Ctrl+K` | Delete current line |
+| `Ctrl+Shift+D` | Duplicate current line |
+| `Ctrl+Shift+K` | Delete current line |
 | `Esc` | Remove focus from editor |
 | `Ctrl+Click` (on URI) | Explore URI connections |
 
@@ -712,6 +712,7 @@ CORS (Cross-Origin Resource Sharing) is a browser security feature. Some SPARQL 
 3. **Check Storage Limits**: Browser might have cleared old data
 4. **Export Important Queries**: Save critical queries externally
 5. **Use Bookmarks**: Bookmark queries as URLs for safekeeping
+6. **Same browser**: Use the same browser and profile to access YASGUI
 
 #### Theme/Layout Not Saving
 

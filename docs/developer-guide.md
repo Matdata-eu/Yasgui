@@ -32,39 +32,39 @@ YASGUI is built as a monorepo with four main packages, each serving a specific p
 ### Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                          YASGUI                             │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │              Tab Management Layer                    │  │
-│  │  - Multiple query tabs                               │  │
-│  │  - Tab persistence                                   │  │
-│  │  - Theme management                                  │  │
-│  │  - Settings & configuration                          │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                                                             │
-│  ┌────────────────────┐         ┌─────────────────────┐  │
-│  │      YASQE          │         │       YASR          │  │
-│  │  (Query Editor)     │         │  (Results Viewer)   │  │
-│  │                     │         │                     │  │
+┌─────────────────────────────────────────────────────────┐
+│                          YASGUI                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │              Tab Management Layer                 │  │
+│  │  - Multiple query tabs                            │  │
+│  │  - Tab persistence                                │  │
+│  │  - Theme management                               │  │
+│  │  - Settings & configuration                       │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                         │
+│  ┌────────────────────┐         ┌────────────────────┐  │
+│  │      YASQE         │         │       YASR         │  │
+│  │  (Query Editor)    │         │  (Results Viewer)  │  │
+│  │                    │         │                    │  │
 │  │  ┌──────────────┐  │         │  ┌──────────────┐  │  │
 │  │  │ CodeMirror   │  │         │  │  Plugins     │  │  │
 │  │  │ - Syntax     │  │         │  │  - Table     │  │  │
 │  │  │ - Validation │  │         │  │  - Graph     │  │  │
 │  │  │ - Autocomplete│ │         │  │  - Geo       │  │  │
 │  │  └──────────────┘  │         │  │  - Boolean   │  │  │
-│  │                     │         │  │  - Response  │  │  │
+│  │                    │         │  │  - Response  │  │  │
 │  │  ┌──────────────┐  │         │  │  - Error     │  │  │
 │  │  │ SPARQL       │  │         │  └──────────────┘  │  │
-│  │  │ Execution    │  ├────────▶│                     │  │
+│  │  │ Execution    │  ├───────▶│                    │  │
 │  │  └──────────────┘  │         │  ┌──────────────┐  │  │
-│  │                     │         │  │ Parser       │  │  │
+│  │                    │         │  │ Parser       │  │  │
 │  │  ┌──────────────┐  │         │  │ - JSON       │  │  │
 │  │  │ Prefixes     │  │         │  │ - XML        │  │  │
 │  │  │ Management   │  │         │  │ - CSV        │  │  │
 │  │  └──────────────┘  │         │  │ - Turtle     │  │  │
 │  └────────────────────┘         │  └──────────────┘  │  │
-│                                   └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+│                                 └────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
                               │
                               │ Uses
                               ▼
@@ -837,7 +837,6 @@ const yasgui = new Yasgui(document.getElementById("yasgui"), {
 - **User-Defined Buttons**: Users can add their own custom buttons through the Settings modal
 - **One-Click Switching**: Instantly switch to a different SPARQL endpoint with a single click
 - **Persistent Storage**: User-defined buttons are saved in local storage
-- **Fully Themed**: Buttons automatically adapt to light and dark themes
 - **Accessible**: Buttons include ARIA labels for accessibility
 
 **Behavior:**
