@@ -57,7 +57,7 @@ export default class Table implements Plugin<PluginConfig> {
           partialRefresh?: boolean;
           headerOnly?: boolean;
         }) => void;
-        onResize: () => {};
+        onResize: () => void;
       }
     | undefined;
   public helpReference = "https://docs.triply.cc/yasgui/#table";
@@ -220,7 +220,7 @@ export default class Table implements Plugin<PluginConfig> {
     this.tableEl.style.removeProperty("width");
     this.tableEl.style.width = this.tableEl.clientWidth + "px";
     const widths = Array.from(this.tableEl.querySelectorAll("th")).map((h) => h.offsetWidth - 26);
-    this.tableResizer = new ColumnResizer.default(this.tableEl, {
+    this.tableResizer = new ColumnResizer(this.tableEl, {
       widths: this.persistentConfig.compact === true ? widths : [this.getSizeFirstColumn(), ...widths.slice(1)],
       partialRefresh: true,
       onResize: this.persistentConfig.isEllipsed !== false && this.setEllipsisHandlers,

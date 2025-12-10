@@ -11,6 +11,8 @@ export interface PersistedJson {
   prefixes?: string;
   autoCaptureEnabled?: boolean;
   customEndpointButtons?: EndpointButton[];
+  theme?: "light" | "dark";
+  orientation?: "vertical" | "horizontal";
 }
 function getDefaults(): PersistedJson {
   return {

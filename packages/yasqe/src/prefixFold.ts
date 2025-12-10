@@ -15,6 +15,7 @@ export function findFirstPrefixLine(yasqe: Yasqe) {
 
 export function findFirstPrefix(yasqe: Yasqe, line: number, startFromCharIndex = 0, lineText?: string) {
   if (!lineText) lineText = yasqe.getDoc().getLine(line);
+  if (!lineText) return undefined;
   lineText = lineText.toUpperCase();
   const charIndex = lineText.indexOf(PREFIX_KEYWORD, startFromCharIndex);
   if (charIndex >= 0) {
