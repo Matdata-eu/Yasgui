@@ -258,6 +258,41 @@ WHERE {
 - Understand which variables are actually bound in your query
 - Improve query quality without blocking execution
 
+### Code Snippets
+
+Quickly insert common SPARQL patterns and query types using the code snippets bar.
+
+**Features:**
+- **Quick insertion**: Click a snippet button to insert code at your cursor position
+- **Default snippets**: Includes 5 useful SPARQL snippets (SELECT, CONSTRUCT, ASK, FILTER, OPTIONAL)
+- **Dropdown grouping**: When more than 10 snippets are configured, they are grouped in dropdown menus
+- **Customizable**: Developers can configure custom snippets
+- **Visibility toggle**: Show or hide the snippets bar based on preference
+
+**How to Use:**
+1. Position your cursor where you want to insert code
+2. Click a snippet button in the snippets bar (below the toolbar)
+3. The code is inserted at your cursor position
+4. Continue editing as needed
+
+**Default Snippets:**
+- **SELECT**: Basic SELECT query template
+- **CONSTRUCT**: CONSTRUCT query template
+- **ASK**: ASK query template
+- **FILTER**: FILTER pattern example
+- **OPTIONAL**: OPTIONAL pattern template
+
+**Grouped Snippets (>10):**
+When more than 10 snippets are configured, they are organized into dropdown menus by group:
+- Click a group button (e.g., "Query Types", "Patterns") to open the dropdown
+- Click a snippet in the dropdown to insert it
+- The dropdown closes automatically after insertion
+
+**Configuration:**
+- Snippets bar visibility is saved in user preferences
+- Developers can configure custom snippets with label, code, and group properties
+- The bar is hidden automatically when no snippets are configured
+
 ### Fullscreen Mode
 
 Maximize screen space for editing or viewing results.

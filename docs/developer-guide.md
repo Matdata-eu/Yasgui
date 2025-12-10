@@ -650,6 +650,152 @@ SELECT ?label WHERE {
 });
 ```
 
+#### Code Snippets
+
+Configure reusable code snippets that users can quickly insert into their queries.
+
+**Configuration Options:**
+
+```typescript
+interface Snippet {
+  label: string;      // Button label
+  code: string;       // Code to insert
+  group?: string;     // Optional group name (for dropdowns when >10 snippets)
+}
+
+interface YasqeConfig {
+  // ... other config options
+  
+  // Code snippets
+  snippets: Snippet[];           // default: 5 SPARQL snippets
+  showSnippetsBar: boolean;      // default: true
+}
+```
+
+**Basic Example:**
+
+```javascript
+import Yasqe from '@matdata/yasqe';
+
+const yasqe = new Yasqe(document.getElementById('yasqe'), {
+  snippets: [
+    {
+      label: 'SELECT',
+      code: 'SELECT * WHERE {\n  ?s ?p ?o .\n} LIMIT 10'
+    },
+    {
+      label: 'FILTER',
+      code: 'FILTER (?var > 100)'
+    },
+    {
+      label: 'OPTIONAL',
+      code: 'OPTIONAL {\n  ?s ?p ?o .\n}'
+    }
+  ]
+});
+```
+
+**Grouped Snippets (Dropdown):**
+
+When you have more than 10 snippets, use the `group` property to organize them into dropdown menus:
+
+```javascript
+const yasqe = new Yasqe(document.getElementById('yasqe'), {
+  snippets: [
+    // Query Types group
+    {
+      label: 'SELECT',
+      code: 'SELECT * WHERE {\n  ?s ?p ?o .\n} LIMIT 10',
+      group: 'Query Types'
+    },
+    {
+      label: 'CONSTRUCT',
+      code: 'CONSTRUCT {\n  ?s ?p ?o .\n} WHERE {\n  ?s ?p ?o .\n}',
+      group: 'Query Types'
+    },
+    {
+      label: 'ASK',
+      code: 'ASK {\n  ?s ?p ?o .\n}',
+      group: 'Query Types'
+    },
+    
+    // Patterns group
+    {
+      label: 'FILTER',
+      code: 'FILTER (?var > 100)',
+      group: 'Patterns'
+    },
+    {
+      label: 'OPTIONAL',
+      code: 'OPTIONAL {\n  ?s ?p ?o .\n}',
+      group: 'Patterns'
+    },
+    {
+      label: 'UNION',
+      code: '{ ?s ?p ?o . } UNION { ?s ?p2 ?o2 . }',
+      group: 'Patterns'
+    },
+    
+    // Modifiers group
+    {
+      label: 'ORDER BY',
+      code: 'ORDER BY ?var',
+      group: 'Modifiers'
+    },
+    {
+      label: 'LIMIT',
+      code: 'LIMIT 10',
+      group: 'Modifiers'
+    }
+    // ... more snippets
+  ]
+});
+```
+
+**API Methods:**
+
+```javascript
+// Hide the snippets bar
+yasqe.setSnippetsBarVisible(false);
+
+// Show the snippets bar
+yasqe.setSnippetsBarVisible(true);
+
+// Check if snippets bar is visible
+const isVisible = yasqe.getSnippetsBarVisible();
+```
+
+**Behavior:**
+- When 10 or fewer snippets: All displayed as individual buttons
+- When more than 10 snippets: Grouped into dropdown menus by the `group` property
+- Snippets without a group appear as individual buttons
+- User visibility preference is saved in localStorage
+- Snippets bar is hidden automatically when `snippets` array is empty
+- Code is inserted at the current cursor position
+
+**Default Snippets:**
+
+YASQE includes 5 default SPARQL snippets:
+1. SELECT query template
+2. CONSTRUCT query template
+3. ASK query template
+4. FILTER pattern
+5. OPTIONAL pattern
+
+**Disabling Snippets:**
+
+```javascript
+// Disable snippets bar
+const yasqe = new Yasqe(document.getElementById('yasqe'), {
+  showSnippetsBar: false
+});
+
+// Or provide empty array
+const yasqe = new Yasqe(document.getElementById('yasqe'), {
+  snippets: []
+});
+```
+
 ### YASR Configuration
 
 YASR (results viewer) specific configuration options:
