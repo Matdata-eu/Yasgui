@@ -2,6 +2,7 @@ import { addClass, removeClass } from "@matdata/yasgui-utils";
 import "./TabSettingsModal.scss";
 import Tab from "./Tab";
 import * as ConfigExportImport from "./ConfigExportImport";
+import { VERSION } from "./version";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -142,11 +143,17 @@ export default class TabSettingsModal {
     addClass(importExportTab, "modalTabButton");
     importExportTab.onclick = () => this.switchTab("importexport");
 
+    const aboutTab = document.createElement("button");
+    aboutTab.textContent = "About";
+    addClass(aboutTab, "modalTabButton");
+    aboutTab.onclick = () => this.switchTab("about");
+
     tabsContainer.appendChild(requestTab);
     tabsContainer.appendChild(prefixTab);
     tabsContainer.appendChild(editorTab);
     tabsContainer.appendChild(endpointsTab);
     tabsContainer.appendChild(importExportTab);
+    tabsContainer.appendChild(aboutTab);
     body.appendChild(tabsContainer);
 
     // Tab content containers
@@ -175,11 +182,17 @@ export default class TabSettingsModal {
     importExportContent.id = "importexport-content";
     this.drawImportExportSettings(importExportContent);
 
+    const aboutContent = document.createElement("div");
+    addClass(aboutContent, "modalTabContent");
+    aboutContent.id = "about-content";
+    this.drawAboutSettings(aboutContent);
+
     body.appendChild(requestContent);
     body.appendChild(prefixContent);
     body.appendChild(editorContent);
     body.appendChild(endpointsContent);
     body.appendChild(importExportContent);
+    body.appendChild(aboutContent);
 
     this.modalContent.appendChild(body);
 
@@ -216,7 +229,8 @@ export default class TabSettingsModal {
         (tabName === "prefix" && index === 1) ||
         (tabName === "editor" && index === 2) ||
         (tabName === "endpoints" && index === 3) ||
-        (tabName === "importexport" && index === 4)
+        (tabName === "importexport" && index === 4) ||
+        (tabName === "about" && index === 5)
       ) {
         addClass(btn as HTMLElement, "active");
       } else {
@@ -938,6 +952,96 @@ export default class TabSettingsModal {
         notification.parentNode.removeChild(notification);
       }
     }, 5000);
+  }
+
+  private drawAboutSettings(container: HTMLElement) {
+    // About Section
+    const aboutSection = document.createElement("div");
+    addClass(aboutSection, "settingsSection", "aboutSection");
+
+    // YASGUI Title and Version
+    const titleContainer = document.createElement("div");
+    addClass(titleContainer, "aboutTitle");
+
+    const title = document.createElement("h3");
+    title.textContent = "YASGUI";
+    addClass(title, "aboutMainTitle");
+
+    const versionBadge = document.createElement("span");
+    versionBadge.textContent = `v${VERSION}`;
+    addClass(versionBadge, "versionBadge");
+
+    titleContainer.appendChild(title);
+    titleContainer.appendChild(versionBadge);
+    aboutSection.appendChild(titleContainer);
+
+    // Subtitle
+    const subtitle = document.createElement("p");
+    subtitle.textContent = "Yet Another SPARQL GUI";
+    addClass(subtitle, "aboutSubtitle");
+    aboutSection.appendChild(subtitle);
+
+    // Links Section
+    const linksSection = document.createElement("div");
+    addClass(linksSection, "aboutLinks");
+
+    // Documentation Link
+    const docsLink = this.createAboutLink(
+      "📚 Documentation",
+      "https://yasgui-docs.matdata.eu/",
+      "View the complete documentation and guides",
+    );
+    linksSection.appendChild(docsLink);
+
+    // Release Notes Link
+    const releasesLink = this.createAboutLink(
+      "📝 Release Notes",
+      "https://github.com/Matdata-eu/Yasgui/releases",
+      "See what's new in the latest releases",
+    );
+    linksSection.appendChild(releasesLink);
+
+    // Issues/Support Link
+    const issuesLink = this.createAboutLink(
+      "🐛 Report Issues & Get Support",
+      "https://github.com/Matdata-eu/Yasgui/issues",
+      "Report bugs, request features, or ask for help",
+    );
+    linksSection.appendChild(issuesLink);
+
+    aboutSection.appendChild(linksSection);
+
+    // Footer info
+    const footerInfo = document.createElement("div");
+    addClass(footerInfo, "aboutFooter");
+    footerInfo.innerHTML = `
+      <p>YASGUI is an open-source project maintained by <a href="https://matdata.eu" target="_blank" rel="noopener noreferrer">Matdata</a>.</p>
+      <p>Licensed under the MIT License.</p>
+    `;
+    aboutSection.appendChild(footerInfo);
+
+    container.appendChild(aboutSection);
+  }
+
+  private createAboutLink(label: string, url: string, description: string): HTMLElement {
+    const linkContainer = document.createElement("div");
+    addClass(linkContainer, "aboutLinkItem");
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = label;
+    addClass(link, "aboutLink");
+
+    const desc = document.createElement("p");
+    desc.textContent = description;
+    addClass(desc, "aboutLinkDescription");
+
+    linkContainer.appendChild(link);
+    linkContainer.appendChild(desc);
+
+    return linkContainer;
   }
 
   public destroy() {
