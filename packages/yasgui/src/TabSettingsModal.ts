@@ -147,7 +147,7 @@ export default class TabSettingsModal {
     shortcutsTab.textContent = "Keyboard Shortcuts";
     addClass(shortcutsTab, "modalTabButton");
     shortcutsTab.onclick = () => this.switchTab("shortcuts");
-    
+
     const aboutTab = document.createElement("button");
     aboutTab.textContent = "About";
     addClass(aboutTab, "modalTabButton");
@@ -192,7 +192,7 @@ export default class TabSettingsModal {
     addClass(shortcutsContent, "modalTabContent");
     shortcutsContent.id = "shortcuts-content";
     this.drawKeyboardShortcuts(shortcutsContent);
-    
+
     const aboutContent = document.createElement("div");
     addClass(aboutContent, "modalTabContent");
     aboutContent.id = "about-content";
@@ -405,6 +405,35 @@ export default class TabSettingsModal {
     constructValidationSection.appendChild(constructValidationCheckboxContainer);
     constructValidationSection.appendChild(constructValidationHelp);
     container.appendChild(constructValidationSection);
+
+    // Code Snippets Bar Visibility Section
+    const snippetsBarSection = document.createElement("div");
+    addClass(snippetsBarSection, "settingsSection");
+
+    const snippetsBarCheckboxContainer = document.createElement("div");
+    addClass(snippetsBarCheckboxContainer, "checkboxContainer");
+
+    const snippetsBarCheckbox = document.createElement("input");
+    snippetsBarCheckbox.type = "checkbox";
+    snippetsBarCheckbox.id = "showSnippetsBar";
+    snippetsBarCheckbox.checked = yasqe.getSnippetsBarVisible() ?? true;
+
+    const snippetsBarLabel = document.createElement("label");
+    snippetsBarLabel.htmlFor = "showSnippetsBar";
+    snippetsBarLabel.textContent = "Show code snippets bar";
+
+    const snippetsBarHelp = document.createElement("div");
+    snippetsBarHelp.textContent =
+      "Display the code snippets bar above the editor for quick insertion of common SPARQL patterns.";
+    addClass(snippetsBarHelp, "settingsHelp");
+    snippetsBarHelp.style.marginTop = "5px";
+
+    snippetsBarCheckboxContainer.appendChild(snippetsBarCheckbox);
+    snippetsBarCheckboxContainer.appendChild(snippetsBarLabel);
+
+    snippetsBarSection.appendChild(snippetsBarCheckboxContainer);
+    snippetsBarSection.appendChild(snippetsBarHelp);
+    container.appendChild(snippetsBarSection);
   }
 
   private drawRequestSettings(container: HTMLElement) {
@@ -525,6 +554,10 @@ export default class TabSettingsModal {
       }
       if (constructValidationCheckbox) {
         yasqe.setCheckConstructVariables(constructValidationCheckbox.checked);
+      }
+      const snippetsBarCheckbox = document.getElementById("showSnippetsBar") as HTMLInputElement;
+      if (snippetsBarCheckbox) {
+        yasqe.setSnippetsBarVisible(snippetsBarCheckbox.checked);
       }
       yasqe.saveQuery();
     }

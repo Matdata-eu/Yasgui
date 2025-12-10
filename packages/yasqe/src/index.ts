@@ -455,7 +455,9 @@ export class Yasqe extends CodeMirror {
     if (!this.snippetsBar) {
       this.snippetsBar = document.createElement("div");
       addClass(this.snippetsBar, "yasqe_snippetsBar");
-      this.getWrapperElement().appendChild(this.snippetsBar);
+      // Insert before the CodeMirror wrapper element
+      const cmWrapper = this.getWrapperElement();
+      cmWrapper.parentElement?.insertBefore(this.snippetsBar, cmWrapper);
     }
 
     // Clear existing content
