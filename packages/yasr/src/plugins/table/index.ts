@@ -119,17 +119,17 @@ export default class Table implements Plugin<PluginConfig> {
     if (!bindings) return "";
     const vars = this.yasr.results.getVariables();
 
-    // Helper to escape pipe characters in markdown
-    const escapePipe = (str: string) => str.replace(/\|/g, "\\|");
+    // Helper to escape special characters in markdown (backslashes and pipes)
+    const escapeMarkdown = (str: string) => str.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 
     // Helper to get plain text value from binding
     const getPlainValue = (binding: Parser.BindingValue | ""): string => {
       if (binding === "") return "";
-      return escapePipe(binding.value);
+      return escapeMarkdown(binding.value);
     };
 
     // Create header row
-    let markdown = "| " + vars.map(escapePipe).join(" | ") + " |\n";
+    let markdown = "| " + vars.map(escapeMarkdown).join(" | ") + " |\n";
     // Create separator row
     markdown += "| " + vars.map(() => "---").join(" | ") + " |\n";
     // Create data rows
@@ -364,14 +364,23 @@ export default class Table implements Plugin<PluginConfig> {
     this.draw(this.persistentConfig);
     this.yasr.storePluginConfig("table", this.persistentConfig);
   };
-  private handleCopyMarkdown = async () => {
+  private handleCopyMarkdown = async (event: Event) => {
     const markdown = this.getMarkdownTable();
+    const button = event.target as HTMLButtonElement;
+    const originalText = button.textContent;
     try {
       await navigator.clipboard.writeText(markdown);
-      // Provide visual feedback (could be improved with a toast notification)
-      console.log("Table copied as markdown");
+      // Provide visual feedback
+      button.textContent = "Copied!";
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 2000);
     } catch (err) {
-      console.error("Failed to copy markdown:", err);
+      // Show user-friendly error
+      button.textContent = "Copy failed";
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 2000);
     }
   };
   /**
