@@ -358,3 +358,81 @@
     }
   }
 }
+
+// Import/Export styles
+.exportButtons,
+.importButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.dropZone {
+  border: 2px dashed var(--yasgui-border-color, #ccc);
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--yasgui-bg-secondary, #f9f9f9);
+  margin-top: 15px;
+  transition: all 0.3s;
+
+  &.dragover {
+    border-color: var(--yasgui-accent-color, #337ab7);
+    background: var(--yasgui-accent-light, #e8f4fc);
+  }
+
+  .dropZoneContent {
+    margin-bottom: 20px;
+  }
+
+  .dropZoneIcon {
+    font-size: 48px;
+    margin-bottom: 10px;
+  }
+
+  .dropZoneText {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--yasgui-text-primary, #333);
+    margin-bottom: 8px;
+  }
+
+  .dropZoneOr {
+    font-size: 14px;
+    color: var(--yasgui-text-secondary, #666);
+    margin: 15px 0;
+  }
+}
+
+.importExportNotification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  font-size: 14px;
+  animation: slideIn 0.3s ease-out;
+
+  &.success {
+    background: #4caf50;
+    color: white;
+  }
+
+  &.error {
+    background: #f44336;
+    color: white;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

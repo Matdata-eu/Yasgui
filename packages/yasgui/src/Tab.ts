@@ -35,6 +35,7 @@ export interface PersistedJson {
     response: Parser.ResponseSummary | undefined;
   };
   requestConfig: YasguiRequestConfig;
+  orientation?: "vertical" | "horizontal";
 }
 export interface Tab {
   on(event: string | symbol, listener: (...args: any[]) => void): this;

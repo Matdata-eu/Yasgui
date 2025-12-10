@@ -165,4 +165,19 @@ export default class PersistentConfig {
     const storage = new YStorage(storageNamespace);
     storage.removeNamespace();
   }
+
+  /**
+   * Get the current persisted configuration (for export purposes)
+   */
+  public getPersistedConfig(): PersistedJson {
+    return this.persistedJson;
+  }
+
+  /**
+   * Update the persisted configuration (for import purposes)
+   */
+  public updatePersistedConfig(config: Partial<PersistedJson>) {
+    Object.assign(this.persistedJson, config);
+    this.toStorage();
+  }
 }
