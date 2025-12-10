@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Heading from '@theme/Heading';
 
 import styles from './index.module.css';
@@ -21,7 +20,7 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/">
-            Get Started 📚
+            Documentation 📚
           </Link>
           <Link
             className="button button--primary button--lg"
@@ -42,9 +41,6 @@ export default function Home(): ReactNode {
       title={`${siteConfig.title} - SPARQL Query Interface`}
       description="YASGUI is a powerful, user-friendly web-based interface for querying and exploring RDF data using SPARQL.">
       <HomepageHeader />
-      <main>
-        <HomepageFeatures />
-      </main>
     </Layout>
   );
 }

@@ -15,15 +15,15 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://matdata-eu.github.io',
+  url: 'https://yasgui-docs.matdata.eu',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/Yasgui/',
+  baseUrl: '/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'Matdata-eu', // Usually your GitHub org/user name.
-  projectName: 'Yasgui', // Usually your repo name.
+  projectName: 'YasGUI', // Usually your repo name.
 
   onBrokenLinks: 'throw',
 
