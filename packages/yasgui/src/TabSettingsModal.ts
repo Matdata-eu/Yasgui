@@ -142,11 +142,17 @@ export default class TabSettingsModal {
     addClass(importExportTab, "modalTabButton");
     importExportTab.onclick = () => this.switchTab("importexport");
 
+    const shortcutsTab = document.createElement("button");
+    shortcutsTab.textContent = "Keyboard Shortcuts";
+    addClass(shortcutsTab, "modalTabButton");
+    shortcutsTab.onclick = () => this.switchTab("shortcuts");
+
     tabsContainer.appendChild(requestTab);
     tabsContainer.appendChild(prefixTab);
     tabsContainer.appendChild(editorTab);
     tabsContainer.appendChild(endpointsTab);
     tabsContainer.appendChild(importExportTab);
+    tabsContainer.appendChild(shortcutsTab);
     body.appendChild(tabsContainer);
 
     // Tab content containers
@@ -175,11 +181,17 @@ export default class TabSettingsModal {
     importExportContent.id = "importexport-content";
     this.drawImportExportSettings(importExportContent);
 
+    const shortcutsContent = document.createElement("div");
+    addClass(shortcutsContent, "modalTabContent");
+    shortcutsContent.id = "shortcuts-content";
+    this.drawKeyboardShortcuts(shortcutsContent);
+
     body.appendChild(requestContent);
     body.appendChild(prefixContent);
     body.appendChild(editorContent);
     body.appendChild(endpointsContent);
     body.appendChild(importExportContent);
+    body.appendChild(shortcutsContent);
 
     this.modalContent.appendChild(body);
 
@@ -216,7 +228,8 @@ export default class TabSettingsModal {
         (tabName === "prefix" && index === 1) ||
         (tabName === "editor" && index === 2) ||
         (tabName === "endpoints" && index === 3) ||
-        (tabName === "importexport" && index === 4)
+        (tabName === "importexport" && index === 4) ||
+        (tabName === "shortcuts" && index === 5)
       ) {
         addClass(btn as HTMLElement, "active");
       } else {
@@ -883,6 +896,83 @@ export default class TabSettingsModal {
     importSection.appendChild(dropZone);
     importSection.appendChild(fileInput);
     container.appendChild(importSection);
+  }
+
+  private drawKeyboardShortcuts(container: HTMLElement) {
+    const shortcutsData = [
+      {
+        category: "Query Editor (YASQE)",
+        shortcuts: [
+          { keys: ["Ctrl+Enter", "Cmd+Enter"], description: "Execute query" },
+          { keys: ["Ctrl+Space"], description: "Trigger autocomplete" },
+          { keys: ["Ctrl+S"], description: "Save query to local storage" },
+          { keys: ["Ctrl+Shift+F"], description: "Format query" },
+          { keys: ["Ctrl+/"], description: "Toggle comment on selected lines" },
+          { keys: ["Ctrl+Shift+D"], description: "Duplicate current line" },
+          { keys: ["Ctrl+Shift+K"], description: "Delete current line" },
+          { keys: ["Esc"], description: "Remove focus from editor" },
+          { keys: ["Ctrl+Click"], description: "Explore URI connections (on URI)" },
+        ],
+      },
+      {
+        category: "Fullscreen",
+        shortcuts: [
+          { keys: ["F11"], description: "Toggle YASQE (editor) fullscreen" },
+          { keys: ["F10"], description: "Toggle YASR (results) fullscreen" },
+          { keys: ["F9"], description: "Switch between YASQE and YASR fullscreen" },
+          { keys: ["Esc"], description: "Exit fullscreen mode" },
+        ],
+      },
+      {
+        category: "General Editor",
+        shortcuts: [
+          { keys: ["Ctrl+F", "Cmd+F"], description: "Find in query" },
+          { keys: ["Ctrl+H", "Cmd+H"], description: "Find and replace" },
+        ],
+      },
+    ];
+
+    shortcutsData.forEach((section) => {
+      const sectionEl = document.createElement("div");
+      addClass(sectionEl, "shortcutsSection");
+
+      const categoryLabel = document.createElement("h3");
+      categoryLabel.textContent = section.category;
+      addClass(categoryLabel, "shortcutsCategory");
+      sectionEl.appendChild(categoryLabel);
+
+      const table = document.createElement("table");
+      addClass(table, "shortcutsTable");
+
+      section.shortcuts.forEach((shortcut) => {
+        const row = document.createElement("tr");
+
+        const keysCell = document.createElement("td");
+        addClass(keysCell, "shortcutsKeys");
+        shortcut.keys.forEach((key, index) => {
+          if (index > 0) {
+            const separator = document.createElement("span");
+            separator.textContent = " / ";
+            addClass(separator, "shortcutsSeparator");
+            keysCell.appendChild(separator);
+          }
+          const kbd = document.createElement("kbd");
+          kbd.textContent = key;
+          keysCell.appendChild(kbd);
+        });
+        row.appendChild(keysCell);
+
+        const descCell = document.createElement("td");
+        addClass(descCell, "shortcutsDescription");
+        descCell.textContent = shortcut.description;
+        row.appendChild(descCell);
+
+        table.appendChild(row);
+      });
+
+      sectionEl.appendChild(table);
+      container.appendChild(sectionEl);
+    });
   }
 
   private async importConfiguration(turtleContent: string) {
