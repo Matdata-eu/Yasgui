@@ -39,6 +39,16 @@ export function serializeToTurtle(config: PersistedJson): string {
   lines.push(`[] a yasgui:Configuration ;`);
   lines.push(`  dcterms:created "${now}"^^xsd:dateTime ;`);
 
+  // Theme
+  if (config.theme) {
+    lines.push(`  yasgui:theme "${config.theme}" ;`);
+  }
+
+  // Orientation
+  if (config.orientation) {
+    lines.push(`  yasgui:orientation "${config.orientation}" ;`);
+  }
+
   // Endpoint history
   if (config.endpointHistory && config.endpointHistory.length > 0) {
     lines.push(`  yasgui:endpointHistory (`);
@@ -86,6 +96,11 @@ export function serializeToTurtle(config: PersistedJson): string {
 
       lines.push(`    dcterms:identifier "${escapeTurtleString(tabId)}" ;`);
       lines.push(`    rdfs:label "${escapeTurtleString(tabConfig.name)}" ;`);
+
+      // Orientation (if different from default)
+      if (tabConfig.orientation) {
+        lines.push(`    yasgui:orientation "${escapeTurtleString(tabConfig.orientation)}" ;`);
+      }
 
       // Query
       if (tabConfig.yasqe?.value) {
@@ -220,6 +235,18 @@ export function parseFromTurtle(turtle: string): Partial<PersistedJson> {
       config.autoCaptureEnabled = autoCaptureMatch[1] === "true";
     }
 
+    // Extract theme
+    const themeMatch = turtle.match(/yasgui:theme\s+"([^"]*)"/);
+    if (themeMatch && (themeMatch[1] === "light" || themeMatch[1] === "dark")) {
+      config.theme = themeMatch[1] as "light" | "dark";
+    }
+
+    // Extract orientation
+    const orientationMatch = turtle.match(/yasgui:orientation\s+"([^"]*)"/);
+    if (orientationMatch && (orientationMatch[1] === "vertical" || orientationMatch[1] === "horizontal")) {
+      config.orientation = orientationMatch[1] as "vertical" | "horizontal";
+    }
+
     // Extract custom endpoint buttons
     const buttonPattern =
       /yasgui:customEndpointButton\s+\[([\s\S]*?)rdfs:label\s+"([^"]*)"\s*;\s*sd:endpoint\s+"([^"]*)"/g;
@@ -244,12 +271,18 @@ export function parseFromTurtle(turtle: string): Partial<PersistedJson> {
       const endpointMatches = [...tabsContent.matchAll(/sd:endpoint\s+"([^"]*)"/g)];
       const methodMatches = [...tabsContent.matchAll(/yasgui:requestMethod\s+"([^"]*)"/g)];
 
+      // Extract tab-level orientation
+      const tabOrientationMatches = [...tabsContent.matchAll(/yasgui:orientation\s+"([^"]*)"/g)];
+
       tabIdMatches.forEach((match, index) => {
         const tabId = unescapeTurtleString(match[1]);
         const tabName = tabNameMatches[index] ? unescapeTurtleString(tabNameMatches[index][1]) : "Query";
         const query = queryMatches[index] ? unescapeTurtleString(queryMatches[index][1]) : "";
         const endpoint = endpointMatches[index] ? unescapeTurtleString(endpointMatches[index][1]) : "";
         const method = methodMatches[index] ? unescapeTurtleString(methodMatches[index][1]) : "POST";
+        const orientation = tabOrientationMatches[index]
+          ? (unescapeTurtleString(tabOrientationMatches[index][1]) as "vertical" | "horizontal")
+          : undefined;
 
         config.tabs!.push(tabId);
         config.tabConfig![tabId] = {
@@ -276,6 +309,7 @@ export function parseFromTurtle(turtle: string): Partial<PersistedJson> {
             settings: {},
             response: undefined,
           },
+          orientation: orientation,
         };
       });
     }

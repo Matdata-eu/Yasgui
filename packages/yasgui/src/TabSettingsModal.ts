@@ -895,10 +895,32 @@ export default class TabSettingsModal {
         return;
       }
 
-      // Update the configuration using the public API
+      // Close the modal first
+      this.close();
+
+      // Apply theme if provided
+      if (parsedConfig.theme) {
+        this.tab.yasgui.themeManager.setTheme(parsedConfig.theme);
+      }
+
+      // Apply global orientation if provided
+      if (parsedConfig.orientation) {
+        this.tab.yasgui.config.orientation = parsedConfig.orientation;
+      }
+
+      // Close all existing tabs
+      const existingTabIds = [...this.tab.yasgui.persistentConfig.getTabs()];
+      for (const tabId of existingTabIds) {
+        const tab = this.tab.yasgui.getTab(tabId);
+        if (tab) {
+          tab.close();
+        }
+      }
+
+      // Update the configuration storage
       this.tab.yasgui.persistentConfig.updatePersistedConfig(parsedConfig);
 
-      this.showNotification("Configuration imported successfully! Reload the page to see changes.", "success");
+      window.location.reload();
     } catch (error) {
       this.showNotification("Failed to import configuration: " + (error as Error).message, "error");
     }
