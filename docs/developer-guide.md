@@ -905,13 +905,24 @@ interface RequestConfig {
   // CORS proxy
   corsProxy?: string;
 
-  // Basic Authentication
+  // Authentication
   basicAuth?: BasicAuthConfig | ((yasqe: Yasqe) => BasicAuthConfig | undefined);
+  bearerAuth?: BearerAuthConfig | ((yasqe: Yasqe) => BearerAuthConfig | undefined);
+  apiKeyAuth?: ApiKeyAuthConfig | ((yasqe: Yasqe) => ApiKeyAuthConfig | undefined);
 }
 
 interface BasicAuthConfig {
   username: string;
   password: string;
+}
+
+interface BearerAuthConfig {
+  token: string;
+}
+
+interface ApiKeyAuthConfig {
+  headerName: string;
+  apiKey: string;
 }
 ```
 
@@ -945,11 +956,19 @@ const config = {
 };
 ```
 
-### Basic Authentication
+### Authentication
 
-YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials. **Authentication is stored per-endpoint**, meaning all tabs using the same endpoint share the same credentials.
+YASGUI supports multiple authentication methods for SPARQL endpoints: Basic Authentication, Bearer Token, and API Key (custom headers). **Authentication is stored per-endpoint**, meaning all tabs using the same endpoint share the same credentials.
 
-#### Programmatic Configuration
+#### Authentication Types
+
+YASGUI supports three authentication types:
+
+1. **Basic Authentication**: Username and password sent as HTTP Basic Auth
+2. **Bearer Token**: Token sent in the `Authorization: Bearer <token>` header
+3. **API Key**: Custom header with an API key (e.g., `X-API-Key: <key>`)
+
+#### Basic Authentication
 
 Configure basic authentication programmatically when initializing YASGUI. Note that this sets the initial credentials, but users can also configure them via the UI.
 
@@ -965,6 +984,37 @@ const yasgui = new Yasgui(document.getElementById("yasgui"), {
 });
 ```
 
+#### Bearer Token Authentication
+
+Use Bearer Token authentication for endpoints that require OAuth2 or JWT tokens:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://api.example.com/sparql",
+    bearerAuth: {
+      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  }
+});
+```
+
+#### API Key Authentication
+
+Use API Key authentication for endpoints that require a custom header:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://api.example.com/sparql",
+    apiKeyAuth: {
+      headerName: "X-API-Key",
+      apiKey: "your-api-key-here"
+    }
+  }
+});
+```
+
 **Important:** When using programmatic configuration, the credentials will be used for that initial request, but YASGUI will store them in the endpoint-based configuration. Any subsequent tab that uses the same endpoint will automatically use these credentials.
 
 #### Managing Endpoint Configurations
@@ -972,7 +1022,7 @@ const yasgui = new Yasgui(document.getElementById("yasgui"), {
 Use the PersistentConfig API to manage endpoint configurations programmatically:
 
 ```javascript
-// Add or update an endpoint with authentication
+// Add or update an endpoint with Basic Authentication
 yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
   label: "My Secure Endpoint",
   showAsButton: true,
@@ -980,6 +1030,27 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
     type: 'basic',
     username: "myuser",
     password: "mypassword"
+  }
+});
+
+// Add or update an endpoint with Bearer Token
+yasgui.persistentConfig.addOrUpdateEndpoint("https://api.example.com/sparql", {
+  label: "API with Bearer Token",
+  showAsButton: true,
+  authentication: {
+    type: 'bearer',
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+});
+
+// Add or update an endpoint with API Key
+yasgui.persistentConfig.addOrUpdateEndpoint("https://api.example.com/sparql", {
+  label: "API with Custom Header",
+  showAsButton: true,
+  authentication: {
+    type: 'apiKey',
+    headerName: 'X-API-Key',
+    apiKey: 'your-api-key-here'
   }
 });
 
@@ -1003,11 +1074,24 @@ Use a function to dynamically provide credentials:
 const yasgui = new Yasgui(document.getElementById("yasgui"), {
   requestConfig: {
     endpoint: "https://example.com/sparql",
+    // Dynamic Basic Auth
     basicAuth: (yasqe) => {
-      // Return credentials dynamically
       return {
         username: getCurrentUsername(),
         password: getCurrentPassword()
+      };
+    },
+    // Dynamic Bearer Token
+    bearerAuth: (yasqe) => {
+      return {
+        token: getAccessToken()
+      };
+    },
+    // Dynamic API Key
+    apiKeyAuth: (yasqe) => {
+      return {
+        headerName: "X-API-Key",
+        apiKey: getApiKey()
       };
     }
   }
@@ -1020,27 +1104,54 @@ To disable authentication:
 
 ```javascript
 tab.setRequestConfig({
-  basicAuth: undefined
+  basicAuth: undefined,
+  bearerAuth: undefined,
+  apiKeyAuth: undefined
 });
 ```
 
 #### TypeScript Support
 
 ```typescript
-import { BasicAuthConfig } from "@matdata/yasqe";
+import { BasicAuthConfig, BearerAuthConfig, ApiKeyAuthConfig } from "@matdata/yasqe";
 
-const authConfig: BasicAuthConfig = {
+// Basic Auth
+const basicAuthConfig: BasicAuthConfig = {
   username: "myuser",
   password: "mypassword"
+};
+
+// Bearer Token
+const bearerAuthConfig: BearerAuthConfig = {
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+};
+
+// API Key
+const apiKeyAuthConfig: ApiKeyAuthConfig = {
+  headerName: "X-API-Key",
+  apiKey: "your-api-key-here"
 };
 
 const yasgui = new Yasgui(element, {
   requestConfig: {
     endpoint: "https://secure-endpoint.com/sparql",
-    basicAuth: authConfig
+    basicAuth: basicAuthConfig,
+    // or
+    bearerAuth: bearerAuthConfig,
+    // or
+    apiKeyAuth: apiKeyAuthConfig
   }
 });
 ```
+
+#### Authentication Priority
+
+When multiple authentication methods are configured:
+1. Bearer Token is applied first (if configured)
+2. API Key is applied (if configured and doesn't conflict)
+3. Basic Authentication is applied last (if no Authorization header exists)
+
+Note: Bearer Token and Basic Authentication both use the `Authorization` header, so only one will be applied. API Key uses a custom header and can coexist with Authorization headers.
 
 #### Examples
 

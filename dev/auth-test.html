@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YASGUI Authentication Test</title>
+    <link rel="stylesheet" href="/packages/yasgui/build/yasgui.min.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+      }
+      #yasgui {
+        height: 90vh;
+      }
+      .info {
+        background: #f0f0f0;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border-left: 4px solid #007acc;
+      }
+      .info h2 {
+        margin-top: 0;
+      }
+      .info ul {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="info">
+      <h2>Authentication Test Page</h2>
+      <p>This page demonstrates the new authentication features in YASGUI:</p>
+      <ul>
+        <li><strong>Basic Authentication:</strong> Traditional username/password</li>
+        <li><strong>Bearer Token:</strong> OAuth2 or JWT tokens</li>
+        <li><strong>API Key:</strong> Custom headers (e.g., X-API-Key)</li>
+      </ul>
+      <p><strong>How to test:</strong></p>
+      <ol>
+        <li>Click the Settings icon (gear) in the tab bar</li>
+        <li>Navigate to "SPARQL Endpoints" tab</li>
+        <li>Add a new endpoint or configure authentication for an existing one</li>
+        <li>Select authentication type and enter credentials</li>
+      </ol>
+    </div>
+
+    <div id="yasgui"></div>
+
+    <script src="/packages/yasgui/build/yasgui.min.js"></script>
+    <script>
+      const yasgui = new Yasgui(document.getElementById("yasgui"), {
+        requestConfig: {
+          endpoint: "https://dbpedia.org/sparql",
+        },
+        // Example: Configure different authentication types
+        // Uncomment to test:
+        /*
+        requestConfig: {
+          endpoint: "https://your-api.example.com/sparql",
+          // Basic Auth example:
+          basicAuth: {
+            username: "testuser",
+            password: "testpass"
+          },
+          // Bearer Token example:
+          bearerAuth: {
+            token: "your-bearer-token-here"
+          },
+          // API Key example:
+          apiKeyAuth: {
+            headerName: "X-API-Key",
+            apiKey: "your-api-key-here"
+          }
+        }
+        */
+      });
+
+      // Log authentication configurations
+      console.log("YASGUI initialized with authentication support");
+      console.log("Available auth types: Basic, Bearer Token, API Key");
+      
+      // Example: Programmatically add endpoints with different auth types
+      setTimeout(() => {
+        // Add endpoint with Basic Auth
+        yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/basic", {
+          label: "Basic Auth Example",
+          showAsButton: false,
+          authentication: {
+            type: 'basic',
+            username: 'demo',
+            password: 'demo'
+          }
+        });
+
+        // Add endpoint with Bearer Token
+        yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/bearer", {
+          label: "Bearer Token Example",
+          showAsButton: false,
+          authentication: {
+            type: 'bearer',
+            token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example'
+          }
+        });
+
+        // Add endpoint with API Key
+        yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/apikey", {
+          label: "API Key Example",
+          showAsButton: false,
+          authentication: {
+            type: 'apiKey',
+            headerName: 'X-API-Key',
+            apiKey: 'demo-key-12345'
+          }
+        });
+
+        console.log("Added example endpoints with different auth types");
+        console.log("Open Settings > SPARQL Endpoints to view and edit them");
+      }, 1000);
+    </script>
+  </body>
+</html>
