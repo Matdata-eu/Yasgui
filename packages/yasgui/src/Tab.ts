@@ -309,9 +309,14 @@ export class Tab extends EventEmitter {
         }
         if (tab.yasr) {
           tab.yasr.refresh();
+          // Emit orientationChange on yasr for plugins to listen
+          tab.yasr.emit("orientationChange", newOrientation);
         }
       }
     }
+
+    // Emit orientationChange event on yasgui
+    this.yasgui.emit("orientationChange", this.yasgui, newOrientation);
   }
   public getYasqe() {
     return this.yasqe;

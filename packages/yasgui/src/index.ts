@@ -104,6 +104,8 @@ export interface Yasgui {
   emit(event: "autocompletionShown", instance: Yasgui, tab: Tab, widget: any): boolean;
   on(event: "autocompletionClose", listener: (instance: Yasgui, tab: Tab) => void): this;
   emit(event: "autocompletionClose", instance: Yasgui, tab: Tab): boolean;
+  on(event: "orientationChange", listener: (instance: Yasgui, orientation: "vertical" | "horizontal") => void): this;
+  emit(event: "orientationChange", instance: Yasgui, orientation: "vertical" | "horizontal"): boolean;
 }
 export class Yasgui extends EventEmitter {
   public rootEl: HTMLDivElement;

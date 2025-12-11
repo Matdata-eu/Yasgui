@@ -32,6 +32,8 @@ export interface Yasr {
   emit(event: "drawn", instance: Yasr, plugin: Plugin<any>): boolean;
   on(event: "toggle-help", listener: (instance: Yasr) => void): this;
   emit(event: "toggle-help", instance: Yasr): boolean;
+  on(event: "orientationChange", listener: (orientation: "vertical" | "horizontal") => void): this;
+  emit(event: "orientationChange", orientation: "vertical" | "horizontal"): boolean;
 }
 export class Yasr extends EventEmitter {
   public results?: Parser;

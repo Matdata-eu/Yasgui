@@ -1486,6 +1486,11 @@ yasgui.on('autocompletionClose', (instance, tab) => {
 yasgui.on('endpointHistoryChange', (instance, history) => {
   console.log('Endpoint history updated:', history);
 });
+
+// Layout events
+yasgui.on('orientationChange', (instance, orientation) => {
+  console.log('Layout orientation changed to:', orientation);
+});
 ```
 
 ### YASQE Events
