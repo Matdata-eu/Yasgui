@@ -704,6 +704,11 @@ export default class TabSettingsModal {
           this.tab.setRequestConfig({
             basicAuth: { username, password },
           });
+        } else {
+          // Clear authentication if credentials are incomplete
+          this.tab.setRequestConfig({
+            basicAuth: undefined,
+          });
         }
       } else {
         // Clear authentication if disabled

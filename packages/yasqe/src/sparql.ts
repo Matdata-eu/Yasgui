@@ -49,10 +49,15 @@ export function getAjaxConfig(
   const withCredentials = isFunction(config.withCredentials) ? config.withCredentials(yasqe) : config.withCredentials;
 
   // Add Basic Authentication header if configured
-  const basicAuth = isFunction(config.basicAuth) ? config.basicAuth(yasqe) : config.basicAuth;
   const finalHeaders = { ...headers };
-  if (basicAuth && basicAuth.username && basicAuth.password) {
-    finalHeaders["Authorization"] = createBasicAuthHeader(basicAuth.username, basicAuth.password);
+  try {
+    const basicAuth = isFunction(config.basicAuth) ? config.basicAuth(yasqe) : config.basicAuth;
+    if (basicAuth && basicAuth.username && basicAuth.password) {
+      finalHeaders["Authorization"] = createBasicAuthHeader(basicAuth.username, basicAuth.password);
+    }
+  } catch (error) {
+    console.warn("Failed to configure basic authentication:", error);
+    // Continue without authentication if there's an error
   }
 
   return {
