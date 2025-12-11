@@ -924,3 +924,66 @@
     }
   }
 }
+
+// Add endpoint form styling
+.addEndpointForm {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--yasgui-bg-secondary, #f9f9f9);
+  border-radius: 4px;
+  border: 1px solid var(--yasgui-border-color, #e0e0e0);
+}
+
+.addFormTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--yasgui-text-primary, #333);
+  margin-bottom: 12px;
+}
+
+.addFormInputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.addEndpointInput {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--yasgui-input-border, #ddd);
+  border-radius: 4px;
+  background: var(--yasgui-bg-primary, white);
+  color: var(--yasgui-text-primary, #333);
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--yasgui-accent-color, #337ab7);
+    box-shadow: 0 0 0 3px var(--yasgui-accent-light, rgba(51, 122, 183, 0.1));
+  }
+
+  &::placeholder {
+    color: var(--yasgui-text-secondary, #999);
+  }
+}
+
+.addEndpointButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: var(--yasgui-accent-color, #337ab7);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--yasgui-accent-dark, #2563a1);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
