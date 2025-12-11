@@ -947,11 +947,11 @@ const config = {
 
 ### Basic Authentication
 
-YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials.
+YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials. **Authentication is stored per-endpoint**, meaning all tabs using the same endpoint share the same credentials.
 
 #### Programmatic Configuration
 
-Configure basic authentication when initializing YASGUI:
+Configure basic authentication programmatically when initializing YASGUI. Note that this sets the initial credentials, but users can also configure them via the UI.
 
 ```javascript
 const yasgui = new Yasgui(document.getElementById("yasgui"), {
@@ -965,18 +965,34 @@ const yasgui = new Yasgui(document.getElementById("yasgui"), {
 });
 ```
 
-#### Per-Tab Configuration
+**Important:** When using programmatic configuration, the credentials will be used for that initial request, but YASGUI will store them in the endpoint-based configuration. Any subsequent tab that uses the same endpoint will automatically use these credentials.
 
-Set authentication for a specific tab:
+#### Managing Endpoint Configurations
+
+Use the PersistentConfig API to manage endpoint configurations programmatically:
 
 ```javascript
-const tab = yasgui.getTab();
-tab.setRequestConfig({
-  basicAuth: {
+// Add or update an endpoint with authentication
+yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
+  label: "My Secure Endpoint",
+  showAsButton: true,
+  authentication: {
+    type: 'basic',
     username: "myuser",
     password: "mypassword"
   }
 });
+
+// Get endpoint configuration
+const config = yasgui.persistentConfig.getEndpointConfig("https://example.com/sparql");
+
+// Remove authentication from an endpoint
+yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
+  authentication: undefined
+});
+
+// Delete an endpoint completely
+yasgui.persistentConfig.deleteEndpointConfig("https://example.com/sparql");
 ```
 
 #### Dynamic Authentication

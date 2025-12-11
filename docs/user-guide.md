@@ -511,26 +511,50 @@ Access comprehensive configuration options through the Settings modal.
 - Select formatter (sparql-formatter or legacy)
 - Enable/disable auto-format on query execution
 
-**Authentication Tab:**
-- Configure HTTP Basic Authentication for secured endpoints
-- Enter username and password
-- Enable/disable authentication per tab
+**SPARQL Endpoints Tab:**
+- Manage all your SPARQL endpoints in one place
+- Configure authentication per endpoint
+- Add labels and create quick-switch buttons
+- Automatically tracks accessed endpoints
 
 All settings are saved automatically to local storage.
 
-### Basic Authentication
+### SPARQL Endpoints Management
 
-YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials.
+YASGUI automatically tracks all SPARQL endpoints you access and lets you manage them from a single location.
 
-**Configuring Basic Authentication:**
+**Accessing the Endpoints Manager:**
 
 1. **Open Settings**: Click the settings icon (⚙️) in the control bar
-2. **Navigate to Authentication**: Click on the "Authentication" tab in the settings modal
-3. **Enable Authentication**: Check the "Enable Basic Authentication" checkbox
-4. **Enter Credentials**:
-   - Username: Enter your username
-   - Password: Enter your password
-5. **Save**: Click the "Save" button to apply your settings
+2. **Navigate to SPARQL Endpoints**: Click on the "SPARQL Endpoints" tab in the settings modal
+
+**Managing Endpoints:**
+
+The endpoints table shows:
+- **Endpoint**: The URL of the SPARQL endpoint
+- **Label**: Optional friendly name for the endpoint
+- **Button**: Checkbox to show endpoint as a quick-switch button (requires label)
+- **Authentication**: Configure HTTP Basic Authentication
+- **Actions**: Delete endpoint from the list
+
+**Adding Quick-Switch Buttons:**
+
+1. Find your endpoint in the list
+2. Enter a label (e.g., "DBpedia", "Wikidata")
+3. Check the "Button" checkbox
+4. The endpoint will now appear as a button in the control bar
+
+**Configuring Authentication:**
+
+YASGUI supports HTTP Basic Authentication for endpoints that require username and password credentials.
+
+1. **Find your endpoint** in the SPARQL Endpoints table
+2. **Click "Configure"** in the Authentication column
+3. **Select authentication type** (currently HTTP Basic Authentication)
+4. **Enter credentials**:
+   - Username: Your endpoint username
+   - Password: Your endpoint password
+5. **Click "Save"** to apply
 
 **Security Considerations:**
 
@@ -540,19 +564,17 @@ YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require user
 - **Only use with HTTPS endpoints**: Never send credentials to HTTP endpoints as they will be transmitted in plain text
 - **Be cautious on shared computers**: Clear your browser data when using YASGUI on shared or public computers
 
-**Per-Tab Configuration:**
+**How Authentication Works:**
 
-Authentication settings are stored per-tab, which means:
-- Each tab can have different credentials
-- You can have multiple tabs connecting to different authenticated endpoints
+Authentication is stored per-endpoint, which means:
+- All tabs using the same endpoint share the same credentials
+- You only need to configure authentication once per endpoint
 - Credentials persist across browser sessions (stored in localStorage)
 
-**How It Works:**
-
-When authentication is enabled:
+When authentication is configured:
 1. YASGUI encodes your credentials using Base64 encoding
 2. Adds an `Authorization` header with the format: `Basic <encoded-credentials>`
-3. Sends this header with every SPARQL query request to the endpoint
+3. Sends this header with every SPARQL query request to that endpoint
 
 ### Query History and Persistence
 
