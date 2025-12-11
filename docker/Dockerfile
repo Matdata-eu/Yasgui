@@ -7,8 +7,15 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Copy workspace package.json files for proper monorepo setup
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/yasgui/package.json ./packages/yasgui/
+COPY packages/yasqe/package.json ./packages/yasqe/
+COPY packages/yasr/package.json ./packages/yasr/
+
+# Install dependencies (skip puppeteer download to avoid network errors)
+ENV PUPPETEER_SKIP_DOWNLOAD=1
+RUN npm ci
 
 # Copy the rest of the application code
 COPY . .
