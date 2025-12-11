@@ -511,7 +511,48 @@ Access comprehensive configuration options through the Settings modal.
 - Select formatter (sparql-formatter or legacy)
 - Enable/disable auto-format on query execution
 
+**Authentication Tab:**
+- Configure HTTP Basic Authentication for secured endpoints
+- Enter username and password
+- Enable/disable authentication per tab
+
 All settings are saved automatically to local storage.
+
+### Basic Authentication
+
+YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials.
+
+**Configuring Basic Authentication:**
+
+1. **Open Settings**: Click the settings icon (⚙️) in the control bar
+2. **Navigate to Authentication**: Click on the "Authentication" tab in the settings modal
+3. **Enable Authentication**: Check the "Enable Basic Authentication" checkbox
+4. **Enter Credentials**:
+   - Username: Enter your username
+   - Password: Enter your password
+5. **Save**: Click the "Save" button to apply your settings
+
+**Security Considerations:**
+
+⚠️ **Important Security Notes:**
+
+- **Credentials are stored in browser localStorage**: Your username and password are stored locally in your browser
+- **Only use with HTTPS endpoints**: Never send credentials to HTTP endpoints as they will be transmitted in plain text
+- **Be cautious on shared computers**: Clear your browser data when using YASGUI on shared or public computers
+
+**Per-Tab Configuration:**
+
+Authentication settings are stored per-tab, which means:
+- Each tab can have different credentials
+- You can have multiple tabs connecting to different authenticated endpoints
+- Credentials persist across browser sessions (stored in localStorage)
+
+**How It Works:**
+
+When authentication is enabled:
+1. YASGUI encodes your credentials using Base64 encoding
+2. Adds an `Authorization` header with the format: `Basic <encoded-credentials>`
+3. Sends this header with every SPARQL query request to the endpoint
 
 ### Query History and Persistence
 

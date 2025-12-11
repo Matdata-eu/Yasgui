@@ -904,6 +904,14 @@ interface RequestConfig {
 
   // CORS proxy
   corsProxy?: string;
+
+  // Basic Authentication
+  basicAuth?: BasicAuthConfig | ((yasqe: Yasqe) => BasicAuthConfig | undefined);
+}
+
+interface BasicAuthConfig {
+  username: string;
+  password: string;
 }
 ```
 
@@ -936,6 +944,162 @@ const config = {
   }
 };
 ```
+
+### Basic Authentication
+
+YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials.
+
+#### Programmatic Configuration
+
+Configure basic authentication when initializing YASGUI:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://example.com/sparql",
+    basicAuth: {
+      username: "myuser",
+      password: "mypassword"
+    }
+  }
+});
+```
+
+#### Per-Tab Configuration
+
+Set authentication for a specific tab:
+
+```javascript
+const tab = yasgui.getTab();
+tab.setRequestConfig({
+  basicAuth: {
+    username: "myuser",
+    password: "mypassword"
+  }
+});
+```
+
+#### Dynamic Authentication
+
+Use a function to dynamically provide credentials:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://example.com/sparql",
+    basicAuth: (yasqe) => {
+      // Return credentials dynamically
+      return {
+        username: getCurrentUsername(),
+        password: getCurrentPassword()
+      };
+    }
+  }
+});
+```
+
+#### Disabling Authentication
+
+To disable authentication:
+
+```javascript
+tab.setRequestConfig({
+  basicAuth: undefined
+});
+```
+
+#### TypeScript Support
+
+```typescript
+import { BasicAuthConfig } from "@matdata/yasqe";
+
+const authConfig: BasicAuthConfig = {
+  username: "myuser",
+  password: "mypassword"
+};
+
+const yasgui = new Yasgui(element, {
+  requestConfig: {
+    endpoint: "https://secure-endpoint.com/sparql",
+    basicAuth: authConfig
+  }
+});
+```
+
+#### Examples
+
+**Example 1: Simple Authentication**
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://secure-endpoint.example.com/sparql",
+    basicAuth: {
+      username: "user",
+      password: "pass"
+    }
+  }
+});
+```
+
+**Example 2: Multiple Tabs with Different Credentials**
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"));
+
+// Tab 1 - Public endpoint (no auth)
+const tab1 = yasgui.addTab();
+tab1.setRequestConfig({
+  endpoint: "https://dbpedia.org/sparql",
+  basicAuth: undefined
+});
+
+// Tab 2 - Private endpoint (with auth)
+const tab2 = yasgui.addTab();
+tab2.setRequestConfig({
+  endpoint: "https://private.example.com/sparql",
+  basicAuth: {
+    username: "admin",
+    password: "secret"
+  }
+});
+```
+
+**Example 3: Prompt User for Credentials**
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://secure-endpoint.example.com/sparql",
+    basicAuth: (yasqe) => {
+      // Only prompt if credentials aren't already stored
+      const stored = localStorage.getItem("sparql_credentials");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      
+      const username = prompt("Enter username:");
+      const password = prompt("Enter password:");
+      
+      if (username && password) {
+        const credentials = { username, password };
+        localStorage.setItem("sparql_credentials", JSON.stringify(credentials));
+        return credentials;
+      }
+      
+      return undefined;
+    }
+  }
+});
+```
+
+#### Security Best Practices
+
+1. **Use HTTPS Only**: Never use basic authentication with HTTP endpoints
+2. **Secure Storage**: Consider implementing additional encryption for stored credentials
+3. **Token-Based Auth**: For production applications, consider using token-based authentication instead of basic auth
+4. **Clear on Logout**: Implement a logout mechanism that clears stored credentials
+5. **Environment Variables**: Store credentials in environment variables for server-side applications
 
 ### Endpoint Buttons Configuration
 
