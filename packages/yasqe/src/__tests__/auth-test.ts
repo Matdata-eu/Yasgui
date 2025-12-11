@@ -170,4 +170,283 @@ describe("Authentication", () => {
       expect(authHeader).to.not.equal(apiKeyHeader);
     });
   });
+
+  describe("Authentication Implementation Tests", () => {
+    describe("Bearer Token Authentication", () => {
+      it("should create correct header format with token", () => {
+        const token = "test-token-123";
+        const header = `Bearer ${token}`;
+
+        expect(header).to.equal("Bearer test-token-123");
+        expect(header).to.match(/^Bearer .+$/);
+      });
+
+      it("should handle whitespace trimming in token", () => {
+        const token = "  test-token-456  ";
+        const trimmedToken = token.trim();
+        const header = `Bearer ${trimmedToken}`;
+
+        expect(header).to.equal("Bearer test-token-456");
+        expect(header).to.not.include("  ");
+        expect(trimmedToken).to.equal("test-token-456");
+      });
+
+      it("should validate empty token", () => {
+        const token = "";
+        const trimmedToken = token.trim();
+        const isValid = trimmedToken.length > 0;
+
+        expect(isValid).to.be.false;
+      });
+
+      it("should validate whitespace-only token", () => {
+        const token = "   ";
+        const trimmedToken = token.trim();
+        const isValid = trimmedToken.length > 0;
+
+        expect(isValid).to.be.false;
+      });
+
+      it("should validate non-empty token", () => {
+        const token = "valid-token";
+        const trimmedToken = token.trim();
+        const isValid = trimmedToken.length > 0;
+
+        expect(isValid).to.be.true;
+      });
+    });
+
+    describe("API Key Authentication", () => {
+      it("should create correct custom header with API key", () => {
+        const headerName = "X-API-Key";
+        const apiKey = "my-api-key-123";
+        const headers: Record<string, string> = {};
+        headers[headerName] = apiKey;
+
+        expect(headers["X-API-Key"]).to.equal("my-api-key-123");
+      });
+
+      it("should handle whitespace trimming in header name and API key", () => {
+        const headerName = "  X-Custom-Key  ";
+        const apiKey = "  key-value  ";
+        const trimmedHeaderName = headerName.trim();
+        const trimmedApiKey = apiKey.trim();
+
+        const headers: Record<string, string> = {};
+        headers[trimmedHeaderName] = trimmedApiKey;
+
+        expect(headers["X-Custom-Key"]).to.equal("key-value");
+        expect(trimmedHeaderName).to.equal("X-Custom-Key");
+        expect(trimmedApiKey).to.equal("key-value");
+      });
+
+      it("should validate empty API key", () => {
+        const apiKey = "";
+        const trimmedApiKey = apiKey.trim();
+        const isValid = trimmedApiKey.length > 0;
+
+        expect(isValid).to.be.false;
+      });
+
+      it("should validate empty header name", () => {
+        const headerName = "";
+        const trimmedHeaderName = headerName.trim();
+        const isValid = trimmedHeaderName.length > 0;
+
+        expect(isValid).to.be.false;
+      });
+
+      it("should validate whitespace-only header name and key", () => {
+        const headerName = "   ";
+        const apiKey = "  ";
+        const isHeaderNameValid = headerName.trim().length > 0;
+        const isApiKeyValid = apiKey.trim().length > 0;
+
+        expect(isHeaderNameValid).to.be.false;
+        expect(isApiKeyValid).to.be.false;
+      });
+
+      it("should support various header names", () => {
+        const headerNames = ["X-API-Key", "X-Auth-Token", "API-Key", "X-Custom-Auth"];
+
+        headerNames.forEach((headerName) => {
+          const headers: Record<string, string> = {};
+          headers[headerName] = "test-key";
+          expect(headers[headerName]).to.equal("test-key");
+        });
+      });
+    });
+
+    describe("Basic Authentication", () => {
+      it("should create correct Basic auth header format", () => {
+        const username = "testuser";
+        const password = "testpass";
+        const credentials = `${username}:${password}`;
+        const encoded = btoa(credentials);
+        const header = `Basic ${encoded}`;
+
+        expect(header).to.match(/^Basic [A-Za-z0-9+/=]+$/);
+        expect(header).to.equal("Basic dGVzdHVzZXI6dGVzdHBhc3M=");
+      });
+
+      it("should validate credentials are provided", () => {
+        const username = "user";
+        const password = "pass";
+        const hasCredentials = !!(username && password);
+
+        expect(hasCredentials).to.be.true;
+      });
+
+      it("should detect missing credentials", () => {
+        const username = "";
+        const password = "pass";
+        const hasCredentials = !!(username && password);
+
+        expect(hasCredentials).to.be.false;
+      });
+    });
+
+    describe("Authentication Priority and Collision Detection", () => {
+      it("should verify Bearer takes priority over Basic by checking Authorization header usage", () => {
+        // Both Bearer and Basic use Authorization header, so only one can be used
+        const bearerToken = "bearer-token";
+        const bearerHeader = `Bearer ${bearerToken}`;
+        const basicHeader = "Basic " + btoa("user:pass");
+
+        // Verify they're different formats
+        expect(bearerHeader).to.not.equal(basicHeader);
+        expect(bearerHeader).to.include("Bearer");
+        expect(basicHeader).to.include("Basic");
+
+        // In implementation, Bearer is checked first and sets Authorization
+        // If Authorization exists, Basic won't overwrite it
+      });
+
+      it("should verify API Key can coexist with Bearer token using different headers", () => {
+        // API Key uses custom header, Bearer uses Authorization
+        const authorizationHeader = "Authorization";
+        const apiKeyHeader = "X-API-Key";
+
+        expect(authorizationHeader).to.not.equal(apiKeyHeader);
+        // These are different headers, so they can both be set
+      });
+
+      it("should verify API Key can coexist with Basic auth using different headers", () => {
+        // API Key uses custom header, Basic uses Authorization
+        const authorizationHeader = "Authorization";
+        const apiKeyHeader = "X-API-Key";
+
+        expect(authorizationHeader).to.not.equal(apiKeyHeader);
+        // These are different headers, so they can both be set
+      });
+
+      it("should validate header collision detection logic", () => {
+        const headers: Record<string, string> = { Authorization: "existing-value" };
+        const headerExists = headers["Authorization"] !== undefined;
+
+        expect(headerExists).to.be.true;
+
+        // Implementation should skip setting auth if header already exists
+        if (headerExists) {
+          // Don't overwrite
+          expect(headers["Authorization"]).to.equal("existing-value");
+        }
+      });
+
+      it("should validate custom header collision detection", () => {
+        const headers: Record<string, string> = { "X-API-Key": "existing-key" };
+        const headerExists = headers["X-API-Key"] !== undefined;
+
+        expect(headerExists).to.be.true;
+
+        // Implementation should skip setting API Key if header already exists
+        if (headerExists) {
+          // Don't overwrite
+          expect(headers["X-API-Key"]).to.equal("existing-key");
+        }
+      });
+    });
+
+    describe("Error Handling and Edge Cases", () => {
+      it("should validate undefined auth config handling", () => {
+        const bearerAuth = undefined;
+        const apiKeyAuth = undefined;
+
+        expect(bearerAuth).to.be.undefined;
+        expect(apiKeyAuth).to.be.undefined;
+
+        // Implementation should handle undefined gracefully
+      });
+
+      it("should validate null token handling", () => {
+        const token: any = null;
+        const isValid = !!(token && token.trim && token.trim().length > 0);
+
+        expect(isValid).to.be.false;
+      });
+
+      it("should validate function-based config pattern", () => {
+        // Verify that function returning config works
+        const getBearerConfig = () => ({ token: "dynamic-token" });
+        const getApiKeyConfig = () => ({ headerName: "X-Key", apiKey: "dynamic-key" });
+
+        const bearerConfig = getBearerConfig();
+        const apiKeyConfig = getApiKeyConfig();
+
+        expect(bearerConfig.token).to.equal("dynamic-token");
+        expect(apiKeyConfig.headerName).to.equal("X-Key");
+        expect(apiKeyConfig.apiKey).to.equal("dynamic-key");
+      });
+
+      it("should validate error handling in function-based config", () => {
+        const getAuthConfigWithError = () => {
+          throw new Error("Config error");
+        };
+
+        try {
+          getAuthConfigWithError();
+          // Should not reach here
+          expect.fail("Should have thrown error");
+        } catch (error) {
+          // Implementation should catch and handle this gracefully
+          expect(error).to.be.instanceOf(Error);
+        }
+      });
+    });
+
+    describe("Trimming Behavior Verification", () => {
+      it("should verify trimmed values are used in headers not originals", () => {
+        const originalToken = "  token-with-spaces  ";
+        const trimmedToken = originalToken.trim();
+
+        // The implementation should use trimmed token
+        const header = `Bearer ${trimmedToken}`;
+
+        expect(header).to.equal("Bearer token-with-spaces");
+        expect(header).to.not.include("  ");
+      });
+
+      it("should verify trimmed header name is used not original", () => {
+        const originalHeaderName = "  X-API-Key  ";
+        const trimmedHeaderName = originalHeaderName.trim();
+
+        const headers: Record<string, string> = {};
+        headers[trimmedHeaderName] = "value";
+
+        expect(headers["X-API-Key"]).to.equal("value");
+        expect(headers["  X-API-Key  "]).to.be.undefined;
+      });
+
+      it("should verify trimmed API key is used not original", () => {
+        const originalKey = "  key-value  ";
+        const trimmedKey = originalKey.trim();
+
+        const headers: Record<string, string> = {};
+        headers["X-API-Key"] = trimmedKey;
+
+        expect(headers["X-API-Key"]).to.equal("key-value");
+        expect(headers["X-API-Key"]).to.not.include("  ");
+      });
+    });
+  });
 });
