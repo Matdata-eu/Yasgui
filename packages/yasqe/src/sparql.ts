@@ -1,4 +1,4 @@
-import { default as Yasqe, Config, RequestConfig, BasicAuthConfig } from "./";
+import { default as Yasqe, Config, RequestConfig } from "./";
 import { merge, isFunction } from "lodash-es";
 import * as queryString from "query-string";
 export type YasqeAjaxConfig = Config["requestConfig"];
