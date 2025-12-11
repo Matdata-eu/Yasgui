@@ -104,36 +104,49 @@
 
 .modalBody {
   flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.modalSidebar {
+  width: 200px;
+  min-width: 200px;
+  border-right: 1px solid var(--yasgui-border-color, #e0e0e0);
+  background: var(--yasgui-bg-secondary, #f8f9fa);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.modalContentArea {
+  flex: 1;
   overflow-y: auto;
   padding: 20px;
 }
 
-.modalTabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid var(--yasgui-border-color, #e0e0e0);
-}
-
-.modalTabButton {
+.modalNavButton {
   background: none;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 20px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   color: var(--yasgui-text-secondary, #666);
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
+  text-align: left;
+  border-left: 3px solid transparent;
   transition: all 0.2s;
+  white-space: nowrap;
 
   &:hover {
+    background: var(--yasgui-bg-primary, white);
     color: var(--yasgui-accent-color, #337ab7);
   }
 
   &.active {
     color: var(--yasgui-accent-color, #337ab7);
-    border-bottom-color: var(--yasgui-accent-color, #337ab7);
+    background: var(--yasgui-bg-primary, white);
+    border-left-color: var(--yasgui-accent-color, #337ab7);
+    font-weight: 600;
   }
 }
 

@@ -111,62 +111,69 @@ export default class TabSettingsModal {
 
     this.modalContent.appendChild(header);
 
-    // Body with tabs
+    // Body with sidebar navigation
     const body = document.createElement("div");
     addClass(body, "modalBody");
 
-    const tabsContainer = document.createElement("div");
-    addClass(tabsContainer, "modalTabs");
+    // Sidebar navigation
+    const sidebar = document.createElement("div");
+    addClass(sidebar, "modalSidebar");
 
     const requestTab = document.createElement("button");
     requestTab.textContent = "Request";
-    addClass(requestTab, "modalTabButton", "active");
+    addClass(requestTab, "modalNavButton", "active");
     requestTab.onclick = () => this.switchTab("request");
 
     const authTab = document.createElement("button");
     authTab.textContent = "Authentication";
-    addClass(authTab, "modalTabButton");
+    addClass(authTab, "modalNavButton");
     authTab.onclick = () => this.switchTab("auth");
 
     const prefixTab = document.createElement("button");
     prefixTab.textContent = "Prefixes";
-    addClass(prefixTab, "modalTabButton");
+    addClass(prefixTab, "modalNavButton");
     prefixTab.onclick = () => this.switchTab("prefix");
 
     const editorTab = document.createElement("button");
     editorTab.textContent = "Editor";
-    addClass(editorTab, "modalTabButton");
+    addClass(editorTab, "modalNavButton");
     editorTab.onclick = () => this.switchTab("editor");
 
     const endpointsTab = document.createElement("button");
     endpointsTab.textContent = "Endpoint Buttons";
-    addClass(endpointsTab, "modalTabButton");
+    addClass(endpointsTab, "modalNavButton");
     endpointsTab.onclick = () => this.switchTab("endpoints");
 
     const importExportTab = document.createElement("button");
     importExportTab.textContent = "Import/Export";
-    addClass(importExportTab, "modalTabButton");
+    addClass(importExportTab, "modalNavButton");
     importExportTab.onclick = () => this.switchTab("importexport");
 
     const shortcutsTab = document.createElement("button");
     shortcutsTab.textContent = "Keyboard Shortcuts";
-    addClass(shortcutsTab, "modalTabButton");
+    addClass(shortcutsTab, "modalNavButton");
     shortcutsTab.onclick = () => this.switchTab("shortcuts");
 
     const aboutTab = document.createElement("button");
     aboutTab.textContent = "About";
-    addClass(aboutTab, "modalTabButton");
+    addClass(aboutTab, "modalNavButton");
     aboutTab.onclick = () => this.switchTab("about");
 
-    tabsContainer.appendChild(requestTab);
-    tabsContainer.appendChild(authTab);
-    tabsContainer.appendChild(prefixTab);
-    tabsContainer.appendChild(editorTab);
-    tabsContainer.appendChild(endpointsTab);
-    tabsContainer.appendChild(importExportTab);
-    tabsContainer.appendChild(shortcutsTab);
-    tabsContainer.appendChild(aboutTab);
-    body.appendChild(tabsContainer);
+    sidebar.appendChild(requestTab);
+    sidebar.appendChild(authTab);
+    sidebar.appendChild(prefixTab);
+    sidebar.appendChild(editorTab);
+    sidebar.appendChild(endpointsTab);
+    sidebar.appendChild(importExportTab);
+    sidebar.appendChild(shortcutsTab);
+    sidebar.appendChild(aboutTab);
+
+    // Content area container
+    const contentArea = document.createElement("div");
+    addClass(contentArea, "modalContentArea");
+
+    body.appendChild(sidebar);
+    body.appendChild(contentArea);
 
     // Tab content containers
     const requestContent = document.createElement("div");
@@ -209,14 +216,14 @@ export default class TabSettingsModal {
     aboutContent.id = "about-content";
     this.drawAboutSettings(aboutContent);
 
-    body.appendChild(requestContent);
-    body.appendChild(authContent);
-    body.appendChild(prefixContent);
-    body.appendChild(editorContent);
-    body.appendChild(endpointsContent);
-    body.appendChild(importExportContent);
-    body.appendChild(shortcutsContent);
-    body.appendChild(aboutContent);
+    contentArea.appendChild(requestContent);
+    contentArea.appendChild(authContent);
+    contentArea.appendChild(prefixContent);
+    contentArea.appendChild(editorContent);
+    contentArea.appendChild(endpointsContent);
+    contentArea.appendChild(importExportContent);
+    contentArea.appendChild(shortcutsContent);
+    contentArea.appendChild(aboutContent);
 
     this.modalContent.appendChild(body);
 
@@ -244,7 +251,7 @@ export default class TabSettingsModal {
   }
 
   private switchTab(tabName: string) {
-    const buttons = this.modalContent.querySelectorAll(".modalTabButton");
+    const buttons = this.modalContent.querySelectorAll(".modalNavButton");
     const contents = this.modalContent.querySelectorAll(".modalTabContent");
 
     buttons.forEach((btn, index) => {
