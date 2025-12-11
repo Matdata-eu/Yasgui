@@ -3,7 +3,21 @@
  */
 import "./index.scss";
 import "datatables.net-dt/css/dataTables.dataTables.min.css";
+import "datatables.net-buttons-dt/css/buttons.dataTables.min.css";
+import "datatables.net-colreorder-dt/css/colReorder.dataTables.min.css";
+import "datatables.net-fixedheader-dt/css/fixedHeader.dataTables.min.css";
+import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
+import "datatables.net-scroller-dt/css/scroller.dataTables.min.css";
+import "datatables.net-searchpanes-dt/css/searchPanes.dataTables.min.css";
 import "datatables.net";
+import "datatables.net-buttons";
+import "datatables.net-buttons/js/buttons.html5.mjs";
+import "datatables.net-buttons/js/buttons.colVis.mjs";
+import "datatables.net-colreorder";
+import "datatables.net-fixedheader";
+import "datatables.net-responsive";
+import "datatables.net-scroller";
+import "datatables.net-searchpanes";
 //@ts-ignore (jquery _does_ expose a default. In es6, it's the one we should use)
 import $ from "jquery";
 import Parser from "../../parsers";
@@ -22,7 +36,7 @@ const DEFAULT_PAGE_SIZE = 50;
 
 export interface PluginConfig {
   openIriInNewWindow: boolean;
-  tableConfig: Config;
+  tableConfig: any; // Using any to avoid TypeScript circular type issues with DataTables extensions
 }
 
 export interface PersistentConfig {
@@ -48,7 +62,6 @@ export default class Table implements Plugin<PluginConfig> {
   private tableEl: HTMLTableElement | undefined;
   private dataTable: Api | undefined;
   private tableFilterField: HTMLInputElement | undefined;
-  private tableSizeField: HTMLSelectElement | undefined;
   private tableCompactSwitch: HTMLInputElement | undefined;
   private tableCompactViewSwitch: HTMLInputElement | undefined;
   private tableUriPrefixSwitch: HTMLInputElement | undefined;
@@ -82,24 +95,53 @@ export default class Table implements Plugin<PluginConfig> {
         // @ts-ignore
         top: null, // @TODO: remove ignore once https://github.com/DataTables/DataTablesSrc/issues/271 is released
         // @ts-ignore
-        topStart: null, // @TODO: remove ignore once https://github.com/DataTables/DataTablesSrc/issues/271 is released
+        topStart: "buttons", // @TODO: remove ignore once https://github.com/DataTables/DataTablesSrc/issues/271 is released
         // @ts-ignore
-        topEnd: null, // @TODO: remove ignore once https://github.com/DataTables/DataTablesSrc/issues/271 is released
+        topEnd: "searchPanes", // @TODO: remove ignore once https://github.com/DataTables/DataTablesSrc/issues/271 is released
       },
-      pageLength: DEFAULT_PAGE_SIZE, //default page length
-      lengthChange: true, //allow changing page length
+      // Use scroller instead of pagination
+      scrollY: "400px",
+      scroller: true,
+      deferRender: true,
+      // Disable pagination
+      paging: false,
       data: [],
       columns: [],
       order: [],
-      deferRender: true,
       orderClasses: false,
-      language: {
-        paginate: {
-          first: "&lt;&lt;", // Have to specify these two due to TS defs, <<
-          last: "&gt;&gt;", // Have to specify these two due to TS defs, >>
-          next: "&gt;", // >
-          previous: "&lt;", // <
+      // Enable fixed header
+      fixedHeader: true,
+      // Enable column reordering
+      colReorder: true,
+      // Enable responsive
+      responsive: true,
+      // Configure buttons
+      buttons: [
+        {
+          extend: "copyHtml5",
+          text: "Copy",
+          exportOptions: {
+            columns: ":visible",
+          },
         },
+        {
+          extend: "csvHtml5",
+          text: "CSV",
+          exportOptions: {
+            columns: ":visible",
+          },
+        },
+        {
+          extend: "colvis",
+          text: "Column Visibility",
+        },
+      ],
+      // Configure search panes
+      searchPanes: {
+        threshold: 1,
+        initCollapsed: true,
+        cascadePanes: true,
+        layout: "columns-3",
       },
     },
   };
@@ -231,13 +273,6 @@ export default class Table implements Plugin<PluginConfig> {
     const rows = this.getRows();
     const columns = this.getColumns();
 
-    if (rows.length <= (persistentConfig?.pageSize || DEFAULT_PAGE_SIZE)) {
-      this.yasr.pluginControls;
-      addClass(this.yasr.rootEl, "isSinglePage");
-    } else {
-      removeClass(this.yasr.rootEl, "isSinglePage");
-    }
-
     if (this.dataTable) {
       this.destroyResizer();
 
@@ -246,9 +281,8 @@ export default class Table implements Plugin<PluginConfig> {
     }
     this.yasr.resultsEl.appendChild(this.tableEl);
     // reset some default config properties as they couldn't be initialized beforehand
-    const dtConfig: Config = {
-      ...(cloneDeep(this.config.tableConfig) as unknown as Config),
-      pageLength: persistentConfig?.pageSize ? persistentConfig.pageSize : DEFAULT_PAGE_SIZE,
+    const dtConfig: any = {
+      ...cloneDeep(this.config.tableConfig),
       data: rows,
       columns: columns,
     };
@@ -326,15 +360,7 @@ export default class Table implements Plugin<PluginConfig> {
     });
   };
   private handleTableSearch = (event: KeyboardEvent) => {
-    this.dataTable?.search((event.target as HTMLInputElement).value).draw("page");
-  };
-  private handleTableSizeSelect = (event: Event) => {
-    const pageLength = parseInt((event.target as HTMLSelectElement).value);
-    // Set page length
-    this.dataTable?.page.len(pageLength).draw("page");
-    // Store in persistentConfig
-    this.persistentConfig.pageSize = pageLength;
-    this.yasr.storePluginConfig("table", this.persistentConfig);
+    this.dataTable?.search((event.target as HTMLInputElement).value).draw();
   };
   private handleSetCompactToggle = (event: Event) => {
     // Store in persistentConfig
@@ -479,34 +505,6 @@ export default class Table implements Plugin<PluginConfig> {
     markdownButton.addEventListener("click", this.handleCopyMarkdown);
     this.tableControls.appendChild(markdownButton);
 
-    // Create page wrapper
-    const pageSizerWrapper = document.createElement("div");
-    pageSizerWrapper.className = "pageSizeWrapper";
-
-    // Create label for page size element
-    const pageSizerLabel = document.createElement("span");
-    pageSizerLabel.textContent = "Page size: ";
-    pageSizerLabel.className = "pageSizerLabel";
-    pageSizerWrapper.appendChild(pageSizerLabel);
-
-    // Create page size element
-    this.tableSizeField = document.createElement("select");
-    this.tableSizeField.className = "tableSizer";
-
-    // Create options for page sizer
-    const options = [10, 50, 100, 1000, -1];
-    for (const option of options) {
-      const element = document.createElement("option");
-      element.value = option + "";
-      // -1 selects everything so we should call it All
-      element.innerText = option > 0 ? option + "" : "All";
-      // Set initial one as selected
-      if (this.dataTable?.page.len() === option) element.selected = true;
-      this.tableSizeField.appendChild(element);
-    }
-    pageSizerWrapper.appendChild(this.tableSizeField);
-    this.tableSizeField.addEventListener("change", this.handleTableSizeSelect);
-    this.tableControls.appendChild(pageSizerWrapper);
     this.yasr.pluginControls.appendChild(this.tableControls);
   }
   download(filename?: string) {
@@ -525,8 +523,6 @@ export default class Table implements Plugin<PluginConfig> {
     // Unregister listeners and remove references to old fields
     this.tableFilterField?.removeEventListener("keyup", this.handleTableSearch);
     this.tableFilterField = undefined;
-    this.tableSizeField?.removeEventListener("change", this.handleTableSizeSelect);
-    this.tableSizeField = undefined;
     this.tableCompactSwitch?.removeEventListener("change", this.handleSetCompactToggle);
     this.tableCompactSwitch = undefined;
     this.tableCompactViewSwitch?.removeEventListener("change", this.handleSetCompactViewToggle);
@@ -552,6 +548,5 @@ export default class Table implements Plugin<PluginConfig> {
     // According to datatables docs, destroy(true) will also remove all events
     this.dataTable?.destroy(true);
     this.dataTable = undefined;
-    removeClass(this.yasr.rootEl, "isSinglePage");
   }
 }

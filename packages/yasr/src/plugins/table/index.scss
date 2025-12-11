@@ -14,22 +14,19 @@ Delimiters used by datatables
     padding: 0px;
     padding-right: 5px;
     flex-wrap: wrap;
+    gap: 10px;
 
     .tableFilter {
-      margin-right: 10px;
+      flex: 1;
+      min-width: 200px;
       height: 100%;
     }
 
-    .tableSizer {
-      height: 100%;
-    }
     .switch {
       display: flex;
       align-items: center;
-      margin-right: 10px;
     }
     .copyMarkdownBtn {
-      margin-right: 10px;
       padding: 4px 8px;
       cursor: pointer;
       border: 1px solid var(--yasgui-border-color, #ddd);
@@ -136,32 +133,118 @@ Delimiters used by datatables
     }
 
     /**
-      Selector for pagination element
+      Scroller styles
     */
-    div.dt-paging {
-      button.dt-paging-button {
-        border: none;
-        background: transparent;
-        color: var(--yasgui-text-secondary, #505050);
+    div.dt-scroll-body {
+      border: 1px solid var(--yasgui-border-color, #ddd);
+    }
 
-        // When the buttons are disabled show the default YASR disabled color
-        &.disabled {
-          color: var(--yasgui-text-muted, #999) !important;
-        }
+    /**
+      Buttons extension styles
+    */
+    div.dt-buttons {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
 
-        &.current {
-          text-decoration: underline !important; // dataTables made the text-decoration important
-          color: var(--yasgui-accent-color, #337ab7);
-        }
+      button.dt-button {
+        padding: 4px 8px;
+        cursor: pointer;
+        border: 1px solid var(--yasgui-border-color, #ddd);
+        background-color: var(--yasgui-bg-secondary, #f7f7f7);
+        color: var(--yasgui-text-primary, #000);
+        border-radius: 3px;
+        font-size: 0.9em;
 
         &:hover {
-          // Don't override the disabled grayed out style
-          &:not(.disabled) {
-            font-weight: bold;
-            color: var(--yasgui-text-secondary, #505050) !important;
+          background-color: var(--yasgui-bg-tertiary, #eee);
+        }
+
+        &:active,
+        &.active {
+          background-color: var(--yasgui-accent-color, #337ab7);
+          color: var(--yasgui-bg-primary, #fff);
+        }
+      }
+    }
+
+    /**
+      Column reorder indicator
+    */
+    .dt-column-reorder-indicator {
+      background-color: var(--yasgui-accent-color, #337ab7);
+      opacity: 0.5;
+    }
+
+    /**
+      Fixed header styles
+    */
+    table.fixedHeader-floating {
+      background-color: var(--yasgui-bg-primary, #fff);
+      border-bottom: 1px solid var(--yasgui-border-color, #ddd);
+    }
+
+    /**
+      Search panes styles
+    */
+    div.dtsp-searchPanes {
+      margin-bottom: 10px;
+
+      div.dtsp-searchPane {
+        border: 1px solid var(--yasgui-border-color, #ddd);
+        border-radius: 3px;
+        background-color: var(--yasgui-bg-primary, #fff);
+
+        div.dtsp-topRow {
+          background-color: var(--yasgui-bg-secondary, #f7f7f7);
+          padding: 5px;
+
+          input.dtsp-search {
+            border: 1px solid var(--yasgui-border-color, #ddd);
+            padding: 3px 5px;
+            border-radius: 3px;
+          }
+
+          button.dtsp-clearButton {
+            background-color: var(--yasgui-bg-secondary, #f7f7f7);
+            border: 1px solid var(--yasgui-border-color, #ddd);
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+
+            &:hover {
+              background-color: var(--yasgui-bg-tertiary, #eee);
+            }
+          }
+        }
+
+        div.dtsp-table {
+          tr.dtsp-selected {
+            background-color: var(--yasgui-accent-color-light, #e6f2ff);
+          }
+
+          tr:hover {
+            background-color: var(--yasgui-bg-tertiary, #f9f9f9);
           }
         }
       }
+    }
+
+    /**
+      Responsive styles
+    */
+    table.dtr-inline.collapsed > tbody > tr {
+      cursor: pointer;
+
+      > td.dtr-control:before,
+      > th.dtr-control:before {
+        background-color: var(--yasgui-accent-color, #337ab7);
+      }
+    }
+
+    table.dataTable.dtr-inline.collapsed > tbody > tr.parent > td.dtr-control:before,
+    table.dataTable.dtr-inline.collapsed > tbody > tr.parent > th.dtr-control:before {
+      background-color: var(--yasgui-text-muted, #999);
     }
   }
 }
