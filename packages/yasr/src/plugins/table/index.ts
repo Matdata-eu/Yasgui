@@ -36,7 +36,10 @@ const DEFAULT_PAGE_SIZE = 50;
 
 export interface PluginConfig {
   openIriInNewWindow: boolean;
-  tableConfig: any; // Using any to avoid TypeScript circular type issues with DataTables extensions
+  // Using any to avoid TypeScript 5.x stack overflow with DataTables 2.3+ complex recursive extension types
+  // The Config type from datatables.net combined with buttons, scroller, searchPanes, etc. causes circular type resolution
+  // JavaScript build and runtime work correctly - this is only a TypeScript compiler limitation
+  tableConfig: any;
 }
 
 export interface PersistentConfig {
@@ -280,7 +283,8 @@ export default class Table implements Plugin<PluginConfig> {
       this.dataTable = undefined;
     }
     this.yasr.resultsEl.appendChild(this.tableEl);
-    // reset some default config properties as they couldn't be initialized beforehand
+    // Reset some default config properties as they couldn't be initialized beforehand
+    // Using any type here to match tableConfig type (see PluginConfig interface for explanation)
     const dtConfig: any = {
       ...cloneDeep(this.config.tableConfig),
       data: rows,
@@ -360,6 +364,7 @@ export default class Table implements Plugin<PluginConfig> {
     });
   };
   private handleTableSearch = (event: KeyboardEvent) => {
+    // Using draw() without parameters since we're using scroller instead of pagination
     this.dataTable?.search((event.target as HTMLInputElement).value).draw();
   };
   private handleSetCompactToggle = (event: Event) => {
