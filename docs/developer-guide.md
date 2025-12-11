@@ -904,6 +904,14 @@ interface RequestConfig {
 
   // CORS proxy
   corsProxy?: string;
+
+  // Basic Authentication
+  basicAuth?: BasicAuthConfig | ((yasqe: Yasqe) => BasicAuthConfig | undefined);
+}
+
+interface BasicAuthConfig {
+  username: string;
+  password: string;
 }
 ```
 
@@ -936,6 +944,202 @@ const config = {
   }
 };
 ```
+
+### Basic Authentication
+
+YASGUI supports HTTP Basic Authentication for SPARQL endpoints that require username and password credentials. **Authentication is stored per-endpoint**, meaning all tabs using the same endpoint share the same credentials.
+
+#### Programmatic Configuration
+
+Configure basic authentication programmatically when initializing YASGUI. Note that this sets the initial credentials, but users can also configure them via the UI.
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://example.com/sparql",
+    basicAuth: {
+      username: "myuser",
+      password: "mypassword"
+    }
+  }
+});
+```
+
+**Important:** When using programmatic configuration, the credentials will be used for that initial request, but YASGUI will store them in the endpoint-based configuration. Any subsequent tab that uses the same endpoint will automatically use these credentials.
+
+#### Managing Endpoint Configurations
+
+Use the PersistentConfig API to manage endpoint configurations programmatically:
+
+```javascript
+// Add or update an endpoint with authentication
+yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
+  label: "My Secure Endpoint",
+  showAsButton: true,
+  authentication: {
+    type: 'basic',
+    username: "myuser",
+    password: "mypassword"
+  }
+});
+
+// Get endpoint configuration
+const config = yasgui.persistentConfig.getEndpointConfig("https://example.com/sparql");
+
+// Remove authentication from an endpoint
+yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
+  authentication: undefined
+});
+
+// Delete an endpoint completely
+yasgui.persistentConfig.deleteEndpointConfig("https://example.com/sparql");
+```
+
+#### Dynamic Authentication
+
+Use a function to dynamically provide credentials:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://example.com/sparql",
+    basicAuth: (yasqe) => {
+      // Return credentials dynamically
+      return {
+        username: getCurrentUsername(),
+        password: getCurrentPassword()
+      };
+    }
+  }
+});
+```
+
+#### Disabling Authentication
+
+To disable authentication:
+
+```javascript
+tab.setRequestConfig({
+  basicAuth: undefined
+});
+```
+
+#### TypeScript Support
+
+```typescript
+import { BasicAuthConfig } from "@matdata/yasqe";
+
+const authConfig: BasicAuthConfig = {
+  username: "myuser",
+  password: "mypassword"
+};
+
+const yasgui = new Yasgui(element, {
+  requestConfig: {
+    endpoint: "https://secure-endpoint.com/sparql",
+    basicAuth: authConfig
+  }
+});
+```
+
+#### Examples
+
+**Example 1: Simple Authentication**
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://secure-endpoint.example.com/sparql",
+    basicAuth: {
+      username: "user",
+      password: "pass"
+    }
+  }
+});
+```
+
+**Example 2: Multiple Endpoints with Different Credentials**
+
+Authentication is stored **per-endpoint**, not per-tab. All tabs using the same endpoint will share the same credentials.
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"));
+
+// Configure authentication for first endpoint
+yasgui.persistentConfig.addOrUpdateEndpoint("https://dbpedia.org/sparql", {
+  // No authentication needed for public endpoint
+});
+
+// Configure authentication for second endpoint
+yasgui.persistentConfig.addOrUpdateEndpoint("https://private.example.com/sparql", {
+  authentication: {
+    type: "basic",
+    username: "admin",
+    password: "secret"
+  }
+});
+
+// Create tabs - they will automatically use endpoint-based auth
+const tab1 = yasgui.addTab();
+tab1.setRequestConfig({ endpoint: "https://dbpedia.org/sparql" });
+
+const tab2 = yasgui.addTab();
+tab2.setRequestConfig({ endpoint: "https://private.example.com/sparql" });
+
+// Both tabs pointing to the same endpoint will share credentials
+const tab3 = yasgui.addTab();
+tab3.setRequestConfig({ endpoint: "https://private.example.com/sparql" }); // Uses same auth as tab2
+```
+
+**Example 3: Prompt User for Credentials**
+
+⚠️ **Security Warning**: Storing credentials in localStorage exposes them to any script running on the same origin (e.g., XSS attacks or malicious third-party scripts). For production use:
+- Use session-based authentication with short-lived tokens
+- Consider OAuth 2.0 or other secure authentication flows
+- Avoid storing reusable passwords in browser storage
+- Only use HTTPS endpoints
+
+```javascript
+const yasgui = new Yasgui(document.getElementById("yasgui"), {
+  requestConfig: {
+    endpoint: "https://secure-endpoint.example.com/sparql",
+    basicAuth: (yasqe) => {
+      // WARNING: This example stores credentials in localStorage for demonstration only.
+      // In production, use more secure alternatives (session tokens, OAuth, etc.)
+      
+      const username = prompt("Enter username:");
+      const password = prompt("Enter password:");
+      
+      if (username && password) {
+        return { username, password };
+      }
+      
+      return undefined;
+    }
+  }
+});
+```
+
+**Recommended Approach**: Use endpoint-based authentication via the UI or configure it once programmatically:
+
+```javascript
+// Configure authentication securely
+yasgui.persistentConfig.addOrUpdateEndpoint("https://secure-endpoint.example.com/sparql", {
+  authentication: {
+    type: "basic",
+    username: "user",
+    password: "pass"  // Consider using environment variables or secure credential management
+  }
+});
+```
+
+#### Security Best Practices
+
+1. **Use HTTPS Only**: Never use basic authentication with HTTP endpoints
+2. **Secure Storage**: Consider implementing additional encryption for stored credentials
+3. **Token-Based Auth**: For production applications, consider using token-based authentication instead of basic auth
+4. **Clear on Logout**: Implement a logout mechanism that clears stored credentials
+5. **Environment Variables**: Store credentials in environment variables for server-side applications
 
 ### Endpoint Buttons Configuration
 

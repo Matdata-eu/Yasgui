@@ -174,6 +174,7 @@ SELECT * WHERE {
     headers: {},
     withCredentials: false,
     adjustQueryBeforeRequest: false,
+    basicAuth: undefined,
   };
   return { ...config, requestConfig };
 }

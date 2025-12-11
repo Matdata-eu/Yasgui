@@ -16,6 +16,47 @@ function getRequestConfigSettings(yasqe: Yasqe, conf?: Partial<Config["requestCo
   }
   return (conf ?? {}) as RequestConfig<Yasqe>;
 }
+
+/**
+ * Create a Basic Authentication header value
+ */
+function createBasicAuthHeader(username: string, password: string): string {
+  const credentials = `${username}:${password}`;
+  const encoded = base64EncodeUnicode(credentials);
+  return `Basic ${encoded}`;
+}
+
+/**
+ * Base64-encode a Unicode string using UTF-8 encoding.
+ * This avoids errors with btoa() and supports all Unicode characters.
+ */
+function base64EncodeUnicode(str: string): string {
+  if (typeof window !== "undefined" && typeof window.TextEncoder !== "undefined") {
+    const utf8Bytes = new window.TextEncoder().encode(str);
+    let binary = "";
+    for (let i = 0; i < utf8Bytes.length; i++) {
+      binary += String.fromCharCode(utf8Bytes[i]);
+    }
+    return btoa(binary);
+  } else if (typeof TextEncoder !== "undefined") {
+    // For environments where TextEncoder is global (e.g., Node.js)
+    const utf8Bytes = new TextEncoder().encode(str);
+    let binary = "";
+    for (let i = 0; i < utf8Bytes.length; i++) {
+      binary += String.fromCharCode(utf8Bytes[i]);
+    }
+    return btoa(binary);
+  } else {
+    // Fallback: try btoa directly, but warn about possible errors
+    try {
+      return btoa(str);
+    } catch (e) {
+      throw new Error(
+        "Basic authentication credentials contain unsupported Unicode characters. Please use a modern browser or restrict credentials to Latin1 characters.",
+      );
+    }
+  }
+}
 // type callback = AjaxConfig.callbacks['complete'];
 export function getAjaxConfig(
   yasqe: Yasqe,
@@ -38,11 +79,30 @@ export function getAjaxConfig(
   const headers = isFunction(config.headers) ? config.headers(yasqe) : config.headers;
   // console.log({headers})
   const withCredentials = isFunction(config.withCredentials) ? config.withCredentials(yasqe) : config.withCredentials;
+
+  // Add Basic Authentication header if configured
+  const finalHeaders = { ...headers };
+  try {
+    const basicAuth = isFunction(config.basicAuth) ? config.basicAuth(yasqe) : config.basicAuth;
+    if (basicAuth && basicAuth.username && basicAuth.password) {
+      if (finalHeaders["Authorization"] !== undefined) {
+        console.warn(
+          "Authorization header already exists in request headers; skipping Basic Auth header to avoid overwrite.",
+        );
+      } else {
+        finalHeaders["Authorization"] = createBasicAuthHeader(basicAuth.username, basicAuth.password);
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to configure basic authentication:", error);
+    // Continue without authentication if there's an error
+  }
+
   return {
     reqMethod,
     url: endpoint,
     args: getUrlArguments(yasqe, config),
-    headers: headers,
+    headers: finalHeaders,
     accept: getAcceptHeader(yasqe, config),
     withCredentials,
   };

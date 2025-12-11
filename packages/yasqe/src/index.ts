@@ -1361,6 +1361,10 @@ export interface HintConfig {
     ) => void;
   };
 }
+export interface BasicAuthConfig {
+  username: string;
+  password: string;
+}
 export interface RequestConfig<Y> {
   queryArgument: string | ((yasqe: Y) => string) | undefined;
   endpoint: string | ((yasqe: Y) => string);
@@ -1374,6 +1378,7 @@ export interface RequestConfig<Y> {
   headers: { [key: string]: string } | ((yasqe: Y) => { [key: string]: string });
   withCredentials: boolean | ((yasqe: Y) => boolean);
   adjustQueryBeforeRequest: ((yasqe: Y) => string) | false;
+  basicAuth: BasicAuthConfig | ((yasqe: Y) => BasicAuthConfig | undefined) | undefined;
 }
 export type PlainRequestConfig = {
   [K in keyof RequestConfig<any>]: Exclude<RequestConfig<any>[K], Function>;
