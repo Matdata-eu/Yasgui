@@ -474,15 +474,7 @@ export default class TabSettingsModal {
     container.innerHTML = "";
     const configs = this.tab.yasgui.persistentConfig.getEndpointConfigs();
 
-    if (configs.length === 0) {
-      const emptyMsg = document.createElement("div");
-      emptyMsg.textContent = "No endpoints yet. Access an endpoint to have it automatically tracked here.";
-      addClass(emptyMsg, "emptyMessage");
-      container.appendChild(emptyMsg);
-      return;
-    }
-
-    // Create table
+    // Create table (even if empty, we'll show add form)
     const table = document.createElement("table");
     addClass(table, "endpointsTableElement");
 
@@ -500,6 +492,20 @@ export default class TabSettingsModal {
 
     // Body
     const tbody = document.createElement("tbody");
+
+    if (configs.length === 0) {
+      // Show empty message in table
+      const emptyRow = document.createElement("tr");
+      const emptyCell = document.createElement("td");
+      emptyCell.colSpan = 5;
+      emptyCell.textContent = "No endpoints yet. Add one below or access an endpoint to have it automatically tracked.";
+      addClass(emptyCell, "emptyMessage");
+      emptyCell.style.textAlign = "center";
+      emptyCell.style.padding = "20px";
+      emptyRow.appendChild(emptyCell);
+      tbody.appendChild(emptyRow);
+    }
+
     configs.forEach((config, index) => {
       const row = document.createElement("tr");
 
@@ -583,6 +589,66 @@ export default class TabSettingsModal {
     });
     table.appendChild(tbody);
     container.appendChild(table);
+
+    // Add endpoint form
+    const addForm = document.createElement("div");
+    addClass(addForm, "addEndpointForm");
+
+    const addFormTitle = document.createElement("div");
+    addFormTitle.textContent = "Add New Endpoint";
+    addClass(addFormTitle, "addFormTitle");
+    addForm.appendChild(addFormTitle);
+
+    const formInputs = document.createElement("div");
+    addClass(formInputs, "addFormInputs");
+
+    const endpointInput = document.createElement("input");
+    endpointInput.type = "url";
+    endpointInput.placeholder = "Endpoint URL (e.g., https://dbpedia.org/sparql)";
+    addClass(endpointInput, "addEndpointInput");
+    formInputs.appendChild(endpointInput);
+
+    const addButton = document.createElement("button");
+    addButton.type = "button";
+    addButton.textContent = "+ Add Endpoint";
+    addClass(addButton, "addEndpointButton");
+    addButton.onclick = () => {
+      const endpoint = endpointInput.value.trim();
+
+      if (!endpoint) {
+        alert("Please enter an endpoint URL.");
+        return;
+      }
+
+      // Validate URL format
+      try {
+        new URL(endpoint);
+      } catch (e) {
+        alert("Please enter a valid URL.");
+        return;
+      }
+
+      // Check if endpoint already exists
+      const existing = this.tab.yasgui.persistentConfig.getEndpointConfig(endpoint);
+      if (existing) {
+        alert("This endpoint is already in the list.");
+        return;
+      }
+
+      // Add the endpoint
+      this.tab.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {});
+
+      // Clear input
+      endpointInput.value = "";
+
+      // Refresh list
+      this.renderEndpointsList(container);
+      this.tab.refreshEndpointButtons();
+    };
+    formInputs.appendChild(addButton);
+
+    addForm.appendChild(formInputs);
+    container.appendChild(addForm);
   }
 
   private showAuthenticationModal(endpoint: string) {
