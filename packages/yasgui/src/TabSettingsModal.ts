@@ -619,10 +619,20 @@ export default class TabSettingsModal {
       }
 
       // Validate URL format
+      // Check for supported protocol first
+      if (!/^https?:\/\//i.test(endpoint)) {
+        alert("Endpoint URL must start with http:// or https://");
+        return;
+      }
       try {
         new URL(endpoint);
       } catch (e) {
-        alert("Please enter a valid URL.");
+        // Show the error message if available, otherwise a generic one
+        alert(
+          e instanceof Error && e.message
+            ? "Malformed URL: " + e.message
+            : "Please enter a valid URL."
+        );
         return;
       }
 
