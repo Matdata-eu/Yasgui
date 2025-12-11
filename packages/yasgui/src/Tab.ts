@@ -241,8 +241,8 @@ export class Tab extends EventEmitter {
     return this.persistentJson.requestConfig;
   }
   private initControlbar() {
-    this.initEndpointSelectField();
     this.initOrientationToggle();
+    this.initEndpointSelectField();
     this.initEndpointButtons();
     if (this.yasgui.config.endpointInfo && this.controlBarEl) {
       this.controlBarEl.appendChild(this.yasgui.config.endpointInfo());
