@@ -413,6 +413,11 @@ export class Tab extends EventEmitter {
       this.persistentJson.requestConfig.endpoint = endpoint;
       this.emit("change", this, this.persistentJson);
       this.emit("endpointChange", this, endpoint);
+      
+      // Auto-track this endpoint in endpoint configs (if not already present)
+      if (endpoint && !this.yasgui.persistentConfig.getEndpointConfig(endpoint)) {
+        this.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {});
+      }
     }
     if (this.endpointSelect instanceof EndpointSelect) {
       this.endpointSelect.setEndpoint(endpoint, endpointHistory);
@@ -462,6 +467,28 @@ export class Tab extends EventEmitter {
     };
 
     this.emit("change", this, this.persistentJson);
+  }
+  
+  /**
+   * Get authentication configuration for the current endpoint
+   * This retrieves auth from the endpoint-based storage
+   */
+  private getAuthForCurrentEndpoint() {
+    const endpoint = this.getEndpoint();
+    if (!endpoint) return undefined;
+    
+    const endpointConfig = this.yasgui.persistentConfig.getEndpointConfig(endpoint);
+    if (!endpointConfig || !endpointConfig.authentication) return undefined;
+    
+    // Convert endpoint auth to requestConfig format
+    if (endpointConfig.authentication.type === 'basic') {
+      return {
+        username: endpointConfig.authentication.username,
+        password: endpointConfig.authentication.password
+      };
+    }
+    
+    return undefined;
   }
 
   /**
@@ -524,6 +551,13 @@ export class Tab extends EventEmitter {
           //The adjustQueryBeforeRequest is meant to be a function though, so let's copy that as is
           adjustQueryBeforeRequest: this.yasgui.config.requestConfig.adjustQueryBeforeRequest,
         };
+        
+        // Inject authentication from endpoint-based storage
+        const endpointAuth = this.getAuthForCurrentEndpoint();
+        if (endpointAuth) {
+          processedReqConfig.basicAuth = endpointAuth;
+        }
+        
         if (this.yasgui.config.corsProxy && !Yasgui.corsEnabled[this.getEndpoint()]) {
           return {
             ...processedReqConfig,

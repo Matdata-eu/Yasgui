@@ -35,6 +35,17 @@ export interface EndpointButton {
   endpoint: string;
   label: string;
 }
+
+export interface EndpointConfig {
+  endpoint: string;
+  label?: string;  // Optional label for the endpoint
+  showAsButton?: boolean;  // Whether to show as a quick-switch button (requires label)
+  authentication?: {
+    type: 'basic';  // For now only basic, but designed for future auth types
+    username: string;
+    password: string;
+  };
+}
 export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {
   /**
    * Autofocus yasqe on load or tab switch

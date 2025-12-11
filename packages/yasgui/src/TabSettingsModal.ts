@@ -124,10 +124,10 @@ export default class TabSettingsModal {
     addClass(requestTab, "modalNavButton", "active");
     requestTab.onclick = () => this.switchTab("request");
 
-    const authTab = document.createElement("button");
-    authTab.textContent = "Authentication";
-    addClass(authTab, "modalNavButton");
-    authTab.onclick = () => this.switchTab("auth");
+    const endpointsTab = document.createElement("button");
+    endpointsTab.textContent = "SPARQL Endpoints";
+    addClass(endpointsTab, "modalNavButton");
+    endpointsTab.onclick = () => this.switchTab("endpoints");
 
     const prefixTab = document.createElement("button");
     prefixTab.textContent = "Prefixes";
@@ -138,11 +138,6 @@ export default class TabSettingsModal {
     editorTab.textContent = "Editor";
     addClass(editorTab, "modalNavButton");
     editorTab.onclick = () => this.switchTab("editor");
-
-    const endpointsTab = document.createElement("button");
-    endpointsTab.textContent = "Endpoint Buttons";
-    addClass(endpointsTab, "modalNavButton");
-    endpointsTab.onclick = () => this.switchTab("endpoints");
 
     const importExportTab = document.createElement("button");
     importExportTab.textContent = "Import/Export";
@@ -160,10 +155,9 @@ export default class TabSettingsModal {
     aboutTab.onclick = () => this.switchTab("about");
 
     sidebar.appendChild(requestTab);
-    sidebar.appendChild(authTab);
+    sidebar.appendChild(endpointsTab);
     sidebar.appendChild(prefixTab);
     sidebar.appendChild(editorTab);
-    sidebar.appendChild(endpointsTab);
     sidebar.appendChild(importExportTab);
     sidebar.appendChild(shortcutsTab);
     sidebar.appendChild(aboutTab);
@@ -181,10 +175,10 @@ export default class TabSettingsModal {
     requestContent.id = "request-content";
     this.drawRequestSettings(requestContent);
 
-    const authContent = document.createElement("div");
-    addClass(authContent, "modalTabContent");
-    authContent.id = "auth-content";
-    this.drawAuthSettings(authContent);
+    const endpointsContent = document.createElement("div");
+    addClass(endpointsContent, "modalTabContent");
+    endpointsContent.id = "endpoints-content";
+    this.drawEndpointsSettings(endpointsContent);
 
     const prefixContent = document.createElement("div");
     addClass(prefixContent, "modalTabContent");
@@ -195,11 +189,6 @@ export default class TabSettingsModal {
     addClass(editorContent, "modalTabContent");
     editorContent.id = "editor-content";
     this.drawEditorSettings(editorContent);
-
-    const endpointsContent = document.createElement("div");
-    addClass(endpointsContent, "modalTabContent");
-    endpointsContent.id = "endpoints-content";
-    this.drawEndpointButtonsSettings(endpointsContent);
 
     const importExportContent = document.createElement("div");
     addClass(importExportContent, "modalTabContent");
@@ -217,7 +206,7 @@ export default class TabSettingsModal {
     this.drawAboutSettings(aboutContent);
 
     contentArea.appendChild(requestContent);
-    contentArea.appendChild(authContent);
+    contentArea.appendChild(endpointsContent);
     contentArea.appendChild(prefixContent);
     contentArea.appendChild(editorContent);
     contentArea.appendChild(endpointsContent);
