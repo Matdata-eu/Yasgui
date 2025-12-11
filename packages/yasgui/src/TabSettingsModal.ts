@@ -802,6 +802,7 @@ export default class TabSettingsModal {
     const apiKeyInput = document.createElement("input");
     apiKeyInput.type = "password";
     apiKeyInput.placeholder = "Enter API key";
+    apiKeyInput.autocomplete = "off";
     apiKeyInput.value = existingAuth?.type === "apiKey" ? existingAuth.apiKey : "";
     apiKeySection.appendChild(apiKeyLabel);
     apiKeySection.appendChild(apiKeyInput);
