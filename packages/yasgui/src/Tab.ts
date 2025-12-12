@@ -20,9 +20,11 @@ const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
   <rect x="2" y="2" width="20" height="8" stroke="currentColor" stroke-width="2" fill="none"/>
   <rect x="2" y="12" width="20" height="10" stroke="currentColor" stroke-width="2" fill="none"/>
 </svg>`;
+
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
 }
+
 export interface PersistedJson {
   name: string;
   id: string;
@@ -37,6 +39,7 @@ export interface PersistedJson {
   requestConfig: YasguiRequestConfig;
   orientation?: "vertical" | "horizontal";
 }
+
 export interface Tab {
   on(event: string | symbol, listener: (...args: any[]) => void): this;
 
@@ -59,6 +62,7 @@ export interface Tab {
   on(event: "autocompletionClose", listener: (tab: Tab) => void): this;
   emit(event: "autocompletionClose", tab: Tab): boolean;
 }
+
 export class Tab extends EventEmitter {
   private persistentJson: PersistedJson;
   public yasgui: Yasgui;
@@ -73,6 +77,7 @@ export class Tab extends EventEmitter {
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
+
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
     if (!conf || conf.id === undefined) throw new Error("Expected a valid configuration to initialize tab with");
@@ -80,15 +85,19 @@ export class Tab extends EventEmitter {
     this.persistentJson = conf;
     this.currentOrientation = this.yasgui.config.orientation || "vertical";
   }
+
   public name() {
     return this.persistentJson.name;
   }
+
   public getPersistedJson() {
     return this.persistentJson;
   }
+
   public getId() {
     return this.persistentJson.id;
   }
+
   private draw() {
     if (this.rootEl) return; //aready drawn
     this.rootEl = document.createElement("div");
@@ -128,10 +137,12 @@ export class Tab extends EventEmitter {
     this.initYasr();
     this.yasgui._setPanel(this.persistentJson.id, this.rootEl);
   }
+
   public hide() {
     removeClass(this.rootEl, "active");
     this.detachKeyboardListeners();
   }
+
   public show() {
     this.draw();
     addClass(this.rootEl, "active");
@@ -200,9 +211,11 @@ export class Tab extends EventEmitter {
   private detachKeyboardListeners() {
     document.removeEventListener("keydown", this.handleKeyDown);
   }
+
   public select() {
     this.yasgui.selectTabId(this.persistentJson.id);
   }
+
   public close() {
     this.detachKeyboardListeners();
     if (this.yasqe) this.yasqe.abortQuery();
@@ -222,12 +235,14 @@ export class Tab extends EventEmitter {
     this.yasgui.tabElements.get(this.persistentJson.id).delete();
     delete this.yasgui._tabs[this.persistentJson.id];
   }
+
   public getQuery() {
     if (!this.yasqe) {
       throw new Error("Cannot get value from uninitialized editor");
     }
     return this.yasqe?.getValue();
   }
+
   public setQuery(query: string) {
     if (!this.yasqe) {
       throw new Error("Cannot set value for uninitialized editor");
@@ -237,9 +252,11 @@ export class Tab extends EventEmitter {
     this.emit("change", this, this.persistentJson);
     return this;
   }
+
   public getRequestConfig() {
     return this.persistentJson.requestConfig;
   }
+
   private initControlbar() {
     this.initOrientationToggle();
     this.initEndpointSelectField();
@@ -313,12 +330,15 @@ export class Tab extends EventEmitter {
       }
     }
   }
+
   public getYasqe() {
     return this.yasqe;
   }
+
   public getYasr() {
     return this.yasr;
   }
+
   private initTabSettingsMenu() {
     if (!this.controlBarEl) throw new Error("Need to initialize wrapper elements before drawing tab settings");
     this.settingsModal = new TabSettingsModal(this, this.controlBarEl);
@@ -433,9 +453,11 @@ export class Tab extends EventEmitter {
     }
     return this;
   }
+
   public getEndpoint(): string {
     return getAsValue(this.persistentJson.requestConfig.endpoint, this.yasgui);
   }
+
   /**
    * Updates the position of the Tab's contextmenu
    * Useful for when being scrolled
@@ -443,21 +465,26 @@ export class Tab extends EventEmitter {
   public updateContextMenu(): void {
     this.getTabListEl().redrawContextMenu();
   }
+
   public getShareableLink(baseURL?: string): string {
     return shareLink.createShareLink(baseURL || window.location.href, this);
   }
+
   public getShareObject() {
     return shareLink.createShareConfig(this);
   }
+
   private getTabListEl(): TabListEl {
     return this.yasgui.tabElements.get(this.persistentJson.id);
   }
+
   public setName(newName: string) {
     this.getTabListEl().rename(newName);
     this.persistentJson.name = newName;
     this.emit("change", this, this.persistentJson);
     return this;
   }
+
   public hasResults() {
     return !!this.yasr?.results;
   }
@@ -465,10 +492,12 @@ export class Tab extends EventEmitter {
   public getName() {
     return this.persistentJson.name;
   }
+
   public query(): Promise<any> {
     if (!this.yasqe) return Promise.reject(new Error("No yasqe editor initialized"));
     return this.yasqe.query();
   }
+
   public setRequestConfig(requestConfig: Partial<YasguiRequestConfig>) {
     this.persistentJson.requestConfig = {
       ...this.persistentJson.requestConfig,
@@ -633,6 +662,7 @@ export class Tab extends EventEmitter {
     // Add Ctrl+Click handler for URIs
     this.attachYasqeMouseHandler();
   }
+
   private destroyYasqe() {
     // As Yasqe extends of CM instead of eventEmitter, it doesn't expose the removeAllListeners function, so we should unregister all events manually
     this.yasqe?.off("blur", this.handleYasqeBlur);
@@ -647,12 +677,14 @@ export class Tab extends EventEmitter {
     this.yasqe?.destroy();
     this.yasqe = undefined;
   }
+
   handleYasqeBlur = (yasqe: Yasqe) => {
     this.persistentJson.yasqe.value = yasqe.getValue();
     // Capture prefixes from query if auto-capture is enabled
     this.settingsModal?.capturePrefixesFromQuery();
     this.emit("change", this, this.persistentJson);
   };
+
   handleYasqeQuery = (yasqe: Yasqe) => {
     //the blur event might not have fired (e.g. when pressing ctrl-enter). So, we'd like to persist the query as well if needed
     if (yasqe.getValue() !== this.persistentJson.yasqe.value) {
@@ -661,6 +693,7 @@ export class Tab extends EventEmitter {
     }
     this.emit("query", this);
   };
+
   handleYasqeQueryAbort = () => {
     this.emit("queryAbort", this);
     // Hide loading indicator in Yasr
@@ -668,6 +701,7 @@ export class Tab extends EventEmitter {
       this.yasr.hideLoading();
     }
   };
+
   handleYasqeQueryBefore = () => {
     this.emit("queryBefore", this);
     // Show loading indicator in Yasr
@@ -675,16 +709,20 @@ export class Tab extends EventEmitter {
       this.yasr.showLoading();
     }
   };
+
   handleYasqeResize = (_yasqe: Yasqe, newSize: string) => {
     this.persistentJson.yasqe.editorHeight = newSize;
     this.emit("change", this, this.persistentJson);
   };
+
   handleAutocompletionShown = (_yasqe: Yasqe, widget: string) => {
     this.emit("autocompletionShown", this, widget);
   };
+
   handleAutocompletionClose = (_yasqe: Yasqe) => {
     this.emit("autocompletionClose", this);
   };
+
   handleQueryResponse = (_yasqe: Yasqe, response: any, duration: number) => {
     this.emit("queryResponse", this);
     if (!this.yasr) throw new Error("Resultset visualizer not initialized. Cannot draw results");
@@ -935,6 +973,7 @@ WHERE {
       this.emit("change", this, this.persistentJson);
     });
   }
+
   destroy() {
     this.removeAllListeners();
     this.settingsModal?.destroy();
@@ -944,6 +983,7 @@ WHERE {
     this.yasr = undefined;
     this.destroyYasqe();
   }
+
   public static getDefaults(yasgui?: Yasgui): PersistedJson {
     return {
       yasqe: {
