@@ -3,6 +3,7 @@ import "./TabSettingsModal.scss";
 import Tab from "./Tab";
 import * as ConfigExportImport from "./ConfigExportImport";
 import { VERSION } from "./version";
+import * as OAuth2Utils from "./OAuth2Utils";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -714,6 +715,11 @@ export default class TabSettingsModal {
     apiKeyOption.textContent = "API Key (Custom Header)";
     typeSelect.appendChild(apiKeyOption);
 
+    const oauth2Option = document.createElement("option");
+    oauth2Option.value = "oauth2";
+    oauth2Option.textContent = "OAuth 2.0";
+    typeSelect.appendChild(oauth2Option);
+
     // Set the current auth type
     if (existingAuth) {
       typeSelect.value = existingAuth.type;
@@ -810,12 +816,105 @@ export default class TabSettingsModal {
 
     body.appendChild(apiKeyAuthFields);
 
+    // OAuth 2.0 Fields
+    const oauth2AuthFields = document.createElement("div");
+    oauth2AuthFields.id = "oauth2AuthFields";
+    addClass(oauth2AuthFields, "authFieldsContainer");
+    oauth2AuthFields.style.display = "none";
+
+    const clientIdSection = document.createElement("div");
+    addClass(clientIdSection, "authModalSection");
+    const clientIdLabel = document.createElement("label");
+    clientIdLabel.textContent = "Client ID";
+    const clientIdInput = document.createElement("input");
+    clientIdInput.type = "text";
+    clientIdInput.placeholder = "Enter OAuth 2.0 client ID";
+    clientIdInput.value = existingAuth?.type === "oauth2" ? existingAuth.clientId : "";
+    clientIdSection.appendChild(clientIdLabel);
+    clientIdSection.appendChild(clientIdInput);
+    oauth2AuthFields.appendChild(clientIdSection);
+
+    const authEndpointSection = document.createElement("div");
+    addClass(authEndpointSection, "authModalSection");
+    const authEndpointLabel = document.createElement("label");
+    authEndpointLabel.textContent = "Authorization Endpoint";
+    const authEndpointInput = document.createElement("input");
+    authEndpointInput.type = "url";
+    authEndpointInput.placeholder = "https://provider.com/oauth/authorize";
+    authEndpointInput.value = existingAuth?.type === "oauth2" ? existingAuth.authorizationEndpoint : "";
+    authEndpointSection.appendChild(authEndpointLabel);
+    authEndpointSection.appendChild(authEndpointInput);
+    oauth2AuthFields.appendChild(authEndpointSection);
+
+    const tokenEndpointSection = document.createElement("div");
+    addClass(tokenEndpointSection, "authModalSection");
+    const tokenEndpointLabel = document.createElement("label");
+    tokenEndpointLabel.textContent = "Token Endpoint";
+    const tokenEndpointInput = document.createElement("input");
+    tokenEndpointInput.type = "url";
+    tokenEndpointInput.placeholder = "https://provider.com/oauth/token";
+    tokenEndpointInput.value = existingAuth?.type === "oauth2" ? existingAuth.tokenEndpoint : "";
+    tokenEndpointSection.appendChild(tokenEndpointLabel);
+    tokenEndpointSection.appendChild(tokenEndpointInput);
+    oauth2AuthFields.appendChild(tokenEndpointSection);
+
+    const redirectUriSection = document.createElement("div");
+    addClass(redirectUriSection, "authModalSection");
+    const redirectUriLabel = document.createElement("label");
+    redirectUriLabel.textContent = "Redirect URI (Optional)";
+    const redirectUriInput = document.createElement("input");
+    redirectUriInput.type = "url";
+    redirectUriInput.placeholder = window.location.origin + "/oauth2-callback";
+    redirectUriInput.value = existingAuth?.type === "oauth2" ? existingAuth.redirectUri || "" : "";
+    const redirectUriHelp = document.createElement("div");
+    redirectUriHelp.textContent =
+      "Leave empty to use current page URL. Must be registered with OAuth provider.";
+    addClass(redirectUriHelp, "authInputHelp");
+    redirectUriSection.appendChild(redirectUriLabel);
+    redirectUriSection.appendChild(redirectUriInput);
+    redirectUriSection.appendChild(redirectUriHelp);
+    oauth2AuthFields.appendChild(redirectUriSection);
+
+    const scopeSection = document.createElement("div");
+    addClass(scopeSection, "authModalSection");
+    const scopeLabel = document.createElement("label");
+    scopeLabel.textContent = "Scope (Optional)";
+    const scopeInput = document.createElement("input");
+    scopeInput.type = "text";
+    scopeInput.placeholder = "e.g., read write";
+    scopeInput.value = existingAuth?.type === "oauth2" ? existingAuth.scope || "" : "";
+    const scopeHelp = document.createElement("div");
+    scopeHelp.textContent = "Space-separated list of OAuth 2.0 scopes";
+    addClass(scopeHelp, "authInputHelp");
+    scopeSection.appendChild(scopeLabel);
+    scopeSection.appendChild(scopeInput);
+    scopeSection.appendChild(scopeHelp);
+    oauth2AuthFields.appendChild(scopeSection);
+
+    // Show token status if already authenticated
+    if (existingAuth?.type === "oauth2" && existingAuth.accessToken) {
+      const tokenStatusSection = document.createElement("div");
+      addClass(tokenStatusSection, "authModalSection");
+      const tokenStatusLabel = document.createElement("label");
+      tokenStatusLabel.textContent = "Authentication Status";
+      const tokenStatus = document.createElement("div");
+      addClass(tokenStatus, "oauth2TokenStatus");
+      tokenStatus.innerHTML = "✓ Authenticated";
+      addClass(tokenStatus, "authenticated");
+      tokenStatusSection.appendChild(tokenStatusLabel);
+      tokenStatusSection.appendChild(tokenStatus);
+      oauth2AuthFields.appendChild(tokenStatusSection);
+    }
+
+    body.appendChild(oauth2AuthFields);
+
     // Function to toggle fields based on auth type
     const toggleAuthFields = () => {
       const authType = typeSelect.value;
       basicAuthFields.style.display = authType === "basic" ? "block" : "none";
       bearerAuthFields.style.display = authType === "bearer" ? "block" : "none";
       apiKeyAuthFields.style.display = authType === "apiKey" ? "block" : "none";
+      oauth2AuthFields.style.display = authType === "oauth2" ? "block" : "none";
     };
 
     // Set initial visibility
@@ -924,6 +1023,79 @@ export default class TabSettingsModal {
         } else {
           alert("Please enter both header name and API key.");
         }
+      } else if (authType === "oauth2") {
+        const clientId = clientIdInput.value.trim();
+        const authorizationEndpoint = authEndpointInput.value.trim();
+        const tokenEndpoint = tokenEndpointInput.value.trim();
+        const redirectUri = redirectUriInput.value.trim() || window.location.origin + window.location.pathname;
+        const scope = scopeInput.value.trim();
+
+        if (!clientId || !authorizationEndpoint || !tokenEndpoint) {
+          alert("Please enter Client ID, Authorization Endpoint, and Token Endpoint.");
+          return;
+        }
+
+        // Check if already authenticated (has access token)
+        if (existingAuth?.type === "oauth2" && existingAuth.accessToken) {
+          // Already has token, just save the configuration updates
+          this.tab.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {
+            authentication: {
+              type: "oauth2",
+              clientId,
+              authorizationEndpoint,
+              tokenEndpoint,
+              redirectUri,
+              scope,
+              accessToken: existingAuth.accessToken,
+              refreshToken: existingAuth.refreshToken,
+              tokenExpiry: existingAuth.tokenExpiry,
+            },
+          });
+          authModalOverlay.remove();
+          const endpointsList = this.modalContent.querySelector(".endpointsTable");
+          if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+          return;
+        }
+
+        // Start OAuth 2.0 flow
+        saveButton.disabled = true;
+        saveButton.textContent = "Authenticating...";
+
+        OAuth2Utils.startOAuth2Flow({
+          clientId,
+          authorizationEndpoint,
+          tokenEndpoint,
+          redirectUri,
+          scope,
+        })
+          .then((tokenResponse) => {
+            const tokenExpiry = OAuth2Utils.calculateTokenExpiry(tokenResponse.expires_in);
+
+            this.tab.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {
+              authentication: {
+                type: "oauth2",
+                clientId,
+                authorizationEndpoint,
+                tokenEndpoint,
+                redirectUri,
+                scope,
+                accessToken: tokenResponse.access_token,
+                refreshToken: tokenResponse.refresh_token,
+                tokenExpiry,
+              },
+            });
+
+            authModalOverlay.remove();
+            const endpointsList = this.modalContent.querySelector(".endpointsTable");
+            if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+            alert("OAuth 2.0 authentication successful!");
+          })
+          .catch((error) => {
+            console.error("OAuth 2.0 authentication failed:", error);
+            alert("OAuth 2.0 authentication failed: " + error.message);
+            saveButton.disabled = false;
+            saveButton.textContent = "Save & Authenticate";
+          });
       }
     };
 

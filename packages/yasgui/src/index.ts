@@ -54,6 +54,17 @@ export interface EndpointConfig {
         type: "apiKey";
         headerName: string;
         apiKey: string;
+      }
+    | {
+        type: "oauth2";
+        clientId: string;
+        authorizationEndpoint: string;
+        tokenEndpoint: string;
+        redirectUri?: string;
+        scope?: string;
+        accessToken?: string;
+        refreshToken?: string;
+        tokenExpiry?: number; // Unix timestamp in milliseconds
       };
 }
 export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {

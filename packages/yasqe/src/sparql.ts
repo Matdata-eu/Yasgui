@@ -83,6 +83,19 @@ export function getAjaxConfig(
   // Add Authentication headers if configured
   const finalHeaders = { ...headers };
   try {
+    // Check for OAuth 2.0 authentication (highest priority for access tokens)
+    const oauth2Auth = isFunction(config.oauth2Auth) ? config.oauth2Auth(yasqe) : config.oauth2Auth;
+    const trimmedOAuth2Token = oauth2Auth && oauth2Auth.accessToken ? oauth2Auth.accessToken.trim() : "";
+    if (oauth2Auth && trimmedOAuth2Token.length > 0) {
+      if (finalHeaders["Authorization"] !== undefined) {
+        console.warn(
+          "Authorization header already exists in request headers; skipping OAuth 2.0 Auth header to avoid overwrite.",
+        );
+      } else {
+        finalHeaders["Authorization"] = `Bearer ${trimmedOAuth2Token}`;
+      }
+    }
+
     // Check for Bearer Token authentication
     const bearerAuth = isFunction(config.bearerAuth) ? config.bearerAuth(yasqe) : config.bearerAuth;
     const trimmedBearerToken = bearerAuth && bearerAuth.token ? bearerAuth.token.trim() : "";
