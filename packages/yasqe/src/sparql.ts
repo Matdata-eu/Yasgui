@@ -30,7 +30,7 @@ function createBasicAuthHeader(username: string, password: string): string {
  * Base64-encode a Unicode string using UTF-8 encoding.
  * This avoids errors with btoa() and supports all Unicode characters.
  */
-function base64EncodeUnicode(str: string): string {
+export function base64EncodeUnicode(str: string): string {
   if (typeof window !== "undefined" && typeof window.TextEncoder !== "undefined") {
     const utf8Bytes = new window.TextEncoder().encode(str);
     let binary = "";

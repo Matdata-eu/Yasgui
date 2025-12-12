@@ -3,6 +3,7 @@ import { addClass, removeClass, getAsValue } from "@matdata/yasgui-utils";
 import { TabListEl } from "./TabElements";
 import TabSettingsModal from "./TabSettingsModal";
 import { default as Yasqe, RequestConfig, PlainRequestConfig, PartialConfig as YasqeConfig } from "@matdata/yasqe";
+import { base64EncodeUnicode } from "@matdata/yasqe/src/sparql";
 import { default as Yasr, Parser, Config as YasrConfig, PersistentConfig as YasrPersistentConfig } from "@matdata/yasr";
 import { mapValues, eq, mergeWith, words, deburr, invert } from "lodash-es";
 import * as shareLink from "./linkUtils";
@@ -829,7 +830,7 @@ WHERE {
           hasAuthConfigured = true;
           if (finalHeaders["Authorization"] === undefined) {
             const credentials = `${basicAuth.username}:${basicAuth.password}`;
-            const encoded = btoa(unescape(encodeURIComponent(credentials)));
+            const encoded = base64EncodeUnicode(credentials);
             finalHeaders["Authorization"] = `Basic ${encoded}`;
           }
         }
