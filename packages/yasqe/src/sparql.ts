@@ -150,7 +150,16 @@ export function getAjaxConfig(
    */
 }
 
-export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Promise<any> {
+export interface ExecuteQueryOptions {
+  customQuery?: string;
+  customAccept?: string;
+}
+
+export async function executeQuery(
+  yasqe: Yasqe,
+  config?: YasqeAjaxConfig,
+  options?: ExecuteQueryOptions,
+): Promise<any> {
   const queryStart = Date.now();
   try {
     yasqe.emit("queryBefore", yasqe, config);
@@ -160,10 +169,13 @@ export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Prom
     }
     const abortController = new AbortController();
 
+    // Use custom accept header if provided, otherwise use the default
+    const acceptHeader = options?.customAccept || populatedConfig.accept;
+
     const fetchOptions: RequestInit = {
       method: populatedConfig.reqMethod,
       headers: {
-        Accept: populatedConfig.accept,
+        Accept: acceptHeader,
         ...(populatedConfig.headers || {}),
       },
       credentials: populatedConfig.withCredentials ? "include" : "same-origin",
@@ -174,14 +186,45 @@ export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Prom
       (fetchOptions.headers as Record<string, string>)["Content-Type"] = "application/x-www-form-urlencoded";
     }
     const searchParams = new URLSearchParams();
-    for (const key in populatedConfig.args) {
-      const value = populatedConfig.args[key];
-      if (Array.isArray(value)) {
-        value.forEach((v) => searchParams.append(key, v));
-      } else {
-        searchParams.append(key, value);
+
+    // Helper function to append args to search params
+    const appendArgsToParams = (args: RequestArgs, excludeKeys: string[] = []) => {
+      for (const key in args) {
+        if (!excludeKeys.includes(key)) {
+          const value = args[key];
+          if (Array.isArray(value)) {
+            value.forEach((v) => searchParams.append(key, v));
+          } else {
+            searchParams.append(key, value);
+          }
+        }
       }
+    };
+
+    // Helper function to determine the query parameter name
+    // SPARQL queries use 'query' parameter, updates use 'update' parameter
+    const getQueryParameterName = (args: RequestArgs): string => {
+      if (args.query !== undefined) {
+        return "query";
+      } else if (args.update !== undefined) {
+        return "update";
+      }
+      // Default to 'query' for standard SPARQL SELECT/CONSTRUCT/DESCRIBE/ASK queries
+      return "query";
+    };
+
+    // Use custom query if provided, otherwise use the args from config
+    if (options?.customQuery) {
+      const queryArg = getQueryParameterName(populatedConfig.args);
+      searchParams.append(queryArg, options.customQuery);
+
+      // Add other args except the query/update parameter
+      appendArgsToParams(populatedConfig.args, ["query", "update"]);
+    } else {
+      // Add all args from config
+      appendArgsToParams(populatedConfig.args);
     }
+
     if (populatedConfig.reqMethod === "POST") {
       fetchOptions.body = searchParams.toString();
     } else {
@@ -261,7 +304,7 @@ export function getUrlArguments(yasqe: Yasqe, _config: Config["requestConfig"]):
   const defaultGraphs = isFunction(config.defaultGraphs) ? config.defaultGraphs(yasqe) : config.defaultGraphs;
   if (defaultGraphs && defaultGraphs.length > 0) {
     let argName = queryMode == "query" ? "default-graph-uri" : "using-graph-uri ";
-    data[argName] = namedGraphs;
+    data[argName] = defaultGraphs;
   }
 
   /**

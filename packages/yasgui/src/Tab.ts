@@ -772,7 +772,8 @@ WHERE {
 } LIMIT 1000`;
 
     // Execute query in background without changing editor content
-    this.executeBackgroundQuery(constructQuery);
+    // Note: void operator is intentional - errors are handled in the catch block of executeBackgroundQuery
+    void this.executeBackgroundQuery(constructQuery);
   };
 
   private async executeBackgroundQuery(query: string) {
@@ -783,126 +784,20 @@ WHERE {
       this.yasr.showLoading();
       this.emit("queryBefore", this);
 
-      // Get the request configuration
-      const requestConfig = this.yasqe.config.requestConfig;
-      const config = typeof requestConfig === "function" ? requestConfig(this.yasqe) : requestConfig;
-
-      if (!config.endpoint) {
-        throw new Error("No endpoint configured");
-      }
-
-      const endpoint = typeof config.endpoint === "function" ? config.endpoint(this.yasqe) : config.endpoint;
-      const method = typeof config.method === "function" ? config.method(this.yasqe) : config.method || "POST";
-      let headers = typeof config.headers === "function" ? config.headers(this.yasqe) : config.headers || {};
-      const withCredentials =
-        typeof config.withCredentials === "function" ? config.withCredentials(this.yasqe) : config.withCredentials;
-
-      // Process authentication and add to headers
-      const finalHeaders = { ...headers };
-      let hasAuthConfigured = false;
-
-      try {
-        // Check for Bearer Token authentication
-        const bearerAuth = typeof config.bearerAuth === "function" ? config.bearerAuth(this.yasqe) : config.bearerAuth;
-        const trimmedBearerToken = bearerAuth && bearerAuth.token ? bearerAuth.token.trim() : "";
-        if (bearerAuth && trimmedBearerToken.length > 0) {
-          hasAuthConfigured = true;
-          if (finalHeaders["Authorization"] === undefined) {
-            finalHeaders["Authorization"] = `Bearer ${trimmedBearerToken}`;
-          }
-        }
-
-        // Check for API Key authentication
-        const apiKeyAuth = typeof config.apiKeyAuth === "function" ? config.apiKeyAuth(this.yasqe) : config.apiKeyAuth;
-        const trimmedHeaderName = apiKeyAuth && apiKeyAuth.headerName ? apiKeyAuth.headerName.trim() : "";
-        const trimmedApiKey = apiKeyAuth && apiKeyAuth.apiKey ? apiKeyAuth.apiKey.trim() : "";
-        if (apiKeyAuth && trimmedHeaderName.length > 0 && trimmedApiKey.length > 0) {
-          hasAuthConfigured = true;
-          if (finalHeaders[trimmedHeaderName] === undefined) {
-            finalHeaders[trimmedHeaderName] = trimmedApiKey;
-          }
-        }
-
-        // Check for Basic Authentication
-        const basicAuth = typeof config.basicAuth === "function" ? config.basicAuth(this.yasqe) : config.basicAuth;
-        if (basicAuth && basicAuth.username && basicAuth.password) {
-          hasAuthConfigured = true;
-          if (finalHeaders["Authorization"] === undefined) {
-            const credentials = `${basicAuth.username}:${basicAuth.password}`;
-            const encoded = btoa(unescape(encodeURIComponent(credentials)));
-            finalHeaders["Authorization"] = `Basic ${encoded}`;
-          }
-        }
-      } catch (error) {
-        console.warn("Failed to configure authentication for background query:", error);
-      }
-
-      // Determine credentials mode - enable if auth is configured or explicitly set
-      const shouldIncludeCredentials = hasAuthConfigured || withCredentials;
-
-      // Prepare request
-      const searchParams = new URLSearchParams();
-      searchParams.append("query", query);
-
-      // Add any additional args
-      if (config.args && Array.isArray(config.args)) {
-        config.args.forEach((arg: any) => {
-          if (arg.name && arg.value) {
-            searchParams.append(arg.name, arg.value);
-          }
-        });
-      }
-
-      const fetchOptions: RequestInit = {
-        method: method,
-        headers: {
-          Accept: "text/turtle",
-          ...finalHeaders,
-        },
-        credentials: shouldIncludeCredentials ? "include" : "same-origin",
-        mode: "cors",
-      };
-
-      let url = endpoint;
-      if (method === "POST") {
-        fetchOptions.headers = {
-          ...fetchOptions.headers,
-          "Content-Type": "application/x-www-form-urlencoded",
-        };
-        fetchOptions.body = searchParams.toString();
-      } else {
-        const urlObj = new URL(endpoint);
-        searchParams.forEach((value, key) => {
-          urlObj.searchParams.append(key, value);
-        });
-        url = urlObj.toString();
-      }
-
+      // Track query execution time
       const startTime = Date.now();
-      const response = await fetch(url, fetchOptions);
+
+      // Use yasqe's executeQuery with custom query and accept header
+      const queryResponse = await Yasqe.Sparql.executeQuery(
+        this.yasqe,
+        undefined, // Use default config
+        {
+          customQuery: query,
+          customAccept: "text/turtle",
+        },
+      );
+
       const duration = Date.now() - startTime;
-
-      const result = await response.text();
-
-      // Create a query response object similar to what Yasqe produces
-      // This includes headers so the Parser can detect the content type
-      const queryResponse = {
-        ok: response.ok,
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        type: response.type,
-        content: result,
-      };
-
-      if (!response.ok) {
-        // For HTTP errors (4xx, 5xx), pass the error with status to yasr
-        const error: any = new Error(result || response.statusText);
-        error.status = response.status;
-        error.statusText = response.statusText;
-        error.response = queryResponse;
-        throw error;
-      }
 
       // Set the response in Yasr
       this.yasr.setResponse(queryResponse, duration);
@@ -922,15 +817,6 @@ WHERE {
         // Set error response with detailed HTTP status if available
         const errorObj: any = error;
         let errorText = error instanceof Error ? error.message : String(error);
-
-        // Enhance error message for fetch failures
-        if (
-          error instanceof Error &&
-          !errorObj.status &&
-          (error.message.includes("Failed to fetch") || error.message.includes("NetworkError"))
-        ) {
-          errorText = `${error.message}. The server may have returned an error response (check browser dev tools), but CORS headers are preventing JavaScript from accessing it. Ensure the endpoint returns proper CORS headers even for error responses (Access-Control-Allow-Origin, etc.).`;
-        }
 
         this.yasr.setResponse(
           {
