@@ -772,6 +772,7 @@ WHERE {
 } LIMIT 1000`;
 
     // Execute query in background without changing editor content
+    // Note: void operator is intentional - errors are handled within executeBackgroundQuery
     void this.executeBackgroundQuery(constructQuery);
   };
 
@@ -783,6 +784,9 @@ WHERE {
       this.yasr.showLoading();
       this.emit("queryBefore", this);
 
+      // Track query execution time
+      const startTime = Date.now();
+
       // Use yasqe's executeQuery with custom query and accept header
       const queryResponse = await Yasqe.Sparql.executeQuery(
         this.yasqe,
@@ -793,10 +797,7 @@ WHERE {
         },
       );
 
-      // Get the duration from the query execution
-      // The executeQuery doesn't return duration, so we'll set it to 0
-      // The actual duration tracking happens in yasqe's events
-      const duration = 0;
+      const duration = Date.now() - startTime;
 
       // Set the response in Yasr
       this.yasr.setResponse(queryResponse, duration);
