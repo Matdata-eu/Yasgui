@@ -909,6 +909,7 @@ interface RequestConfig {
   basicAuth?: BasicAuthConfig | ((yasqe: Yasqe) => BasicAuthConfig | undefined);
   bearerAuth?: BearerAuthConfig | ((yasqe: Yasqe) => BearerAuthConfig | undefined);
   apiKeyAuth?: ApiKeyAuthConfig | ((yasqe: Yasqe) => ApiKeyAuthConfig | undefined);
+  oauth2Auth?: OAuth2AuthConfig | ((yasqe: Yasqe) => OAuth2AuthConfig | undefined);
 }
 
 interface BasicAuthConfig {
@@ -923,6 +924,10 @@ interface BearerAuthConfig {
 interface ApiKeyAuthConfig {
   headerName: string;
   apiKey: string;
+}
+
+interface OAuth2AuthConfig {
+  accessToken: string;
 }
 ```
 
@@ -962,11 +967,12 @@ YASGUI supports multiple authentication methods for SPARQL endpoints: Basic Auth
 
 #### Authentication Types
 
-YASGUI supports three authentication types:
+YASGUI supports four authentication types:
 
 1. **Basic Authentication**: Username and password sent as HTTP Basic Auth
 2. **Bearer Token**: Token sent in the `Authorization: Bearer <token>` header
 3. **API Key**: Custom header with an API key (e.g., `X-API-Key: <key>`)
+4. **OAuth 2.0**: Industry-standard OAuth 2.0 with automatic token refresh
 
 #### Basic Authentication
 
@@ -1051,6 +1057,24 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://api.example.com/sparql", {
     type: 'apiKey',
     headerName: 'X-API-Key',
     apiKey: 'your-api-key-here'
+  }
+});
+
+// Add or update an endpoint with OAuth 2.0
+yasgui.persistentConfig.addOrUpdateEndpoint("https://oauth.example.com/sparql", {
+  label: "OAuth Protected Endpoint",
+  showAsButton: true,
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-client-id',
+    authorizationEndpoint: 'https://auth.example.com/oauth/authorize',
+    tokenEndpoint: 'https://auth.example.com/oauth/token',
+    redirectUri: 'https://yourapp.com/oauth2-callback', // optional
+    scope: 'read write', // optional
+    // The following are automatically populated after authentication:
+    // accessToken: '...',
+    // refreshToken: '...',
+    // tokenExpiry: 1234567890
   }
 });
 

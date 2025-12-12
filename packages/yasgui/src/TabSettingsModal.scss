@@ -925,6 +925,33 @@
   }
 }
 
+// OAuth 2.0 specific styling
+.authInputHelp {
+  font-size: 12px;
+  color: var(--yasgui-text-secondary, #666);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.oauth2TokenStatus {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+
+  &.authenticated {
+    background: var(--yasgui-success-bg, #d4edda);
+    color: var(--yasgui-success-text, #155724);
+    border: 1px solid var(--yasgui-success-border, #c3e6cb);
+  }
+
+  &.expired {
+    background: var(--yasgui-warning-bg, #fff3cd);
+    color: var(--yasgui-warning-text, #856404);
+    border: 1px solid var(--yasgui-warning-border, #ffeaa7);
+  }
+}
+
 // Add endpoint form styling
 .addEndpointForm {
   margin-top: 20px;

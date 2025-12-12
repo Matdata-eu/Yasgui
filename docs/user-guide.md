@@ -656,23 +656,52 @@ The endpoints table shows:
 
 **Configuring Authentication:**
 
-YASGUI supports HTTP Basic Authentication for endpoints that require username and password credentials.
+YASGUI supports multiple authentication methods for endpoints that require credentials.
 
 1. **Find your endpoint** in the SPARQL Endpoints table
 2. **Click "Configure"** in the Authentication column
-3. **Select authentication type** (currently HTTP Basic Authentication)
-4. **Enter credentials**:
-   - Username: Your endpoint username
-   - Password: Your endpoint password
-5. **Click "Save"** to apply
+3. **Select authentication type**:
+   - **HTTP Basic Authentication**: Username and password
+   - **Bearer Token**: Pre-configured access token
+   - **API Key**: Custom header with API key
+   - **OAuth 2.0**: Industry-standard OAuth 2.0 authorization
+4. **Enter credentials** based on your selected type (see below)
+5. **Click "Save"** (or "Save & Authenticate" for OAuth 2.0) to apply
+
+**Authentication Types:**
+
+*HTTP Basic Authentication:*
+- Username: Your endpoint username
+- Password: Your endpoint password
+- Use case: Simple username/password authentication
+
+*Bearer Token:*
+- Token: Your pre-configured bearer token
+- Use case: When you have a pre-generated access token
+
+*API Key (Custom Header):*
+- Header Name: The HTTP header name (e.g., X-API-Key)
+- API Key: Your API key value
+- Use case: Endpoints using custom header-based authentication
+
+*OAuth 2.0:*
+- Client ID: Your OAuth application's client ID
+- Authorization Endpoint: The OAuth provider's authorization URL
+- Token Endpoint: The OAuth provider's token exchange URL
+- Redirect URI: Callback URL (optional, defaults to current page)
+- Scope: Space-separated OAuth scopes (optional)
+- Use case: Secure, industry-standard authorization with automatic token refresh
+- **Process**: Click "Save & Authenticate" to open OAuth login window
 
 **Security Considerations:**
 
 ⚠️ **Important Security Notes:**
 
-- **Credentials are stored in browser localStorage**: Your username and password are stored locally in your browser
+- **Credentials are stored in browser localStorage**: Your authentication credentials are stored locally in your browser
 - **Only use with HTTPS endpoints**: Never send credentials to HTTP endpoints as they will be transmitted in plain text
 - **Be cautious on shared computers**: Clear your browser data when using YASGUI on shared or public computers
+- **OAuth 2.0 tokens**: Access tokens are automatically refreshed when expired (if refresh token is available)
+- **Token security**: OAuth 2.0 uses secure PKCE flow (Proof Key for Code Exchange) for enhanced security
 
 **How Authentication Works:**
 
@@ -682,9 +711,30 @@ Authentication is stored per-endpoint, which means:
 - Credentials persist across browser sessions (stored in localStorage)
 
 When authentication is configured:
+
+For **Basic Authentication**:
 1. YASGUI encodes your credentials using Base64 encoding
 2. Adds an `Authorization` header with the format: `Basic <encoded-credentials>`
 3. Sends this header with every SPARQL query request to that endpoint
+
+For **Bearer Token**:
+1. Uses the provided token as-is
+2. Adds an `Authorization` header with the format: `Bearer <token>`
+3. Sends this header with every SPARQL query request to that endpoint
+
+For **API Key**:
+1. Uses the specified custom header name and API key value
+2. Adds a custom header with the format: `<Header-Name>: <api-key>`
+3. Sends this header with every SPARQL query request to that endpoint
+
+For **OAuth 2.0**:
+1. Opens a popup window for OAuth provider authentication
+2. Uses Authorization Code flow with PKCE for secure token exchange
+3. Stores access token and refresh token
+4. Automatically checks token expiration before each query
+5. Automatically refreshes expired tokens using refresh token (if available)
+6. Adds an `Authorization` header with the format: `Bearer <access-token>`
+7. If token refresh fails, prompts user to re-authenticate
 
 ### Query History and Persistence
 
