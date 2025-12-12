@@ -150,7 +150,16 @@ export function getAjaxConfig(
    */
 }
 
-export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Promise<any> {
+export interface ExecuteQueryOptions {
+  customQuery?: string;
+  customAccept?: string;
+}
+
+export async function executeQuery(
+  yasqe: Yasqe,
+  config?: YasqeAjaxConfig,
+  options?: ExecuteQueryOptions,
+): Promise<any> {
   const queryStart = Date.now();
   try {
     yasqe.emit("queryBefore", yasqe, config);
@@ -160,10 +169,13 @@ export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Prom
     }
     const abortController = new AbortController();
 
+    // Use custom accept header if provided, otherwise use the default
+    const acceptHeader = options?.customAccept || populatedConfig.accept;
+
     const fetchOptions: RequestInit = {
       method: populatedConfig.reqMethod,
       headers: {
-        Accept: populatedConfig.accept,
+        Accept: acceptHeader,
         ...(populatedConfig.headers || {}),
       },
       credentials: populatedConfig.withCredentials ? "include" : "same-origin",
@@ -174,14 +186,40 @@ export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Prom
       (fetchOptions.headers as Record<string, string>)["Content-Type"] = "application/x-www-form-urlencoded";
     }
     const searchParams = new URLSearchParams();
-    for (const key in populatedConfig.args) {
-      const value = populatedConfig.args[key];
-      if (Array.isArray(value)) {
-        value.forEach((v) => searchParams.append(key, v));
-      } else {
-        searchParams.append(key, value);
+
+    // Use custom query if provided, otherwise use the args from config
+    if (options?.customQuery) {
+      // For custom queries, we still need to determine the query parameter name
+      const queryArg =
+        populatedConfig.args.query !== undefined
+          ? "query"
+          : populatedConfig.args.update !== undefined
+            ? "update"
+            : "query";
+      searchParams.append(queryArg, options.customQuery);
+
+      // Add other args except the query/update parameter
+      for (const key in populatedConfig.args) {
+        if (key !== "query" && key !== "update") {
+          const value = populatedConfig.args[key];
+          if (Array.isArray(value)) {
+            value.forEach((v) => searchParams.append(key, v));
+          } else {
+            searchParams.append(key, value);
+          }
+        }
+      }
+    } else {
+      for (const key in populatedConfig.args) {
+        const value = populatedConfig.args[key];
+        if (Array.isArray(value)) {
+          value.forEach((v) => searchParams.append(key, v));
+        } else {
+          searchParams.append(key, value);
+        }
       }
     }
+
     if (populatedConfig.reqMethod === "POST") {
       fetchOptions.body = searchParams.toString();
     } else {
