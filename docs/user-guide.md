@@ -66,6 +66,49 @@ This excellent resource covers:
 
 YASGUI is available at: **[https://yasgui.matdata.eu/](https://yasgui.matdata.eu/)**
 
+### Running YASGUI with Docker
+
+You can run YASGUI locally using Docker, which is especially useful when working with local SPARQL endpoints.
+
+**Why Use Docker?**
+- Avoids browser mixed content restrictions when querying local endpoints
+- No need to grant browser permissions for local network access
+- Self-contained environment with all dependencies included
+- Easy to set up and run
+
+**Running YASGUI:**
+
+```bash
+docker run -p 8080:8080 mathiasvda/yasgui
+```
+
+This command:
+- Downloads the YASGUI Docker image (first run only)
+- Starts YASGUI on port 8080
+- Makes it accessible at `http://localhost:8080`
+
+**Accessing YASGUI:**
+- Open your browser and navigate to: `http://localhost:8080`
+- YASGUI will load and be ready to use
+- You can now query local endpoints without browser permission prompts
+
+**Benefits for Local Endpoints:**
+- Both YASGUI and your local endpoint use HTTP (no mixed content issues)
+- No browser security prompts
+- Seamless connection to localhost services
+- See [Querying Local Endpoints](#querying-local-endpoints) for more details
+
+**Stopping YASGUI:**
+- Press `Ctrl+C` in the terminal where Docker is running
+- Or use: `docker stop <container-id>`
+
+**Custom Port:**
+To run on a different port (e.g., 3000):
+```bash
+docker run -p 3000:8080 mathiasvda/yasgui
+```
+Then access at `http://localhost:3000`
+
 ### Your First Query
 
 1. **Select an Endpoint**: Enter a SPARQL endpoint URL in the endpoint field (or use the default)
@@ -135,6 +178,16 @@ The process is similar in Chrome, Firefox, and Safari:
 - Firefox: May require setting `security.mixed_content.block_active_content` to false in about:config (unverified by author)
 - Safari: Check "Disable local file restrictions" in Develop menu (unverified by author)
 - Vivaldi: the same as Edge (verified by author)
+
+**Alternative: Use Docker to Avoid Permission Issues**
+
+If you frequently work with local endpoints, consider running YASGUI locally with Docker:
+```bash
+docker run -p 8080:8080 mathiasvda/yasgui
+```
+Then open your browser and navigate to `http://localhost:8080`.
+
+This eliminates browser permission prompts since both YASGUI and your local endpoint use HTTP. See [Running YASGUI with Docker](#running-yasgui-with-docker) for details.
 
 **Important Notes:**
 - Permission is required because YASGUI is served over HTTPS while your local endpoint uses HTTP
@@ -959,20 +1012,27 @@ CORS (Cross-Origin Resource Sharing) is a browser security feature. Some SPARQL 
 Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content policy). This is a security feature to prevent malicious websites from accessing your local services.
 
 **Solutions:**
-1. **Grant Browser Permission**: 
+1. **Run YASGUI Locally with Docker** (Recommended):
+   ```bash
+   docker run -p 8080:8080 mathiasvda/yasgui
+   ```
+   - Eliminates all permission issues
+   - Both YASGUI and local endpoint use HTTP
+   - See [Running YASGUI with Docker](#running-yasgui-with-docker) for details
+2. **Grant Browser Permission**: 
    - Click "Allow" when the browser prompts for permission
    - See [Querying Local Endpoints](#querying-local-endpoints) for detailed instructions with screenshots
-2. **Check Permission Settings**:
+3. **Check Permission Settings**:
    - Click the lock/info icon in the address bar
    - Find "Insecure content" or "Mixed content" setting
    - Change to "Allow" and reload
-3. **Verify Local Server is Running**:
+4. **Verify Local Server is Running**:
    - Open `http://localhost:PORT/` in a new tab
    - Ensure you see your SPARQL endpoint's interface
-4. **Check Port Number**: Common SPARQL ports are 3030 (Fuseki), 7200 (GraphDB), 3333 (Blazegraph)
-5. **Try 127.0.0.1**: If `localhost` doesn't work, try `http://127.0.0.1:PORT/`
-6. **Enable CORS on Local Server**: Configure your SPARQL server to allow CORS requests
-7. **Use HTTPS for Local Endpoint**: Set up SSL/TLS on your local server (advanced)
+5. **Check Port Number**: Common SPARQL ports are 3030 (Fuseki), 7200 (GraphDB), 3333 (Blazegraph)
+6. **Try 127.0.0.1**: If `localhost` doesn't work, try `http://127.0.0.1:PORT/`
+7. **Enable CORS on Local Server**: Configure your SPARQL server to allow CORS requests
+8. **Use HTTPS for Local Endpoint**: Set up SSL/TLS on your local server (advanced)
 
 **Browser-Specific Notes:**
 - **Edge/Chrome/Vivaldi**: Look for shield icon in address bar to manage blocked content
