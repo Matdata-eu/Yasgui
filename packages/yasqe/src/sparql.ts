@@ -187,9 +187,23 @@ export async function executeQuery(
     }
     const searchParams = new URLSearchParams();
 
+    // Helper function to append args to search params
+    const appendArgsToParams = (args: RequestArgs, excludeKeys: string[] = []) => {
+      for (const key in args) {
+        if (!excludeKeys.includes(key)) {
+          const value = args[key];
+          if (Array.isArray(value)) {
+            value.forEach((v) => searchParams.append(key, v));
+          } else {
+            searchParams.append(key, value);
+          }
+        }
+      }
+    };
+
     // Use custom query if provided, otherwise use the args from config
     if (options?.customQuery) {
-      // For custom queries, we still need to determine the query parameter name
+      // For custom queries, determine the query parameter name
       const queryArg =
         populatedConfig.args.query !== undefined
           ? "query"
@@ -199,25 +213,10 @@ export async function executeQuery(
       searchParams.append(queryArg, options.customQuery);
 
       // Add other args except the query/update parameter
-      for (const key in populatedConfig.args) {
-        if (key !== "query" && key !== "update") {
-          const value = populatedConfig.args[key];
-          if (Array.isArray(value)) {
-            value.forEach((v) => searchParams.append(key, v));
-          } else {
-            searchParams.append(key, value);
-          }
-        }
-      }
+      appendArgsToParams(populatedConfig.args, ["query", "update"]);
     } else {
-      for (const key in populatedConfig.args) {
-        const value = populatedConfig.args[key];
-        if (Array.isArray(value)) {
-          value.forEach((v) => searchParams.append(key, v));
-        } else {
-          searchParams.append(key, value);
-        }
-      }
+      // Add all args from config
+      appendArgsToParams(populatedConfig.args);
     }
 
     if (populatedConfig.reqMethod === "POST") {
