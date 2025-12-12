@@ -31,6 +31,7 @@ export default function initialize(): Config<CatalogueItem> {
     theme: undefined,
     showThemeToggle: true,
     orientation: "vertical",
+    showSnippetsBar: true,
     endpointButtons: undefined,
     endpointCatalogueOptions: {
       getData: () => {

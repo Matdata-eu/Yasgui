@@ -426,7 +426,10 @@ export default class TabSettingsModal {
     const snippetsBarCheckbox = document.createElement("input");
     snippetsBarCheckbox.type = "checkbox";
     snippetsBarCheckbox.id = "showSnippetsBar";
-    snippetsBarCheckbox.checked = yasqe.getSnippetsBarVisible();
+    // Read from global config
+    const persistedValue = this.tab.yasgui.persistentConfig.getShowSnippetsBar();
+    snippetsBarCheckbox.checked =
+      persistedValue !== undefined ? persistedValue : this.tab.yasgui.config.showSnippetsBar !== false;
 
     const snippetsBarLabel = document.createElement("label");
     snippetsBarLabel.htmlFor = "showSnippetsBar";
@@ -1057,7 +1060,23 @@ export default class TabSettingsModal {
       }
       const snippetsBarCheckbox = document.getElementById("showSnippetsBar") as HTMLInputElement;
       if (snippetsBarCheckbox) {
-        yasqe.setSnippetsBarVisible(snippetsBarCheckbox.checked);
+        // Save globally to config and persistent storage
+        this.tab.yasgui.config.showSnippetsBar = snippetsBarCheckbox.checked;
+        this.tab.yasgui.persistentConfig.setShowSnippetsBar(snippetsBarCheckbox.checked);
+
+        // Apply to all tabs by updating each Yasqe instance's config and refreshing
+        this.tab.yasgui.persistentConfig.getTabs().forEach((tabId: string) => {
+          const tab = this.tab.yasgui.getTab(tabId);
+          if (tab) {
+            const tabYasqe = tab.getYasqe();
+            if (tabYasqe) {
+              // Update the individual Yasqe instance's config
+              tabYasqe.config.showSnippetsBar = snippetsBarCheckbox.checked;
+              // Refresh the snippets bar to reflect the change
+              tabYasqe.refreshSnippetsBar();
+            }
+          }
+        });
       }
       yasqe.saveQuery();
     }

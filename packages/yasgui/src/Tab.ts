@@ -558,6 +558,8 @@ export class Tab extends EventEmitter {
       persistenceId: null, //yasgui handles persistent storing
       consumeShareLink: null, //not handled by this tab, but by parent yasgui instance
       createShareableLink: () => this.getShareableLink(),
+      // Use global showSnippetsBar setting if it exists
+      showSnippetsBar: this.yasgui.config.showSnippetsBar !== false,
       requestConfig: () => {
         const processedReqConfig: YasguiRequestConfig = {
           //setting defaults

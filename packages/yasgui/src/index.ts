@@ -87,6 +87,10 @@ export interface Config<EndpointObject extends CatalogueItem = CatalogueItem> {
    * 'horizontal': YASQE on left, YASR on right
    */
   orientation?: "vertical" | "horizontal";
+  /**
+   * Show code snippets bar in all tabs (global setting)
+   */
+  showSnippetsBar?: boolean;
 }
 export type PartialConfig = {
   [P in keyof Config]?: Config[P] extends object ? Partial<Config[P]> : Config[P];
@@ -150,6 +154,12 @@ export class Yasgui extends EventEmitter {
     }
     this.themeManager.listenToSystemTheme();
     this.persistentConfig = new PersistentConfig(this);
+
+    // Load persisted showSnippetsBar if available
+    const persistedShowSnippetsBar = this.persistentConfig.getShowSnippetsBar();
+    if (persistedShowSnippetsBar !== undefined) {
+      this.config.showSnippetsBar = persistedShowSnippetsBar;
+    }
 
     this.tabElements = new TabElements(this);
     this.tabPanelsEl = document.createElement("div");
