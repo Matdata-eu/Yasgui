@@ -3,6 +3,7 @@ import "./TabSettingsModal.scss";
 import Tab from "./Tab";
 import * as ConfigExportImport from "./ConfigExportImport";
 import { VERSION } from "./version";
+import PersistentConfig from "./PersistentConfig";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -1599,6 +1600,28 @@ export default class TabSettingsModal {
     aboutSection.appendChild(footerInfo);
 
     container.appendChild(aboutSection);
+
+    // Storage Management Section
+    const storageSection = document.createElement("div");
+    addClass(storageSection, "settingsSection");
+
+    const storageTitle = document.createElement("h3");
+    storageTitle.textContent = "Storage Management";
+    storageSection.appendChild(storageTitle);
+
+    const storageDescription = document.createElement("p");
+    storageDescription.textContent =
+      "Clear all locally stored data including tabs, queries, endpoint configurations, and preferences. This action cannot be undone.";
+    addClass(storageDescription, "settingsHelp");
+    storageSection.appendChild(storageDescription);
+
+    const clearStorageButton = document.createElement("button");
+    clearStorageButton.textContent = "Clear Persistent Storage";
+    addClass(clearStorageButton, "dangerButton");
+    clearStorageButton.onclick = () => this.clearPersistentStorage();
+    storageSection.appendChild(clearStorageButton);
+
+    container.appendChild(storageSection);
   }
 
   private createAboutLink(label: string, url: string, description: string): HTMLElement {
@@ -1620,6 +1643,27 @@ export default class TabSettingsModal {
     linkContainer.appendChild(desc);
 
     return linkContainer;
+  }
+
+  private clearPersistentStorage() {
+    const confirmed = confirm(
+      "Are you sure you want to clear all persistent storage?\n\n" +
+        "This will delete:\n" +
+        "- All saved tabs and queries\n" +
+        "- Endpoint configurations and history\n" +
+        "- Authentication settings\n" +
+        "- Editor preferences\n" +
+        "- Prefixes\n\n" +
+        "This action cannot be undone and the page will reload.",
+    );
+
+    if (confirmed) {
+      // Clear persistent storage
+      PersistentConfig.clear();
+
+      // Reload the page to reinitialize with empty storage
+      window.location.reload();
+    }
   }
 
   public destroy() {

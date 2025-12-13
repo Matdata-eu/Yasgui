@@ -160,6 +160,13 @@
 
 .settingsSection {
   margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--yasgui-text-primary, #000);
+  }
 }
 
 .settingsLabel {
@@ -297,7 +304,8 @@
 }
 
 .primaryButton,
-.secondaryButton {
+.secondaryButton,
+.dangerButton {
   padding: 8px 20px;
   border: none;
   border-radius: 4px;
@@ -320,7 +328,21 @@
   color: var(--yasgui-text-primary, #333);
 
   &:hover {
-    background: var(--yasgui-border-color, #d0d0d0);
+    background: var(--yasgui-bg-quaternary, #d0d0d0);
+  }
+}
+
+.dangerButton {
+  background: var(--yasgui-danger-bg, #dc3545);
+  color: white;
+  margin-top: 10px;
+
+  &:hover {
+    background: var(--yasgui-danger-hover, #c82333);
+  }
+
+  &:active {
+    background: var(--yasgui-danger-active, #bd2130);
   }
 }
 
