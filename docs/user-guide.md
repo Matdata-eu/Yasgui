@@ -4,14 +4,67 @@
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [What is SPARQL?](#what-is-sparql)
-3. [Getting Started](#getting-started)
-4. [Components Overview](#components-overview)
-5. [Features](#features)
-6. [Plugins](#plugins)
-7. [Keyboard Shortcuts](#keyboard-shortcuts)
-8. [Troubleshooting](#troubleshooting)
+- [YASGUI User Guide](#yasgui-user-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [What is SPARQL?](#what-is-sparql)
+    - [Basic Concepts](#basic-concepts)
+    - [Learning SPARQL](#learning-sparql)
+    - [Common SPARQL Query Types](#common-sparql-query-types)
+  - [Getting Started](#getting-started)
+    - [Accessing YASGUI](#accessing-yasgui)
+    - [Running YASGUI with Docker](#running-yasgui-with-docker)
+    - [Your First Query](#your-first-query)
+    - [Saving Your Work](#saving-your-work)
+    - [Querying Local Endpoints](#querying-local-endpoints)
+  - [Components Overview](#components-overview)
+    - [YASQE (Query Editor)](#yasqe-query-editor)
+    - [YASR (Results Viewer)](#yasr-results-viewer)
+    - [YASGUI (Main Interface)](#yasgui-main-interface)
+  - [Features](#features)
+    - [Themes](#themes)
+    - [Layout Orientation](#layout-orientation)
+    - [Query Formatting](#query-formatting)
+    - [CONSTRUCT Query Validation](#construct-query-validation)
+    - [Code Snippets](#code-snippets)
+    - [Fullscreen Mode](#fullscreen-mode)
+    - [Prefix Management](#prefix-management)
+    - [Endpoint Quick Switch](#endpoint-quick-switch)
+    - [Configuration Import/Export](#configuration-importexport)
+    - [URI Explorer](#uri-explorer)
+    - [Query Tabs](#query-tabs)
+    - [Settings Modal](#settings-modal)
+    - [SPARQL Endpoints Management](#sparql-endpoints-management)
+    - [Query History and Persistence](#query-history-and-persistence)
+    - [Share Queries](#share-queries)
+  - [Plugins](#plugins)
+    - [Table Plugin](#table-plugin)
+    - [Boolean Plugin](#boolean-plugin)
+    - [Response Plugin](#response-plugin)
+    - [Graph Plugin](#graph-plugin)
+    - [Geo Plugin](#geo-plugin)
+    - [Error Plugin](#error-plugin)
+    - [Plugin Selection](#plugin-selection)
+  - [Keyboard Shortcuts](#keyboard-shortcuts)
+    - [Query Editor (YASQE)](#query-editor-yasqe)
+    - [Fullscreen](#fullscreen)
+    - [General Editor](#general-editor)
+    - [Results Viewer (YASR)](#results-viewer-yasr)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues and Solutions](#common-issues-and-solutions)
+      - [Query Not Executing](#query-not-executing)
+      - [CORS Errors](#cors-errors)
+      - [Local Endpoint Issues](#local-endpoint-issues)
+      - [Virtuoso Preflight Authentication Issues](#virtuoso-preflight-authentication-issues)
+      - [Slow Queries](#slow-queries)
+      - [Results Not Displaying Correctly](#results-not-displaying-correctly)
+      - [Autocomplete Not Working](#autocomplete-not-working)
+      - [Lost Queries](#lost-queries)
+      - [Theme/Layout Not Saving](#themelayout-not-saving)
+      - [Formatting Issues](#formatting-issues)
+    - [Getting Help](#getting-help)
+    - [Best Practices](#best-practices)
+  - [Additional Resources](#additional-resources)
 
 ---
 
@@ -997,9 +1050,10 @@ CORS (Cross-Origin Resource Sharing) is a browser security feature. Some SPARQL 
 
 **Solutions:**
 1. **Check Endpoint CORS Policy**: Contact the endpoint administrator
-2. **Use CORS Proxy**: Configure a CORS proxy in YASGUI settings (if provided by administrator)
+2. **Use CORS Proxy**: Setup a local hosted CORS proxy (see (#virtuoso-preflight-authentication-issues)) or a remote one (google it)
 3. **Use Desktop/Server Version**: Run YASGUI locally or server-side where CORS doesn't apply
 4. **Server-Side Proxy**: Query through a backend service
+5. **Virtuoso-Specific Issues**: If using Virtuoso 07.20.3242 or earlier with authentication, see [Virtuoso Preflight Authentication Issues](#virtuoso-preflight-authentication-issues)
 
 #### Local Endpoint Issues
 
@@ -1033,11 +1087,85 @@ Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content 
 6. **Try 127.0.0.1**: If `localhost` doesn't work, try `http://127.0.0.1:PORT/`
 7. **Enable CORS on Local Server**: Configure your SPARQL server to allow CORS requests
 8. **Use HTTPS for Local Endpoint**: Set up SSL/TLS on your local server (advanced)
+9. **Virtuoso with Authentication**: If using Virtuoso 07.20.3242 or earlier with Basic Authentication, see [Virtuoso Preflight Authentication Issues](#virtuoso-preflight-authentication-issues)
 
 **Browser-Specific Notes:**
 - **Edge/Chrome/Vivaldi**: Look for shield icon in address bar to manage blocked content
 - **Firefox**: May need to adjust `security.mixed_content.block_active_content` in about:config
 - **Safari**: Enable "Disable local file restrictions" in Develop menu
+
+#### Virtuoso Preflight Authentication Issues
+
+**Symptoms:**
+- Using Virtuoso 07.20.3242 (and earlier?) with Basic Authentication
+- SPARQL queries work from curl/Postman but fail from browser
+- Browser shows 401 Unauthorized error on OPTIONS request
+- Error occurs before the actual query is sent
+
+**Explanation:**
+When querying a SPARQL endpoint with authentication from a web browser, the browser sends a preflight OPTIONS request first (before the actual GET/POST request). This is standard CORS behavior. However, **Virtuoso versions 07.20.3242 and earlier have a bug** where they require authentication for the OPTIONS request, which violates the CORS specification. The browser never sends credentials with OPTIONS requests, so Virtuoso returns a 401 error and blocks the query.
+
+This issue was supposed to be fixed in Virtuoso 08.03.3326 (see [release notes](https://community.openlinksw.com/t/virtuoso-08-03-3326-release-notes/3376): "Fixed OPTIONS is pre-flight; should be 200 w/ CORS headers").
+
+**Solutions:**
+
+**Option 1: Use a Local CORS Proxy** (Recommended for development)
+
+Run a simple proxy server that handles CORS and authentication correctly:
+
+1. **Quick Start with Docker:**
+   ```bash
+   docker run -d --name simple-cors-proxy -p 8080:8080 mathiasvda/simple-cors-proxy
+   ```
+
+2. **Or install from source:**
+   ```bash
+   git clone https://github.com/Matdata-eu/simple-cors-proxy.git
+   cd simple-cors-proxy
+   npm install
+   npm start
+   ```
+   The proxy runs on port 8080 by default.
+
+3. **Configure YASGUI endpoint:**
+   - For **local Virtuoso** (running on your machine):
+     ```
+     http://localhost:8080/proxy/http://host.docker.internal:8890/sparql-auth
+     ```
+   - For **remote Virtuoso** servers:
+     ```
+     http://localhost:8080/proxy/https://your-virtuoso-server.com/sparql
+     ```
+   
+   The proxy URL format is: `http://localhost:8080/proxy/[TARGET_ENDPOINT_URL]`
+
+**Option 2: Upgrade Virtuoso** (Recommended for production)
+
+At the time of writing, the issue was present in the latest Virtuoso Opensource version 07.20.3242. This issue has been raised with OpenLink and hopefully they will patch the proble.
+
+**Option 3: Configure Server-Side URL Rewrite**
+
+If you control the web server in front of Virtuoso, configure it to return 200 OK for OPTIONS requests without authentication. See your web server documentation (Apache, Nginx, IIS) for URL rewrite rules.
+
+**Why This Happens:**
+
+When YASGUI sends an authenticated request from a browser:
+1. Browser detects cross-origin request with custom headers (Authorization)
+2. Browser sends preflight OPTIONS request (without credentials)
+3. Virtuoso incorrectly requires authentication for OPTIONS
+4. OPTIONS returns 401, blocking the actual query
+5. Your SPARQL query never executes
+
+The proxy solves this by:
+- Accepting the OPTIONS request and returning proper CORS headers
+- Forwarding only the actual GET/POST requests to Virtuoso with credentials
+- Translating between browser CORS requirements and Virtuoso's behavior
+
+**Additional Notes:**
+- This issue only affects browser-based queries with authentication
+- Command-line tools (curl, Postman) work fine because they don't send OPTIONS
+- The issue affects other triple stores with similar CORS/authentication bugs
+- The proxy is safe for local development but shouldn't be exposed publicly
 
 #### Slow Queries
 
@@ -1079,6 +1207,7 @@ Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content 
 2. **Wait for Typing Pause**: Autocomplete appears after a brief delay
 3. **Position Cursor Correctly**: Autocomplete context-dependent (prefixes, keywords, etc.)
 4. **Manually Trigger**: Press `Ctrl+Space` to force autocomplete
+5. **LOV ontology description**: The implementation uses https://lov.linkeddata.es/dataset/lov/ to retrieve classes and predicates from ontologies. If the ontology that you use cannot be found here, then the autocomplete will not work.
 
 #### Lost Queries
 
