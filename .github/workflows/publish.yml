@@ -27,9 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build packages
-        run: npm run build
-
       - name: Update package versions from release tag
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/}
@@ -45,6 +42,9 @@ jobs:
               cd ../..
             fi
           done
+
+      - name: Build packages
+        run: npm run build
 
       - name: Copy README to all packages
         run: |

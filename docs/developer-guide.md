@@ -4,14 +4,128 @@ This comprehensive guide covers everything developers need to know to integrate,
 
 ## Table of Contents
 
-1. [Architecture Overview](#architecture-overview)
-2. [Installation](#installation)
-3. [Usage Examples](#usage-examples)
-4. [Configuration](#configuration)
-5. [API Reference](#api-reference)
-6. [Events](#events)
-7. [Plugin Development](#plugin-development)
-8. [Contributing](#contributing)
+- [YASGUI Developer Guide](#yasgui-developer-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Architecture Overview](#architecture-overview)
+    - [Package Structure](#package-structure)
+    - [Architecture Diagram](#architecture-diagram)
+    - [Package Details](#package-details)
+      - [@matdata/yasgui-utils](#matdatayasgui-utils)
+      - [@matdata/yasqe (SPARQL Query Editor)](#matdatayasqe-sparql-query-editor)
+      - [@matdata/yasr (SPARQL Results Viewer)](#matdatayasr-sparql-results-viewer)
+      - [@matdata/yasgui (Main Package)](#matdatayasgui-main-package)
+  - [Installation](#installation)
+    - [npm](#npm)
+    - [Yarn](#yarn)
+    - [CDN](#cdn)
+    - [Source](#source)
+  - [Usage Examples](#usage-examples)
+    - [Plain HTML](#plain-html)
+    - [Node.js / ES Modules](#nodejs--es-modules)
+    - [CommonJS](#commonjs)
+    - [React](#react)
+    - [Vue](#vue)
+    - [Angular](#angular)
+    - [Using YASQE and YASR Separately](#using-yasqe-and-yasr-separately)
+  - [Configuration](#configuration)
+    - [YASGUI Configuration](#yasgui-configuration)
+      - [Example Configuration](#example-configuration)
+    - [YASQE Configuration](#yasqe-configuration)
+      - [YASQE Example](#yasqe-example)
+      - [Code Snippets](#code-snippets)
+    - [YASR Configuration](#yasr-configuration)
+      - [YASR Example](#yasr-example)
+    - [Request Configuration](#request-configuration)
+      - [Request Configuration Example](#request-configuration-example)
+    - [Authentication](#authentication)
+      - [Authentication Types](#authentication-types)
+      - [Basic Authentication](#basic-authentication)
+      - [Bearer Token Authentication](#bearer-token-authentication)
+      - [API Key Authentication](#api-key-authentication)
+      - [Managing Endpoint Configurations](#managing-endpoint-configurations)
+      - [Dynamic Authentication](#dynamic-authentication)
+      - [Disabling Authentication](#disabling-authentication)
+      - [TypeScript Support](#typescript-support)
+      - [Authentication Priority](#authentication-priority)
+      - [Examples](#examples)
+      - [Security Best Practices](#security-best-practices)
+    - [Endpoint Buttons Configuration](#endpoint-buttons-configuration)
+    - [Theme Configuration](#theme-configuration)
+  - [API Reference](#api-reference)
+    - [Yasgui Class](#yasgui-class)
+      - [Constructor](#constructor)
+      - [Methods](#methods)
+        - [`getTab(tabId?: string): Tab | undefined`](#gettabtabid-string-tab--undefined)
+        - [`addTab(select?: boolean, config?: PartialTabConfig): Tab`](#addtabselect-boolean-config-partialtabconfig-tab)
+        - [`selectTabId(tabId: string): void`](#selecttabidtabid-string-void)
+        - [`closeTab(tab: Tab): void`](#closetabtab-tab-void)
+        - [`getTabs(): { [tabId: string]: Tab }`](#gettabs--tabid-string-tab-)
+        - [`setTheme(theme: 'light' | 'dark'): void`](#setthemetheme-light--dark-void)
+        - [`getTheme(): 'light' | 'dark'`](#gettheme-light--dark)
+        - [`toggleTheme(): 'light' | 'dark'`](#toggletheme-light--dark)
+    - [Tab Class](#tab-class)
+      - [Methods](#methods-1)
+        - [`getName(): string`](#getname-string)
+        - [`setName(name: string): void`](#setnamename-string-void)
+        - [`getId(): string`](#getid-string)
+        - [`getYasqe(): Yasqe`](#getyasqe-yasqe)
+        - [`getYasr(): Yasr`](#getyasr-yasr)
+        - [`query(): Promise<void>`](#query-promisevoid)
+        - [`setQuery(query: string): void`](#setqueryquery-string-void)
+        - [`getQuery(): string`](#getquery-string)
+    - [Yasqe Class](#yasqe-class)
+      - [Methods](#methods-2)
+        - [`getValue(): string`](#getvalue-string)
+        - [`setValue(value: string): void`](#setvaluevalue-string-void)
+        - [`query(): Promise<any>`](#query-promiseany)
+        - [`abortQuery(): void`](#abortquery-void)
+        - [`format(): void`](#format-void)
+        - [`getPrefixes(): Prefixes`](#getprefixes-prefixes)
+        - [`addPrefixes(prefixes: Prefixes): void`](#addprefixesprefixes-prefixes-void)
+        - [`removePrefixes(): void`](#removeprefixes-void)
+    - [Yasr Class](#yasr-class)
+      - [Methods](#methods-3)
+        - [`setResponse(response: any, duration?: number): void`](#setresponseresponse-any-duration-number-void)
+        - [`draw(): void`](#draw-void)
+        - [`selectPlugin(pluginName: string): void`](#selectpluginpluginname-string-void)
+        - [`getPlugins(): { [name: string]: Plugin }`](#getplugins--name-string-plugin-)
+        - [`download(filename?: string): void`](#downloadfilename-string-void)
+  - [Events](#events)
+    - [YASGUI Events](#yasgui-events)
+    - [YASQE Events](#yasqe-events)
+    - [YASR Events](#yasr-events)
+    - [Event Example: Query Tracking](#event-example-query-tracking)
+    - [Event Example: Custom Query Logging](#event-example-custom-query-logging)
+  - [Plugin Development](#plugin-development)
+    - [Plugin Interface](#plugin-interface)
+    - [Step-by-Step Plugin Development Guide](#step-by-step-plugin-development-guide)
+      - [Step 1: Create Plugin Class](#step-1-create-plugin-class)
+      - [Step 2: Register Plugin](#step-2-register-plugin)
+      - [Step 3: Configure Plugin](#step-3-configure-plugin)
+      - [Step 4: Add Styling](#step-4-add-styling)
+    - [Plugin Example: Chart Plugin](#plugin-example-chart-plugin)
+    - [Plugin Best Practices](#plugin-best-practices)
+    - [Theme Support for Plugins](#theme-support-for-plugins)
+      - [Implementation Steps](#implementation-steps)
+    - [Distributing Your Plugin](#distributing-your-plugin)
+  - [Contributing](#contributing)
+    - [Getting Started](#getting-started)
+    - [Project Structure](#project-structure)
+    - [Development Workflow](#development-workflow)
+      - [Making Changes](#making-changes)
+      - [Building](#building)
+      - [Pull Requests](#pull-requests)
+    - [Code Guidelines](#code-guidelines)
+      - [TypeScript](#typescript)
+      - [CSS](#css)
+      - [Documentation](#documentation)
+    - [Reporting Issues](#reporting-issues)
+    - [Feature Requests](#feature-requests)
+    - [Release Process](#release-process)
+    - [Community](#community)
+    - [Code of Conduct](#code-of-conduct)
+  - [Additional Resources](#additional-resources)
+
 
 ---
 
@@ -458,9 +572,6 @@ interface Config {
   // Default tab name
   tabName: string;  // default: "Query"
 
-  // CORS proxy URL
-  corsProxy?: string;
-
   // Endpoint catalogue configuration
   endpointCatalogueOptions: EndpointSelectConfig;
 
@@ -494,9 +605,6 @@ interface Config {
 
   // Context menu container element
   contextMenuContainer?: HTMLElement;
-
-  // Non-SSL domain for mixed content
-  nonSslDomain?: string;
 
   // Theme: 'light' or 'dark'
   theme?: 'light' | 'dark';
@@ -901,9 +1009,6 @@ interface RequestConfig {
 
   // Adjust query before request
   adjustQueryBeforeRequest?: (query: string) => string;
-
-  // CORS proxy
-  corsProxy?: string;
 
   // Authentication
   basicAuth?: BasicAuthConfig | ((yasqe: Yasqe) => BasicAuthConfig | undefined);

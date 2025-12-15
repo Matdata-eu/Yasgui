@@ -442,11 +442,8 @@ export class Yasqe extends CodeMirror {
   }
 
   private drawSnippetsBar() {
-    // Check if snippets bar should be shown
-    const shouldShow =
-      this.config.showSnippetsBar &&
-      (this.persistentConfig?.showSnippetsBar === undefined || this.persistentConfig.showSnippetsBar) &&
-      this.config.snippets.length > 0;
+    // Check if snippets bar should be shown (now using global config only)
+    const shouldShow = this.config.showSnippetsBar && this.config.snippets.length > 0;
 
     if (!shouldShow) {
       // Remove existing bar if present
@@ -1126,25 +1123,17 @@ export class Yasqe extends CodeMirror {
    * Snippets management
    */
   public setSnippetsBarVisible(visible: boolean) {
-    if (!this.persistentConfig) {
-      this.persistentConfig = {
-        query: this.getValue(),
-        editorHeight: this.config.editorHeight,
-        showSnippetsBar: visible,
-      };
-    } else {
-      this.persistentConfig.showSnippetsBar = visible;
-    }
-    this.saveQuery();
+    // Update config and redraw
+    this.config.showSnippetsBar = visible;
     this.drawSnippetsBar();
   }
 
   public getSnippetsBarVisible(): boolean {
-    return (
-      this.config.showSnippetsBar &&
-      (this.persistentConfig?.showSnippetsBar === undefined || this.persistentConfig.showSnippetsBar) &&
-      this.config.snippets.length > 0
-    );
+    return this.config.showSnippetsBar && this.config.snippets.length > 0;
+  }
+
+  public refreshSnippetsBar() {
+    this.drawSnippetsBar();
   }
 
   /**
@@ -1454,7 +1443,6 @@ export interface PersistentConfig {
   editorHeight: string;
   formatterType?: "sparql-formatter" | "legacy"; // Which formatter to use
   autoformatOnQuery?: boolean; // Auto-format query on execution
-  showSnippetsBar?: boolean; // User preference for snippets bar visibility
 }
 // export var _Yasqe = _Yasqe;
 

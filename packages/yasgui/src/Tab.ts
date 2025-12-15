@@ -21,9 +21,11 @@ const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
   <rect x="2" y="2" width="20" height="8" stroke="currentColor" stroke-width="2" fill="none"/>
   <rect x="2" y="12" width="20" height="10" stroke="currentColor" stroke-width="2" fill="none"/>
 </svg>`;
+
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
 }
+
 export interface PersistedJson {
   name: string;
   id: string;
@@ -38,6 +40,7 @@ export interface PersistedJson {
   requestConfig: YasguiRequestConfig;
   orientation?: "vertical" | "horizontal";
 }
+
 export interface Tab {
   on(event: string | symbol, listener: (...args: any[]) => void): this;
 
@@ -60,6 +63,7 @@ export interface Tab {
   on(event: "autocompletionClose", listener: (tab: Tab) => void): this;
   emit(event: "autocompletionClose", tab: Tab): boolean;
 }
+
 export class Tab extends EventEmitter {
   private persistentJson: PersistedJson;
   public yasgui: Yasgui;
@@ -74,6 +78,7 @@ export class Tab extends EventEmitter {
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
+
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
     if (!conf || conf.id === undefined) throw new Error("Expected a valid configuration to initialize tab with");
@@ -81,15 +86,19 @@ export class Tab extends EventEmitter {
     this.persistentJson = conf;
     this.currentOrientation = this.yasgui.config.orientation || "vertical";
   }
+
   public name() {
     return this.persistentJson.name;
   }
+
   public getPersistedJson() {
     return this.persistentJson;
   }
+
   public getId() {
     return this.persistentJson.id;
   }
+
   private draw() {
     if (this.rootEl) return; //aready drawn
     this.rootEl = document.createElement("div");
@@ -129,10 +138,12 @@ export class Tab extends EventEmitter {
     this.initYasr();
     this.yasgui._setPanel(this.persistentJson.id, this.rootEl);
   }
+
   public hide() {
     removeClass(this.rootEl, "active");
     this.detachKeyboardListeners();
   }
+
   public show() {
     this.draw();
     addClass(this.rootEl, "active");
@@ -201,9 +212,11 @@ export class Tab extends EventEmitter {
   private detachKeyboardListeners() {
     document.removeEventListener("keydown", this.handleKeyDown);
   }
+
   public select() {
     this.yasgui.selectTabId(this.persistentJson.id);
   }
+
   public close() {
     this.detachKeyboardListeners();
     if (this.yasqe) this.yasqe.abortQuery();
@@ -223,12 +236,14 @@ export class Tab extends EventEmitter {
     this.yasgui.tabElements.get(this.persistentJson.id).delete();
     delete this.yasgui._tabs[this.persistentJson.id];
   }
+
   public getQuery() {
     if (!this.yasqe) {
       throw new Error("Cannot get value from uninitialized editor");
     }
     return this.yasqe?.getValue();
   }
+
   public setQuery(query: string) {
     if (!this.yasqe) {
       throw new Error("Cannot set value for uninitialized editor");
@@ -238,9 +253,11 @@ export class Tab extends EventEmitter {
     this.emit("change", this, this.persistentJson);
     return this;
   }
+
   public getRequestConfig() {
     return this.persistentJson.requestConfig;
   }
+
   private initControlbar() {
     this.initOrientationToggle();
     this.initEndpointSelectField();
@@ -314,12 +331,15 @@ export class Tab extends EventEmitter {
       }
     }
   }
+
   public getYasqe() {
     return this.yasqe;
   }
+
   public getYasr() {
     return this.yasr;
   }
+
   private initTabSettingsMenu() {
     if (!this.controlBarEl) throw new Error("Need to initialize wrapper elements before drawing tab settings");
     this.settingsModal = new TabSettingsModal(this, this.controlBarEl);
@@ -398,26 +418,11 @@ export class Tab extends EventEmitter {
     });
   }
 
-  private checkEndpointForCors(endpoint: string) {
-    if (this.yasgui.config.corsProxy && !(endpoint in Yasgui.corsEnabled)) {
-      const askUrl = new URL(endpoint);
-      askUrl.searchParams.append("query", "ASK {?x ?y ?z}");
-      fetch(askUrl.toString())
-        .then(() => {
-          Yasgui.corsEnabled[endpoint] = true;
-        })
-        .catch((e) => {
-          // CORS error throws `TypeError: NetworkError when attempting to fetch resource.`
-          Yasgui.corsEnabled[endpoint] = e instanceof TypeError ? false : true;
-        });
-    }
-  }
   public setEndpoint(endpoint: string, endpointHistory?: string[]) {
     if (endpoint) endpoint = endpoint.trim();
     if (endpointHistory && !eq(endpointHistory, this.yasgui.persistentConfig.getEndpointHistory())) {
       this.yasgui.emit("endpointHistoryChange", this.yasgui, endpointHistory);
     }
-    this.checkEndpointForCors(endpoint); //little cost in checking this as we're caching the check results
 
     if (this.persistentJson.requestConfig.endpoint !== endpoint) {
       this.persistentJson.requestConfig.endpoint = endpoint;
@@ -434,9 +439,11 @@ export class Tab extends EventEmitter {
     }
     return this;
   }
+
   public getEndpoint(): string {
     return getAsValue(this.persistentJson.requestConfig.endpoint, this.yasgui);
   }
+
   /**
    * Updates the position of the Tab's contextmenu
    * Useful for when being scrolled
@@ -444,21 +451,26 @@ export class Tab extends EventEmitter {
   public updateContextMenu(): void {
     this.getTabListEl().redrawContextMenu();
   }
+
   public getShareableLink(baseURL?: string): string {
     return shareLink.createShareLink(baseURL || window.location.href, this);
   }
+
   public getShareObject() {
     return shareLink.createShareConfig(this);
   }
+
   private getTabListEl(): TabListEl {
     return this.yasgui.tabElements.get(this.persistentJson.id);
   }
+
   public setName(newName: string) {
     this.getTabListEl().rename(newName);
     this.persistentJson.name = newName;
     this.emit("change", this, this.persistentJson);
     return this;
   }
+
   public hasResults() {
     return !!this.yasr?.results;
   }
@@ -477,6 +489,7 @@ export class Tab extends EventEmitter {
 
     return this.yasqe.query();
   }
+
   public setRequestConfig(requestConfig: Partial<YasguiRequestConfig>) {
     this.persistentJson.requestConfig = {
       ...this.persistentJson.requestConfig,
@@ -638,6 +651,8 @@ export class Tab extends EventEmitter {
       persistenceId: null, //yasgui handles persistent storing
       consumeShareLink: null, //not handled by this tab, but by parent yasgui instance
       createShareableLink: () => this.getShareableLink(),
+      // Use global showSnippetsBar setting if it exists
+      showSnippetsBar: this.yasgui.config.showSnippetsBar !== false,
       requestConfig: () => {
         const processedReqConfig: YasguiRequestConfig = {
           //setting defaults
@@ -675,18 +690,6 @@ export class Tab extends EventEmitter {
           }
         }
 
-        if (this.yasgui.config.corsProxy && !Yasgui.corsEnabled[this.getEndpoint()]) {
-          return {
-            ...processedReqConfig,
-            args: [
-              ...(Array.isArray(processedReqConfig.args) ? processedReqConfig.args : []),
-              { name: "endpoint", value: this.getEndpoint() },
-              { name: "method", value: this.persistentJson.requestConfig.method },
-            ],
-            method: "POST",
-            endpoint: this.yasgui.config.corsProxy,
-          } as PlainRequestConfig;
-        }
         return processedReqConfig as PlainRequestConfig;
       },
     };
@@ -715,6 +718,7 @@ export class Tab extends EventEmitter {
     // Add Ctrl+Click handler for URIs
     this.attachYasqeMouseHandler();
   }
+
   private destroyYasqe() {
     // As Yasqe extends of CM instead of eventEmitter, it doesn't expose the removeAllListeners function, so we should unregister all events manually
     this.yasqe?.off("blur", this.handleYasqeBlur);
@@ -729,12 +733,14 @@ export class Tab extends EventEmitter {
     this.yasqe?.destroy();
     this.yasqe = undefined;
   }
+
   handleYasqeBlur = (yasqe: Yasqe) => {
     this.persistentJson.yasqe.value = yasqe.getValue();
     // Capture prefixes from query if auto-capture is enabled
     this.settingsModal?.capturePrefixesFromQuery();
     this.emit("change", this, this.persistentJson);
   };
+
   handleYasqeQuery = (yasqe: Yasqe) => {
     //the blur event might not have fired (e.g. when pressing ctrl-enter). So, we'd like to persist the query as well if needed
     if (yasqe.getValue() !== this.persistentJson.yasqe.value) {
@@ -743,6 +749,7 @@ export class Tab extends EventEmitter {
     }
     this.emit("query", this);
   };
+
   handleYasqeQueryAbort = () => {
     this.emit("queryAbort", this);
     // Hide loading indicator in Yasr
@@ -750,6 +757,7 @@ export class Tab extends EventEmitter {
       this.yasr.hideLoading();
     }
   };
+
   handleYasqeQueryBefore = () => {
     this.emit("queryBefore", this);
     // Show loading indicator in Yasr
@@ -757,16 +765,20 @@ export class Tab extends EventEmitter {
       this.yasr.showLoading();
     }
   };
+
   handleYasqeResize = (_yasqe: Yasqe, newSize: string) => {
     this.persistentJson.yasqe.editorHeight = newSize;
     this.emit("change", this, this.persistentJson);
   };
+
   handleAutocompletionShown = (_yasqe: Yasqe, widget: string) => {
     this.emit("autocompletionShown", this, widget);
   };
+
   handleAutocompletionClose = (_yasqe: Yasqe) => {
     this.emit("autocompletionClose", this);
   };
+
   handleQueryResponse = (_yasqe: Yasqe, response: any, duration: number) => {
     this.emit("queryResponse", this);
     if (!this.yasr) throw new Error("Resultset visualizer not initialized. Cannot draw results");
@@ -843,7 +855,8 @@ WHERE {
 } LIMIT 1000`;
 
     // Execute query in background without changing editor content
-    this.executeBackgroundQuery(constructQuery);
+    // Note: void operator is intentional - errors are handled in the catch block of executeBackgroundQuery
+    void this.executeBackgroundQuery(constructQuery);
   };
 
   private async executeBackgroundQuery(query: string) {
@@ -854,74 +867,20 @@ WHERE {
       this.yasr.showLoading();
       this.emit("queryBefore", this);
 
-      // Get the request configuration
-      const requestConfig = this.yasqe.config.requestConfig;
-      const config = typeof requestConfig === "function" ? requestConfig(this.yasqe) : requestConfig;
-
-      if (!config.endpoint) {
-        throw new Error("No endpoint configured");
-      }
-
-      const endpoint = typeof config.endpoint === "function" ? config.endpoint(this.yasqe) : config.endpoint;
-      const method = typeof config.method === "function" ? config.method(this.yasqe) : config.method || "POST";
-      const headers = typeof config.headers === "function" ? config.headers(this.yasqe) : config.headers || {};
-
-      // Prepare request
-      const searchParams = new URLSearchParams();
-      searchParams.append("query", query);
-
-      // Add any additional args
-      if (config.args && Array.isArray(config.args)) {
-        config.args.forEach((arg: any) => {
-          if (arg.name && arg.value) {
-            searchParams.append(arg.name, arg.value);
-          }
-        });
-      }
-
-      const fetchOptions: RequestInit = {
-        method: method,
-        headers: {
-          Accept: "text/turtle",
-          ...headers,
-        },
-      };
-
-      let url = endpoint;
-      if (method === "POST") {
-        fetchOptions.headers = {
-          ...fetchOptions.headers,
-          "Content-Type": "application/x-www-form-urlencoded",
-        };
-        fetchOptions.body = searchParams.toString();
-      } else {
-        const urlObj = new URL(endpoint);
-        searchParams.forEach((value, key) => {
-          urlObj.searchParams.append(key, value);
-        });
-        url = urlObj.toString();
-      }
-
+      // Track query execution time
       const startTime = Date.now();
-      const response = await fetch(url, fetchOptions);
+
+      // Use yasqe's executeQuery with custom query and accept header
+      const queryResponse = await Yasqe.Sparql.executeQuery(
+        this.yasqe,
+        undefined, // Use default config
+        {
+          customQuery: query,
+          customAccept: "text/turtle",
+        },
+      );
+
       const duration = Date.now() - startTime;
-
-      if (!response.ok) {
-        throw new Error(`Query failed: ${response.statusText}`);
-      }
-
-      const result = await response.text();
-
-      // Create a query response object similar to what Yasqe produces
-      // This includes headers so the Parser can detect the content type
-      const queryResponse = {
-        ok: response.ok,
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        type: response.type,
-        content: result,
-      };
 
       // Set the response in Yasr
       this.yasr.setResponse(queryResponse, duration);
@@ -938,10 +897,17 @@ WHERE {
       console.error("Background query failed:", error);
       if (this.yasr) {
         this.yasr.hideLoading();
-        // Set error response
+        // Set error response with detailed HTTP status if available
+        const errorObj: any = error;
+        let errorText = error instanceof Error ? error.message : String(error);
+
         this.yasr.setResponse(
           {
-            error: error instanceof Error ? error.message : "Unknown error",
+            error: {
+              status: errorObj.status,
+              statusText: errorObj.statusText || (error instanceof Error ? error.name : undefined),
+              text: errorText,
+            },
           },
           0,
         );
@@ -1017,6 +983,7 @@ WHERE {
       this.emit("change", this, this.persistentJson);
     });
   }
+
   destroy() {
     this.removeAllListeners();
     this.settingsModal?.destroy();
@@ -1026,6 +993,7 @@ WHERE {
     this.yasr = undefined;
     this.destroyYasqe();
   }
+
   public static getDefaults(yasgui?: Yasgui): PersistedJson {
     return {
       yasqe: {
@@ -1055,11 +1023,21 @@ const safeEndpoint = (endpoint: string): string => {
 
 function getCorsErrorRenderer(tab: Tab) {
   return async (error: Parser.ErrorSummary): Promise<HTMLElement | undefined> => {
+    // Only show CORS/mixed-content warning for actual network failures (no status code)
+    // AND when querying HTTP from HTTPS
     if (!error.status) {
-      // Only show this custom error if
       const shouldReferToHttp =
         new URL(tab.getEndpoint()).protocol === "http:" && window.location.protocol === "https:";
-      if (shouldReferToHttp) {
+
+      // Check if this looks like a network error (not just missing status)
+      const isNetworkError =
+        !error.text ||
+        error.text.indexOf("Request has been terminated") >= 0 ||
+        error.text.indexOf("Failed to fetch") >= 0 ||
+        error.text.indexOf("NetworkError") >= 0 ||
+        error.text.indexOf("Network request failed") >= 0;
+
+      if (shouldReferToHttp && isNetworkError) {
         const errorEl = document.createElement("div");
         const errorSpan = document.createElement("p");
         errorSpan.innerHTML = `You are trying to query an HTTP endpoint (<a href="${safeEndpoint(
@@ -1068,14 +1046,7 @@ function getCorsErrorRenderer(tab: Tab) {
           tab.getEndpoint(),
         )}</a>) from an HTTP<strong>S</strong> website (<a href="${safeEndpoint(window.location.href)}">${safeEndpoint(
           window.location.href,
-        )}</a>).<br>This is not allowed in modern browsers, see <a target="_blank" rel="noopener noreferrer" href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy</a>.`;
-        if (tab.yasgui.config.nonSslDomain) {
-          const errorLink = document.createElement("p");
-          errorLink.innerHTML = `As a workaround, you can use the HTTP version of Yasgui instead: <a href="${tab.getShareableLink(
-            tab.yasgui.config.nonSslDomain,
-          )}" target="_blank">${tab.yasgui.config.nonSslDomain}</a>`;
-          errorSpan.appendChild(errorLink);
-        }
+        )}</a>).<br>This can be blocked in modern browsers, see <a target="_blank" rel="noopener noreferrer" href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy">https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy</a>. See also <a href="https://yasgui-doc.matdata.eu/docs/user-guide#querying-local-endpoints">the YasGUI documentation</a> for possible workarounds.`;
         errorEl.appendChild(errorSpan);
         return errorEl;
       }
