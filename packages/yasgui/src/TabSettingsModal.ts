@@ -868,7 +868,7 @@ export default class TabSettingsModal {
     redirectUriLabel.textContent = "Redirect URI (Optional)";
     const redirectUriInput = document.createElement("input");
     redirectUriInput.type = "url";
-    redirectUriInput.placeholder = window.location.origin + "/oauth2-callback";
+    redirectUriInput.placeholder = window.location.origin + window.location.pathname;
     redirectUriInput.value = existingAuth?.type === "oauth2" ? existingAuth.redirectUri || "" : "";
     const redirectUriHelp = document.createElement("div");
     redirectUriHelp.textContent = "Leave empty to use current page URL. Must be registered with OAuth provider.";
