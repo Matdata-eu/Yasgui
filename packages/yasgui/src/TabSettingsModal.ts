@@ -93,7 +93,8 @@ export default class TabSettingsModal {
     // Modal overlay
     this.modalOverlay = document.createElement("div");
     addClass(this.modalOverlay, "tabSettingsModalOverlay");
-    this.modalOverlay.onclick = () => this.close();
+    // Removed: this.modalOverlay.onclick = () => this.close();
+    // Users must explicitly click 'Save' or 'Cancel' to close the modal
 
     // Modal content
     this.modalContent = document.createElement("div");
