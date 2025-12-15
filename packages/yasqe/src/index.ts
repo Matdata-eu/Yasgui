@@ -788,34 +788,48 @@ export class Yasqe extends CodeMirror {
     var min = Math.min(startLine, endLine);
     var max = Math.max(startLine, endLine);
 
-    // if all lines start with #, remove this char. Otherwise add this char
+    // if all lines start with # (after whitespace), remove the comment. Otherwise add comment
     var linesAreCommented = true;
     for (var i = min; i <= max; i++) {
       var line = this.getDoc().getLine(i);
-      if (line.length == 0 || line.substring(0, 1) != "#") {
+      var trimmedLine = line.trimStart();
+      if (line.length > 0 && (trimmedLine.length === 0 || trimmedLine.substring(0, 1) !== "#")) {
         linesAreCommented = false;
         break;
       }
     }
     for (var i = min; i <= max; i++) {
-      if (linesAreCommented) {
-        // lines are commented, so remove comments
-        this.getDoc().replaceRange(
-          "",
-          {
-            line: i,
-            ch: 0,
-          },
-          {
-            line: i,
-            ch: 1,
-          },
-        );
-      } else {
+      var line = this.getDoc().getLine(i);
+      var trimmedLine = line.trimStart();
+      var leadingWhitespace = line.length - trimmedLine.length;
+
+      if (linesAreCommented && trimmedLine.length > 0) {
+        // lines are commented, so remove the # character (and following space if present)
+        var commentIndex = line.indexOf("#");
+        if (commentIndex >= 0) {
+          var removeLength = 1;
+          // Also remove the space after # if present (e.g., "  # code" -> "  code")
+          if (commentIndex + 1 < line.length && line.charAt(commentIndex + 1) === " ") {
+            removeLength = 2;
+          }
+          this.getDoc().replaceRange(
+            "",
+            {
+              line: i,
+              ch: commentIndex,
+            },
+            {
+              line: i,
+              ch: commentIndex + removeLength,
+            },
+          );
+        }
+      } else if (!linesAreCommented && line.length > 0) {
         // Not all lines are commented, so add comments
-        this.getDoc().replaceRange("#", {
+        // Insert "# " after the leading whitespace
+        this.getDoc().replaceRange("# ", {
           line: i,
-          ch: 0,
+          ch: leadingWhitespace,
         });
       }
     }
