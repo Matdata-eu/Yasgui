@@ -957,13 +957,18 @@ export default class TabSettingsModal {
     removeButton.textContent = "Remove Authentication";
     removeButton.type = "button";
     addClass(removeButton, "authRemoveButton");
+    // Helper function to close modal and refresh endpoints list
+    const closeModalAndRefresh = () => {
+      authModalOverlay.remove();
+      const endpointsList = this.modalContent.querySelector(".endpointsTable");
+      if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+    };
+
     removeButton.onclick = () => {
       this.tab.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {
         authentication: undefined,
       });
-      authModalOverlay.remove();
-      const endpointsList = this.modalContent.querySelector(".endpointsTable");
-      if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+      closeModalAndRefresh();
     };
     if (!existingAuth) {
       removeButton.disabled = true;
@@ -994,9 +999,7 @@ export default class TabSettingsModal {
               password,
             },
           });
-          authModalOverlay.remove();
-          const endpointsList = this.modalContent.querySelector(".endpointsTable");
-          if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+          closeModalAndRefresh();
         } else {
           alert("Please enter both username and password.");
         }
@@ -1010,9 +1013,7 @@ export default class TabSettingsModal {
               token,
             },
           });
-          authModalOverlay.remove();
-          const endpointsList = this.modalContent.querySelector(".endpointsTable");
-          if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+          closeModalAndRefresh();
         } else {
           alert("Please enter a bearer token.");
         }
@@ -1028,9 +1029,7 @@ export default class TabSettingsModal {
               apiKey,
             },
           });
-          authModalOverlay.remove();
-          const endpointsList = this.modalContent.querySelector(".endpointsTable");
-          if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+          closeModalAndRefresh();
         } else {
           alert("Please enter both header name and API key.");
         }
@@ -1063,9 +1062,7 @@ export default class TabSettingsModal {
               tokenExpiry: existingAuth.tokenExpiry,
             },
           });
-          authModalOverlay.remove();
-          const endpointsList = this.modalContent.querySelector(".endpointsTable");
-          if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+          closeModalAndRefresh();
           return;
         }
 
@@ -1098,9 +1095,7 @@ export default class TabSettingsModal {
               },
             });
 
-            authModalOverlay.remove();
-            const endpointsList = this.modalContent.querySelector(".endpointsTable");
-            if (endpointsList) this.renderEndpointsList(endpointsList as HTMLElement);
+            closeModalAndRefresh();
             alert("OAuth 2.0 authentication successful!");
           })
           .catch((error) => {
