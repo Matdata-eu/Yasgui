@@ -603,7 +603,7 @@ export class Tab extends EventEmitter {
         }
       } else {
         // No refresh token available, user needs to re-authenticate
-        alert("Your OAuth 2.0 session has expired. Please re-authenticate in the endpoint settings.");
+        alert("Your OAuth 2.0 session has expired. To re-authenticate, click the gear icon next to the endpoint selector to open the endpoint settings.");
         return false;
       }
     }
