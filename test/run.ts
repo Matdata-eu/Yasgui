@@ -830,13 +830,14 @@ WHERE {
       const result = await page.evaluate(() => {
         return {
           barExists: !!document.querySelector(".yasqe_snippetsBar"),
-          snippetCount: document.querySelectorAll(".yasqe_snippetButton").length,
+          dropdownCount: document.querySelectorAll(".yasqe_snippetDropdown").length,
           snippets: window.yasqe.config.snippets.map((s: any) => s.label),
         };
       });
 
       expect(result.barExists).to.be.true;
-      expect(result.snippetCount).to.equal(5);
+      // With grouped snippets, we should have 2 dropdown buttons (Query Types and Patterns)
+      expect(result.dropdownCount).to.be.at.least(2);
       expect(result.snippets).to.include("SELECT");
       expect(result.snippets).to.include("CONSTRUCT");
       expect(result.snippets).to.include("ASK");
@@ -851,8 +852,18 @@ WHERE {
         window.yasqe.getDoc().setCursor({ line: 1, ch: 2 });
       });
 
-      // Click the FILTER snippet button
-      await page.click('button[aria-label="Insert FILTER snippet"]');
+      // Click the "Patterns" dropdown button to open it
+      await page.click('button[aria-label="Patterns snippets"]');
+
+      // Wait for dropdown to open
+      await page.waitForSelector('.yasqe_snippetDropdownContent[style*="display: block"]');
+
+      // Click the FILTER snippet item
+      await page.evaluate(() => {
+        const items = Array.from(document.querySelectorAll(".yasqe_snippetDropdownItem"));
+        const filterItem = items.find((item) => item.textContent === "FILTER") as HTMLElement;
+        if (filterItem) filterItem.click();
+      });
 
       const value = await page.evaluate(() => window.yasqe.getValue());
       expect(value).to.include("FILTER (?var > 100)");
