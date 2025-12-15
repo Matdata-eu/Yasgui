@@ -175,7 +175,7 @@ export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Prom
         Accept: populatedConfig.accept,
         ...(populatedConfig.headers || {}),
       },
-      credentials: "include",
+      credentials: populatedConfig.withCredentials ? "include" : "same-origin",
       signal: abortController.signal,
     };
     if (fetchOptions?.headers && populatedConfig.reqMethod === "POST") {
