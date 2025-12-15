@@ -867,8 +867,7 @@ export default class TabSettingsModal {
     redirectUriInput.placeholder = window.location.origin + "/oauth2-callback";
     redirectUriInput.value = existingAuth?.type === "oauth2" ? existingAuth.redirectUri || "" : "";
     const redirectUriHelp = document.createElement("div");
-    redirectUriHelp.textContent =
-      "Leave empty to use current page URL. Must be registered with OAuth provider.";
+    redirectUriHelp.textContent = "Leave empty to use current page URL. Must be registered with OAuth provider.";
     addClass(redirectUriHelp, "authInputHelp");
     redirectUriSection.appendChild(redirectUriLabel);
     redirectUriSection.appendChild(redirectUriInput);
@@ -922,6 +921,14 @@ export default class TabSettingsModal {
 
     // Update visibility when auth type changes
     typeSelect.onchange = toggleAuthFields;
+
+    // Help link
+    const helpLink = document.createElement("div");
+    addClass(helpLink, "authHelpLink");
+    helpLink.innerHTML = `
+      📚 <a href="https://triply.cc/docs/yasgui#authentication" target="_blank" rel="noopener noreferrer">View authentication documentation</a>
+    `;
+    body.appendChild(helpLink);
 
     // Security notice
     const securityNotice = document.createElement("div");

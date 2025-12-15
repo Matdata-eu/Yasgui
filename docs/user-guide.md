@@ -736,6 +736,26 @@ For **OAuth 2.0**:
 6. Adds an `Authorization` header with the format: `Bearer <access-token>`
 7. If token refresh fails, prompts user to re-authenticate
 
+**OAuth 2.0 Provider Examples:**
+
+*Microsoft Azure (Entra ID):*
+- Authorization Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize`
+- Token Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token`
+- Scope: `api://your-app-id/.default` or `openid profile`
+- Note: Your app must be registered in Azure AD with public client flow enabled
+
+*AWS Cognito:*
+- Authorization Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/authorize`
+- Token Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/token`
+- Scope: `openid profile` (adjust as needed)
+- Note: Enable "Authorization code grant" flow in your app client settings
+
+*Keycloak:*
+- Authorization Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/auth`
+- Token Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/token`
+- Scope: `openid profile` (adjust based on client configuration)
+- Note: Client should have "Standard Flow" enabled and "Access Type" set to "public"
+
 ### Query History and Persistence
 
 YASGUI automatically saves your work locally.

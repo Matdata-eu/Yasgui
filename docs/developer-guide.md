@@ -1090,6 +1090,63 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
 yasgui.persistentConfig.deleteEndpointConfig("https://example.com/sparql");
 ```
 
+#### OAuth 2.0 Provider Examples
+
+**Microsoft Azure (Entra ID)**
+
+```javascript
+yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sparql", {
+  label: "Azure Protected Endpoint",
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-azure-client-id',
+    authorizationEndpoint: 'https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize',
+    tokenEndpoint: 'https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token',
+    scope: 'api://your-app-id/.default', // or specific scopes like 'openid profile'
+    redirectUri: window.location.origin + window.location.pathname // optional
+  }
+});
+```
+
+**AWS Cognito**
+
+```javascript
+yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sparql", {
+  label: "AWS Cognito Protected Endpoint",
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-cognito-app-client-id',
+    authorizationEndpoint: 'https://your-domain.auth.region.amazoncognito.com/oauth2/authorize',
+    tokenEndpoint: 'https://your-domain.auth.region.amazoncognito.com/oauth2/token',
+    scope: 'openid profile', // adjust based on your needs
+    redirectUri: window.location.origin + window.location.pathname // optional
+  }
+});
+```
+
+**Keycloak**
+
+```javascript
+yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sparql", {
+  label: "Keycloak Protected Endpoint",
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-keycloak-client-id',
+    authorizationEndpoint: 'https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/auth',
+    tokenEndpoint: 'https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/token',
+    scope: 'openid profile', // adjust based on your client configuration
+    redirectUri: window.location.origin + window.location.pathname // optional
+  }
+});
+```
+
+**Important Notes:**
+- Replace placeholders like `{tenant-id}`, `{realm-name}`, `region`, etc. with your actual values
+- Ensure your OAuth application is configured to allow the redirect URI (the current page URL by default)
+- For Azure, the client must be registered in Azure AD with public client flow enabled
+- For AWS Cognito, the app client should have "Authorization code grant" flow enabled
+- For Keycloak, the client should have "Standard Flow" enabled and "Access Type" set to "public"
+
 #### Dynamic Authentication
 
 Use a function to dynamically provide credentials:
