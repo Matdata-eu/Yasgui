@@ -296,12 +296,28 @@
   .yasqe_snippetsBar {
     position: relative;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 5px;
     padding: 5px 10px;
     background-color: var(--yasgui-bg-primary, #fff);
     border-bottom: 1px solid var(--yasgui-border-color, #e3e3e3);
     order: -1; // Place before CodeMirror in flex layout
+    overflow: visible; // Allow dropdowns to overflow
+
+    .yasqe_snippetsVisible {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      // Remove overflow hidden to allow dropdowns to show
+    }
+
+    .yasqe_showMore {
+      flex-shrink: 0;
+      margin-left: auto;
+    }
 
     .yasqe_snippetButton {
       padding: 4px 10px;
@@ -370,10 +386,27 @@
         border: 1px solid var(--yasgui-border-color, #ccc);
         border-radius: 3px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 100;
+        z-index: 10000; // High z-index to ensure it's above CodeMirror
         min-width: 150px;
         max-height: 300px;
         overflow-y: auto;
+
+        .yasqe_snippetGroupHeader {
+          padding: 6px 12px;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--yasgui-text-secondary, #666);
+          background-color: var(--yasgui-bg-secondary, #f8f8f8);
+          border-bottom: 1px solid var(--yasgui-border-color, #e0e0e0);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          white-space: nowrap;
+
+          &:not(:first-child) {
+            margin-top: 4px;
+            border-top: 1px solid var(--yasgui-border-color, #e0e0e0);
+          }
+        }
 
         .yasqe_snippetDropdownItem {
           display: block;
@@ -395,6 +428,14 @@
             background-color: var(--yasgui-bg-tertiary, #e0e0e0);
           }
         }
+      }
+    }
+
+    // Special styling for "Show More" dropdown to align it to the right
+    .yasqe_showMore {
+      .yasqe_snippetDropdownContent {
+        left: auto;
+        right: 0;
       }
     }
   }

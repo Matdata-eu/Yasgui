@@ -58,6 +58,7 @@ export class Yasqe extends CodeMirror {
   private resizeWrapper?: HTMLDivElement;
   private snippetsBar?: HTMLDivElement;
   private snippetsClickHandler?: (e: MouseEvent) => void;
+  private snippetsResizeHandler?: () => void;
   public rootEl: HTMLDivElement;
   public storage: YStorage;
   public config: Config;
@@ -468,97 +469,240 @@ export class Yasqe extends CodeMirror {
 
     const snippets = this.config.snippets;
 
-    // If 10 or fewer snippets, show all as buttons
-    if (snippets.length <= 10) {
-      snippets.forEach((snippet) => {
-        const btn = document.createElement("button");
-        addClass(btn, "yasqe_snippetButton");
-        btn.textContent = snippet.label;
-        btn.title = snippet.code;
-        btn.setAttribute("aria-label", `Insert ${snippet.label} snippet`);
-        btn.onclick = () => this.insertSnippet(snippet.code);
-        this.snippetsBar!.appendChild(btn);
-      });
-    } else {
-      // Group snippets by group property
-      const grouped: { [group: string]: Snippet[] } = {};
-      const ungrouped: Snippet[] = [];
+    // Create a container for visible items
+    const visibleContainer = document.createElement("div");
+    addClass(visibleContainer, "yasqe_snippetsVisible");
 
-      snippets.forEach((snippet) => {
-        if (snippet.group) {
-          if (!grouped[snippet.group]) grouped[snippet.group] = [];
-          grouped[snippet.group].push(snippet);
-        } else {
-          ungrouped.push(snippet);
+    // Create all buttons/dropdowns
+    const allItems: HTMLElement[] = [];
+
+    // Group snippets by group property for all snippets (not just >10)
+    const grouped: { [group: string]: Snippet[] } = {};
+    const ungrouped: Snippet[] = [];
+
+    snippets.forEach((snippet) => {
+      if (snippet.group) {
+        if (!grouped[snippet.group]) grouped[snippet.group] = [];
+        grouped[snippet.group].push(snippet);
+      } else {
+        ungrouped.push(snippet);
+      }
+    });
+
+    // Create dropdown for each group
+    Object.keys(grouped).forEach((groupName) => {
+      const dropdown = document.createElement("div");
+      addClass(dropdown, "yasqe_snippetDropdown");
+
+      const dropdownBtn = document.createElement("button");
+      addClass(dropdownBtn, "yasqe_snippetDropdownButton");
+      dropdownBtn.textContent = groupName + " ";
+      const chevron = drawSvgStringAsElement(imgs.chevronDown);
+      addClass(chevron, "chevronIcon");
+      dropdownBtn.appendChild(chevron);
+      dropdownBtn.setAttribute("aria-label", `${groupName} snippets`);
+      dropdownBtn.setAttribute("aria-expanded", "false");
+
+      const dropdownContent = document.createElement("div");
+      addClass(dropdownContent, "yasqe_snippetDropdownContent");
+      dropdownContent.setAttribute("role", "menu");
+
+      grouped[groupName].forEach((snippet) => {
+        const item = document.createElement("button");
+        addClass(item, "yasqe_snippetDropdownItem");
+        item.textContent = snippet.label;
+        item.title = snippet.code;
+        item.setAttribute("role", "menuitem");
+        item.onclick = () => {
+          this.insertSnippet(snippet.code);
+          dropdownContent.style.display = "none";
+          dropdownBtn.setAttribute("aria-expanded", "false");
+        };
+        dropdownContent.appendChild(item);
+      });
+
+      dropdownBtn.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = dropdownContent.style.display === "block";
+        // Close all other dropdowns
+        const allDropdowns = this.snippetsBar!.querySelectorAll(".yasqe_snippetDropdownContent");
+        allDropdowns.forEach((dd) => {
+          (dd as HTMLElement).style.display = "none";
+        });
+        const allButtons = this.snippetsBar!.querySelectorAll(".yasqe_snippetDropdownButton");
+        allButtons.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
+
+        // Toggle this dropdown
+        if (!isOpen) {
+          dropdownContent.style.display = "block";
+          dropdownBtn.setAttribute("aria-expanded", "true");
+        }
+      };
+
+      dropdown.appendChild(dropdownBtn);
+      dropdown.appendChild(dropdownContent);
+      allItems.push(dropdown);
+    });
+
+    // Add ungrouped snippets as individual buttons
+    ungrouped.forEach((snippet) => {
+      const btn = document.createElement("button");
+      addClass(btn, "yasqe_snippetButton");
+      btn.textContent = snippet.label;
+      btn.title = snippet.code;
+      btn.setAttribute("aria-label", `Insert ${snippet.label} snippet`);
+      btn.onclick = () => this.insertSnippet(snippet.code);
+      allItems.push(btn);
+    });
+
+    // Add all items to visible container initially
+    allItems.forEach((item) => visibleContainer.appendChild(item));
+    this.snippetsBar.appendChild(visibleContainer);
+
+    // Create "Show More" dropdown (initially hidden)
+    const showMoreDropdown = document.createElement("div");
+    addClass(showMoreDropdown, "yasqe_snippetDropdown", "yasqe_showMore");
+    showMoreDropdown.style.display = "none";
+
+    const showMoreBtn = document.createElement("button");
+    addClass(showMoreBtn, "yasqe_snippetDropdownButton", "yasqe_showMoreButton");
+    showMoreBtn.textContent = "More ";
+    const chevron = drawSvgStringAsElement(imgs.chevronDown);
+    addClass(chevron, "chevronIcon");
+    showMoreBtn.appendChild(chevron);
+    showMoreBtn.setAttribute("aria-label", "Show more snippets");
+    showMoreBtn.setAttribute("aria-expanded", "false");
+
+    const showMoreContent = document.createElement("div");
+    addClass(showMoreContent, "yasqe_snippetDropdownContent", "yasqe_showMoreContent");
+    showMoreContent.setAttribute("role", "menu");
+
+    showMoreBtn.onclick = (e) => {
+      e.stopPropagation();
+      const isOpen = showMoreContent.style.display === "block";
+      // Close all other dropdowns
+      const allDropdowns = this.snippetsBar!.querySelectorAll(".yasqe_snippetDropdownContent");
+      allDropdowns.forEach((dd) => {
+        if (dd !== showMoreContent) {
+          (dd as HTMLElement).style.display = "none";
+        }
+      });
+      const allButtons = this.snippetsBar!.querySelectorAll(".yasqe_snippetDropdownButton");
+      allButtons.forEach((btn) => {
+        if (btn !== showMoreBtn) {
+          btn.setAttribute("aria-expanded", "false");
         }
       });
 
-      // Create dropdown for each group
-      Object.keys(grouped).forEach((groupName) => {
-        const dropdown = document.createElement("div");
-        addClass(dropdown, "yasqe_snippetDropdown");
+      // Toggle this dropdown
+      if (!isOpen) {
+        showMoreContent.style.display = "block";
+        showMoreBtn.setAttribute("aria-expanded", "true");
+      } else {
+        showMoreContent.style.display = "none";
+        showMoreBtn.setAttribute("aria-expanded", "false");
+      }
+    };
 
-        const dropdownBtn = document.createElement("button");
-        addClass(dropdownBtn, "yasqe_snippetDropdownButton");
-        dropdownBtn.textContent = groupName + " ";
-        const chevron = drawSvgStringAsElement(imgs.chevronDown);
-        addClass(chevron, "chevronIcon");
-        dropdownBtn.appendChild(chevron);
-        dropdownBtn.setAttribute("aria-label", `${groupName} snippets`);
-        dropdownBtn.setAttribute("aria-expanded", "false");
+    showMoreDropdown.appendChild(showMoreBtn);
+    showMoreDropdown.appendChild(showMoreContent);
+    this.snippetsBar.appendChild(showMoreDropdown);
 
-        const dropdownContent = document.createElement("div");
-        addClass(dropdownContent, "yasqe_snippetDropdownContent");
-        dropdownContent.setAttribute("role", "menu");
+    // Create function to handle overflow detection
+    const handleOverflow = () => {
+      if (!this.snippetsBar) return;
 
-        grouped[groupName].forEach((snippet) => {
-          const item = document.createElement("button");
-          addClass(item, "yasqe_snippetDropdownItem");
-          item.textContent = snippet.label;
-          item.title = snippet.code;
-          item.setAttribute("role", "menuitem");
-          item.onclick = () => {
-            this.insertSnippet(snippet.code);
-            dropdownContent.style.display = "none";
-            dropdownBtn.setAttribute("aria-expanded", "false");
-          };
-          dropdownContent.appendChild(item);
-        });
+      const containerWidth = this.snippetsBar.offsetWidth;
+      const showMoreWidth = 80; // Approximate width for "Show More" button
+      let availableWidth = containerWidth - showMoreWidth - 20; // 20px for padding/margin
+      let currentWidth = 0;
+      const overflowItems: { element: HTMLElement; snippet?: Snippet; groupName?: string }[] = [];
 
-        dropdownBtn.onclick = (e) => {
-          e.stopPropagation();
-          const isOpen = dropdownContent.style.display === "block";
-          // Close all other dropdowns
-          const allDropdowns = this.snippetsBar!.querySelectorAll(".yasqe_snippetDropdownContent");
-          allDropdowns.forEach((dd) => {
-            (dd as HTMLElement).style.display = "none";
-          });
-          const allButtons = this.snippetsBar!.querySelectorAll(".yasqe_snippetDropdownButton");
-          allButtons.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
+      // Check each item to see if it fits
+      allItems.forEach((item, index) => {
+        const itemWidth = item.offsetWidth + 5; // 5px gap
 
-          // Toggle this dropdown
-          if (!isOpen) {
-            dropdownContent.style.display = "block";
-            dropdownBtn.setAttribute("aria-expanded", "true");
+        if (currentWidth + itemWidth > availableWidth && index > 0) {
+          // This item overflows, hide it and add to show more
+          item.style.display = "none";
+
+          // Find the corresponding snippet or group
+          if (item.classList.contains("yasqe_snippetDropdown")) {
+            // It's a group dropdown
+            const groupBtn = item.querySelector(".yasqe_snippetDropdownButton");
+            const groupName = groupBtn?.textContent?.trim().replace(" ", "") || "Group";
+            overflowItems.push({ element: item, groupName });
+          } else {
+            // It's an individual button
+            const snippet = ungrouped.find((s) => s.label === item.textContent);
+            overflowItems.push({ element: item, snippet });
           }
-        };
-
-        dropdown.appendChild(dropdownBtn);
-        dropdown.appendChild(dropdownContent);
-        this.snippetsBar!.appendChild(dropdown);
+        } else {
+          currentWidth += itemWidth;
+        }
       });
 
-      // Add ungrouped snippets as individual buttons
-      ungrouped.forEach((snippet) => {
-        const btn = document.createElement("button");
-        addClass(btn, "yasqe_snippetButton");
-        btn.textContent = snippet.label;
-        btn.title = snippet.code;
-        btn.setAttribute("aria-label", `Insert ${snippet.label} snippet`);
-        btn.onclick = () => this.insertSnippet(snippet.code);
-        this.snippetsBar!.appendChild(btn);
-      });
+      // If there are overflow items, show the "Show More" button
+      if (overflowItems.length > 0) {
+        showMoreDropdown.style.display = "inline-block";
+
+        // Populate show more content with proper grouping
+        overflowItems.forEach(({ element, snippet, groupName }) => {
+          if (groupName) {
+            // It's a group - add a group header and its items
+            const groupHeader = document.createElement("div");
+            addClass(groupHeader, "yasqe_snippetGroupHeader");
+            groupHeader.textContent = groupName;
+            showMoreContent.appendChild(groupHeader);
+
+            const groupItems = element.querySelectorAll(".yasqe_snippetDropdownItem");
+            groupItems.forEach((item) => {
+              const clonedItem = item.cloneNode(true) as HTMLElement;
+              clonedItem.onclick = (item as HTMLElement).onclick;
+              showMoreContent.appendChild(clonedItem);
+            });
+          } else if (snippet) {
+            // It's an individual snippet
+            const item = document.createElement("button");
+            addClass(item, "yasqe_snippetDropdownItem");
+            item.textContent = snippet.label;
+            item.title = snippet.code;
+            item.setAttribute("role", "menuitem");
+            item.onclick = () => {
+              this.insertSnippet(snippet.code);
+              showMoreContent.style.display = "none";
+              showMoreBtn.setAttribute("aria-expanded", "false");
+            };
+            showMoreContent.appendChild(item);
+          }
+        });
+      }
+    };
+
+    // Run overflow detection on next frame
+    requestAnimationFrame(handleOverflow);
+
+    // Set up resize handler for overflow detection
+    // Remove any existing handler first
+    if (this.snippetsResizeHandler) {
+      window.removeEventListener("resize", this.snippetsResizeHandler);
     }
+
+    // Create and store the resize handler
+    this.snippetsResizeHandler = () => {
+      if (!this.snippetsBar) return;
+
+      // Reset all items to visible first
+      allItems.forEach((item) => (item.style.display = ""));
+      showMoreDropdown.style.display = "none";
+      showMoreContent.innerHTML = "";
+
+      // Re-run overflow detection
+      requestAnimationFrame(handleOverflow);
+    };
+
+    // Add the resize handler
+    window.addEventListener("resize", this.snippetsResizeHandler);
 
     // Set up click handler for closing dropdowns when clicking outside
     // Remove any existing handler first
