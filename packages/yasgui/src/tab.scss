@@ -61,6 +61,7 @@
       .yasrWrapperEl {
         flex: 1;
         min-width: 0;
+        height: calc(100vh - var(--yasgui-tabList-height)) !important;
         overflow: hidden;
       }
 
