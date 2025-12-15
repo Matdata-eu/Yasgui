@@ -73,9 +73,12 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
   // Generate state for CSRF protection
   const state = generateRandomString(32);
 
-  // Store code verifier and state in sessionStorage for later retrieval
-  sessionStorage.setItem("oauth2_code_verifier", codeVerifier);
-  sessionStorage.setItem("oauth2_state", state);
+  // Generate unique flow ID to prevent collisions across multiple OAuth flows
+  const flowId = generateRandomString(16);
+
+  // Store code verifier and state in sessionStorage for later retrieval with unique keys
+  sessionStorage.setItem(`oauth2_code_verifier_${flowId}`, codeVerifier);
+  sessionStorage.setItem(`oauth2_state_${flowId}`, state);
 
   // Build authorization URL
   const authUrl = new URL(config.authorizationEndpoint);
@@ -84,7 +87,8 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
   authUrl.searchParams.set("redirect_uri", config.redirectUri);
   authUrl.searchParams.set("code_challenge", codeChallenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
-  authUrl.searchParams.set("state", state);
+  // Include flowId in state to link the callback to this specific flow
+  authUrl.searchParams.set("state", `${state}:${flowId}`);
   if (config.scope) {
     authUrl.searchParams.set("scope", config.scope);
   }
@@ -106,21 +110,35 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
 
   // Wait for the OAuth callback
   return new Promise<OAuth2TokenResponse>((resolve, reject) => {
+    // Flag to prevent race condition between polling and messageHandler
+    let flowCompleted = false;
+
+    const cleanup = () => {
+      clearInterval(checkInterval);
+      window.removeEventListener("message", messageHandler);
+      // Clean up sessionStorage
+      sessionStorage.removeItem(`oauth2_code_verifier_${flowId}`);
+      sessionStorage.removeItem(`oauth2_state_${flowId}`);
+    };
+
     const checkInterval = setInterval(() => {
       try {
         // Check if popup is closed
         if (popup.closed) {
-          clearInterval(checkInterval);
-          window.removeEventListener("message", messageHandler);
-          reject(new Error("OAuth 2.0 authorization was cancelled"));
+          if (!flowCompleted) {
+            flowCompleted = true;
+            cleanup();
+            reject(new Error("OAuth 2.0 authorization was cancelled"));
+          }
           return;
         }
 
         // Try to read popup URL (will throw if cross-origin)
         try {
           const popupUrl = popup.location.href;
-          if (popupUrl.startsWith(config.redirectUri)) {
-            clearInterval(checkInterval);
+          if (popupUrl.startsWith(config.redirectUri) && !flowCompleted) {
+            flowCompleted = true;
+            cleanup();
             popup.close();
 
             // Parse the authorization code from URL
@@ -131,33 +149,24 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
             const errorDescription = url.searchParams.get("error_description");
 
             if (error) {
-              window.removeEventListener("message", messageHandler);
               reject(new Error(`OAuth 2.0 error: ${error}${errorDescription ? " - " + errorDescription : ""}`));
               return;
             }
 
             if (!code) {
-              window.removeEventListener("message", messageHandler);
               reject(new Error("No authorization code received"));
               return;
             }
 
-            if (returnedState !== state) {
-              window.removeEventListener("message", messageHandler);
+            // Validate state includes our flowId
+            const expectedState = `${state}:${flowId}`;
+            if (returnedState !== expectedState) {
               reject(new Error("State mismatch - possible CSRF attack"));
               return;
             }
 
             // Exchange code for tokens
-            exchangeCodeForToken(config, code, codeVerifier)
-              .then((tokenResponse) => {
-                window.removeEventListener("message", messageHandler);
-                resolve(tokenResponse);
-              })
-              .catch((err) => {
-                window.removeEventListener("message", messageHandler);
-                reject(err);
-              });
+            exchangeCodeForToken(config, code, codeVerifier).then(resolve).catch(reject);
           }
         } catch (e) {
           // Cross-origin error is expected when on OAuth provider's domain
@@ -171,8 +180,9 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
     // Also listen for postMessage from redirect page (alternative method)
     const messageHandler = (event: MessageEvent) => {
       // Validate origin if needed (should match redirect URI origin)
-      if (event.data && event.data.type === "oauth2_callback") {
-        clearInterval(checkInterval);
+      if (event.data && event.data.type === "oauth2_callback" && !flowCompleted) {
+        flowCompleted = true;
+        cleanup();
         if (popup && !popup.closed) {
           popup.close();
         }
@@ -189,7 +199,9 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
           return;
         }
 
-        if (returnedState !== state) {
+        // Validate state includes our flowId
+        const expectedState = `${state}:${flowId}`;
+        if (returnedState !== expectedState) {
           reject(new Error("State mismatch - possible CSRF attack"));
           return;
         }
@@ -204,12 +216,14 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
     // Cleanup timeout after 5 minutes
     setTimeout(
       () => {
-        clearInterval(checkInterval);
-        window.removeEventListener("message", messageHandler);
-        if (popup && !popup.closed) {
-          popup.close();
+        if (!flowCompleted) {
+          flowCompleted = true;
+          cleanup();
+          if (popup && !popup.closed) {
+            popup.close();
+          }
+          reject(new Error("OAuth 2.0 authorization timeout"));
         }
-        reject(new Error("OAuth 2.0 authorization timeout"));
       },
       5 * 60 * 1000,
     );
@@ -249,14 +263,10 @@ async function exchangeCodeForToken(
 
     const tokenResponse: OAuth2TokenResponse = await response.json();
 
-    // Clean up stored values
-    sessionStorage.removeItem("oauth2_code_verifier");
-    sessionStorage.removeItem("oauth2_state");
-
+    // Note: sessionStorage cleanup is handled by the caller
     return tokenResponse;
   } catch (error) {
-    sessionStorage.removeItem("oauth2_code_verifier");
-    sessionStorage.removeItem("oauth2_state");
+    // Note: sessionStorage cleanup is handled by the caller
     throw error;
   }
 }

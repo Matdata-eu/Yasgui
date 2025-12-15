@@ -597,13 +597,15 @@ export class Tab extends EventEmitter {
           console.error("Failed to refresh OAuth 2.0 token:", error);
           // Token refresh failed, user needs to re-authenticate
           alert(
-            "Your OAuth 2.0 session has expired and could not be refreshed. Please re-authenticate in the endpoint settings.",
+            "Your OAuth 2.0 session has expired and could not be refreshed. Please re-authenticate by clicking the Settings button (gear icon) and selecting the SPARQL Endpoints tab.",
           );
           return false;
         }
       } else {
         // No refresh token available, user needs to re-authenticate
-        alert("Your OAuth 2.0 session has expired. To re-authenticate, click the gear icon next to the endpoint selector to open the endpoint settings.");
+        alert(
+          "Your OAuth 2.0 session has expired. Please re-authenticate by clicking the Settings button (gear icon) and selecting the SPARQL Endpoints tab.",
+        );
         return false;
       }
     }
