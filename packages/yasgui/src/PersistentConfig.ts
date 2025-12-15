@@ -14,6 +14,7 @@ export interface PersistedJson {
   endpointConfigs?: EndpointConfig[]; // New endpoint-based storage with auth
   theme?: "light" | "dark";
   orientation?: "vertical" | "horizontal";
+  showSnippetsBar?: boolean;
 }
 function getDefaults(): PersistedJson {
   return {
@@ -163,6 +164,15 @@ export default class PersistentConfig {
   }
   public setCustomEndpointButtons(buttons: EndpointButton[]) {
     this.persistedJson.customEndpointButtons = buttons;
+    this.toStorage();
+  }
+
+  public getShowSnippetsBar(): boolean | undefined {
+    return this.persistedJson.showSnippetsBar;
+  }
+
+  public setShowSnippetsBar(show: boolean) {
+    this.persistedJson.showSnippetsBar = show;
     this.toStorage();
   }
 

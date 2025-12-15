@@ -4,6 +4,7 @@
     margin: 4px 0px;
     border: 2px solid #ccc;
     width: 100%;
+    min-width: 200px;
     &:hover {
       border-color: #bbb;
     }
@@ -125,6 +126,11 @@
     align-items: center;
     gap: 4px;
     margin-left: 4px;
+
+    // Hide on small screens (mobile)
+    @media (max-width: 768px) {
+      display: none;
+    }
   }
 
   .endpointButton {
@@ -151,6 +157,12 @@
     &:focus {
       outline: 2px solid var(--yasgui-endpoint-button-focus, #5cb3fd);
       outline-offset: 2px;
+    }
+
+    // Reduce padding on medium screens
+    @media (max-width: 1024px) {
+      padding: 4px 8px;
+      font-size: 12px;
     }
   }
 }

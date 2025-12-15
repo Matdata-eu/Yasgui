@@ -4,6 +4,7 @@ import Tab from "./Tab";
 import * as ConfigExportImport from "./ConfigExportImport";
 import { VERSION } from "./version";
 import * as OAuth2Utils from "./OAuth2Utils";
+import PersistentConfig from "./PersistentConfig";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -427,7 +428,10 @@ export default class TabSettingsModal {
     const snippetsBarCheckbox = document.createElement("input");
     snippetsBarCheckbox.type = "checkbox";
     snippetsBarCheckbox.id = "showSnippetsBar";
-    snippetsBarCheckbox.checked = yasqe.getSnippetsBarVisible();
+    // Read from global config
+    const persistedValue = this.tab.yasgui.persistentConfig.getShowSnippetsBar();
+    snippetsBarCheckbox.checked =
+      persistedValue !== undefined ? persistedValue : this.tab.yasgui.config.showSnippetsBar !== false;
 
     const snippetsBarLabel = document.createElement("label");
     snippetsBarLabel.htmlFor = "showSnippetsBar";
@@ -1238,7 +1242,23 @@ export default class TabSettingsModal {
       }
       const snippetsBarCheckbox = document.getElementById("showSnippetsBar") as HTMLInputElement;
       if (snippetsBarCheckbox) {
-        yasqe.setSnippetsBarVisible(snippetsBarCheckbox.checked);
+        // Save globally to config and persistent storage
+        this.tab.yasgui.config.showSnippetsBar = snippetsBarCheckbox.checked;
+        this.tab.yasgui.persistentConfig.setShowSnippetsBar(snippetsBarCheckbox.checked);
+
+        // Apply to all tabs by updating each Yasqe instance's config and refreshing
+        this.tab.yasgui.persistentConfig.getTabs().forEach((tabId: string) => {
+          const tab = this.tab.yasgui.getTab(tabId);
+          if (tab) {
+            const tabYasqe = tab.getYasqe();
+            if (tabYasqe) {
+              // Update the individual Yasqe instance's config
+              tabYasqe.config.showSnippetsBar = snippetsBarCheckbox.checked;
+              // Refresh the snippets bar to reflect the change
+              tabYasqe.refreshSnippetsBar();
+            }
+          }
+        });
       }
       yasqe.saveQuery();
     }
@@ -1761,6 +1781,28 @@ export default class TabSettingsModal {
     aboutSection.appendChild(footerInfo);
 
     container.appendChild(aboutSection);
+
+    // Storage Management Section
+    const storageSection = document.createElement("div");
+    addClass(storageSection, "settingsSection");
+
+    const storageTitle = document.createElement("h3");
+    storageTitle.textContent = "Storage Management";
+    storageSection.appendChild(storageTitle);
+
+    const storageDescription = document.createElement("p");
+    storageDescription.textContent =
+      "Clear all locally stored data including tabs, queries, endpoint configurations, and preferences. This action cannot be undone.";
+    addClass(storageDescription, "settingsHelp");
+    storageSection.appendChild(storageDescription);
+
+    const clearStorageButton = document.createElement("button");
+    clearStorageButton.textContent = "Clear Persistent Storage";
+    addClass(clearStorageButton, "dangerButton");
+    clearStorageButton.onclick = () => this.clearPersistentStorage();
+    storageSection.appendChild(clearStorageButton);
+
+    container.appendChild(storageSection);
   }
 
   private createAboutLink(label: string, url: string, description: string): HTMLElement {
@@ -1782,6 +1824,27 @@ export default class TabSettingsModal {
     linkContainer.appendChild(desc);
 
     return linkContainer;
+  }
+
+  private clearPersistentStorage() {
+    const confirmed = confirm(
+      "Are you sure you want to clear all persistent storage?\n\n" +
+        "This will delete:\n" +
+        "- All saved tabs and queries\n" +
+        "- Endpoint configurations and history\n" +
+        "- Authentication settings\n" +
+        "- Editor preferences\n" +
+        "- Prefixes\n\n" +
+        "This action cannot be undone and the page will reload.",
+    );
+
+    if (confirmed) {
+      // Clear persistent storage
+      PersistentConfig.clear();
+
+      // Reload the page to reinitialize with empty storage
+      window.location.reload();
+    }
   }
 
   public destroy() {

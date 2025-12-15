@@ -122,8 +122,10 @@ class Parser {
   public getError() {
     if (!this.errorSummary) {
       if (this.res && this.res.status >= 400) {
+        // Use response content if available, otherwise fall back to statusText
+        const errorText = this.res.content || this.res.statusText;
         this.errorSummary = {
-          text: this.res.statusText,
+          text: errorText,
           status: this.res.status,
           statusText: !this.res.ok ? this.res.statusText : undefined,
         };
@@ -132,8 +134,12 @@ class Parser {
         this.errorSummary = this.summary.error;
       }
       if (this.error) {
+        // Check if the error object has status properties attached (from our enhanced error handling)
+        const errorWithStatus = this.error as any;
         this.errorSummary = {
           text: this.error.message,
+          status: errorWithStatus.status,
+          statusText: errorWithStatus.statusText,
         };
       }
     }
