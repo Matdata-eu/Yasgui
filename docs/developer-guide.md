@@ -1033,6 +1033,7 @@ interface ApiKeyAuthConfig {
 
 interface OAuth2AuthConfig {
   accessToken: string;
+  idToken?: string;
 }
 ```
 
