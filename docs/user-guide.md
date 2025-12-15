@@ -692,6 +692,7 @@ YASGUI supports multiple authentication methods for endpoints that require crede
 - Scope: Space-separated OAuth scopes (optional)
 - Use case: Secure, industry-standard authorization with automatic token refresh
 - **Process**: Click "Save & Authenticate" to open OAuth login window
+- **⚠️ Important**: The redirect URI must be registered with your OAuth provider by the OAuth administrator before authentication will work
 
 **Security Considerations:**
 
@@ -738,23 +739,29 @@ For **OAuth 2.0**:
 
 **OAuth 2.0 Provider Examples:**
 
+**⚠️ Important Prerequisite:**
+Before using OAuth 2.0, the OAuth administrator must register the redirect URI (callback URL) in the OAuth provider's configuration. By default, YASGUI uses the current page URL as the redirect URI. For example, if YASGUI is hosted at `https://yasgui.example.com/`, this URL must be added to the allowed redirect URIs in your OAuth application settings.
+
 *Microsoft Azure (Entra ID):*
 - Authorization Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize`
 - Token Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token`
 - Scope: `api://your-app-id/.default` or `openid profile`
 - Note: Your app must be registered in Azure AD with public client flow enabled
+- **Redirect URI Registration**: Add your YASGUI URL to "Redirect URIs" in Azure AD app registration
 
 *AWS Cognito:*
 - Authorization Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/authorize`
 - Token Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/token`
 - Scope: `openid profile` (adjust as needed)
 - Note: Enable "Authorization code grant" flow in your app client settings
+- **Redirect URI Registration**: Add your YASGUI URL to "Allowed callback URLs" in Cognito app client settings
 
 *Keycloak:*
 - Authorization Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/auth`
 - Token Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/token`
 - Scope: `openid profile` (adjust based on client configuration)
 - Note: Client should have "Standard Flow" enabled and "Access Type" set to "public"
+- **Redirect URI Registration**: Add your YASGUI URL to "Valid Redirect URIs" in Keycloak client configuration
 
 ### Query History and Persistence
 

@@ -1092,6 +1092,9 @@ yasgui.persistentConfig.deleteEndpointConfig("https://example.com/sparql");
 
 #### OAuth 2.0 Provider Examples
 
+**⚠️ Important Prerequisite:**
+Before OAuth 2.0 authentication can work, the **OAuth administrator must register the redirect URI** (callback URL) in the OAuth provider's application configuration. YASGUI uses the current page URL as the redirect URI by default (e.g., `https://yasgui.example.com/`). This URL must be added to the list of allowed redirect URIs in your OAuth application settings.
+
 **Microsoft Azure (Entra ID)**
 
 ```javascript
@@ -1107,6 +1110,8 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sp
   }
 });
 ```
+
+**Redirect URI Registration:** In Azure AD app registration, add your YASGUI URL to "Redirect URIs" under Authentication settings.
 
 **AWS Cognito**
 
@@ -1124,6 +1129,8 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sp
 });
 ```
 
+**Redirect URI Registration:** In Cognito app client settings, add your YASGUI URL to "Allowed callback URLs".
+
 **Keycloak**
 
 ```javascript
@@ -1140,9 +1147,11 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sp
 });
 ```
 
+**Redirect URI Registration:** In Keycloak client configuration, add your YASGUI URL to "Valid Redirect URIs".
+
 **Important Notes:**
 - Replace placeholders like `{tenant-id}`, `{realm-name}`, `region`, etc. with your actual values
-- Ensure your OAuth application is configured to allow the redirect URI (the current page URL by default)
+- **The OAuth administrator must register the redirect URI** in the OAuth provider before authentication will work
 - For Azure, the client must be registered in Azure AD with public client flow enabled
 - For AWS Cognito, the app client should have "Authorization code grant" flow enabled
 - For Keycloak, the client should have "Standard Flow" enabled and "Access Type" set to "public"
