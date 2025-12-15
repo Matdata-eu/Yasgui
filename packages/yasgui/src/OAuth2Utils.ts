@@ -46,6 +46,7 @@ export interface OAuth2Config {
 
 export interface OAuth2TokenResponse {
   access_token: string;
+  id_token?: string; // ID token for authentication (Azure AD, OIDC)
   refresh_token?: string;
   expires_in?: number; // seconds
   token_type: string;
@@ -194,23 +195,24 @@ export async function startOAuth2Flow(config: OAuth2Config): Promise<OAuth2Token
         }
 
         // Exchange code for tokens
-        exchangeCodeForToken(config, code, codeVerifier)
-          .then(resolve)
-          .catch(reject);
+        exchangeCodeForToken(config, code, codeVerifier).then(resolve).catch(reject);
       }
     };
 
     window.addEventListener("message", messageHandler);
 
     // Cleanup timeout after 5 minutes
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      window.removeEventListener("message", messageHandler);
-      if (popup && !popup.closed) {
-        popup.close();
-      }
-      reject(new Error("OAuth 2.0 authorization timeout"));
-    }, 5 * 60 * 1000);
+    setTimeout(
+      () => {
+        clearInterval(checkInterval);
+        window.removeEventListener("message", messageHandler);
+        if (popup && !popup.closed) {
+          popup.close();
+        }
+        reject(new Error("OAuth 2.0 authorization timeout"));
+      },
+      5 * 60 * 1000,
+    );
   });
 }
 

@@ -63,6 +63,7 @@ export interface EndpointConfig {
         redirectUri?: string;
         scope?: string;
         accessToken?: string;
+        idToken?: string; // ID token for OIDC/Azure AD authentication
         refreshToken?: string;
         tokenExpiry?: number; // Unix timestamp in milliseconds
       };

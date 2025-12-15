@@ -1374,6 +1374,7 @@ export interface ApiKeyAuthConfig {
 }
 export interface OAuth2AuthConfig {
   accessToken: string;
+  idToken?: string; // ID token for authentication (Azure AD, OIDC)
 }
 export type AuthConfig = BasicAuthConfig | BearerAuthConfig | ApiKeyAuthConfig | OAuth2AuthConfig;
 export interface RequestConfig<Y> {

@@ -523,13 +523,14 @@ export class Tab extends EventEmitter {
         },
       };
     } else if (auth.type === "oauth2") {
-      // For OAuth 2.0, return the current access token
+      // For OAuth 2.0, return the current access token and ID token
       // Token refresh is handled separately before query execution
       if (auth.accessToken) {
         return {
           type: "oauth2" as const,
           config: {
             accessToken: auth.accessToken,
+            idToken: auth.idToken,
           },
         };
       }
@@ -572,6 +573,7 @@ export class Tab extends EventEmitter {
             authentication: {
               ...auth,
               accessToken: tokenResponse.access_token,
+              idToken: tokenResponse.id_token,
               refreshToken: tokenResponse.refresh_token || auth.refreshToken,
               tokenExpiry,
             },

@@ -85,7 +85,14 @@ export function getAjaxConfig(
   try {
     // Check for OAuth 2.0 authentication (highest priority for access tokens)
     const oauth2Auth = isFunction(config.oauth2Auth) ? config.oauth2Auth(yasqe) : config.oauth2Auth;
-    const trimmedOAuth2Token = oauth2Auth && oauth2Auth.accessToken ? oauth2Auth.accessToken.trim() : "";
+    // Prefer ID token over access token for authentication:
+    // - OAuth2 Proxy and similar gateways expect ID tokens (issued by OIDC providers like Azure AD)
+    // - ID tokens contain identity/authentication info and match the expected issuer
+    // - Access tokens are for API authorization and may have different issuers
+    // - Azure AD issues both: id_token (from sts.windows.net or login.microsoftonline.com) for auth,
+    //   and access_token for API access
+    const oauth2Token = oauth2Auth?.idToken || oauth2Auth?.accessToken;
+    const trimmedOAuth2Token = oauth2Token ? oauth2Token.trim() : "";
     if (oauth2Auth && trimmedOAuth2Token.length > 0) {
       if (finalHeaders["Authorization"] !== undefined) {
         console.warn(
@@ -113,11 +120,7 @@ export function getAjaxConfig(
     const apiKeyAuth = isFunction(config.apiKeyAuth) ? config.apiKeyAuth(yasqe) : config.apiKeyAuth;
     const trimmedHeaderName = apiKeyAuth && apiKeyAuth.headerName ? apiKeyAuth.headerName.trim() : "";
     const trimmedApiKey = apiKeyAuth && apiKeyAuth.apiKey ? apiKeyAuth.apiKey.trim() : "";
-    if (
-      apiKeyAuth &&
-      trimmedHeaderName.length > 0 &&
-      trimmedApiKey.length > 0
-    ) {
+    if (apiKeyAuth && trimmedHeaderName.length > 0 && trimmedApiKey.length > 0) {
       if (finalHeaders[trimmedHeaderName] !== undefined) {
         console.warn(
           `Header "${trimmedHeaderName}" already exists in request headers; skipping API Key header to avoid overwrite.`,
@@ -172,7 +175,7 @@ export async function executeQuery(yasqe: Yasqe, config?: YasqeAjaxConfig): Prom
         Accept: populatedConfig.accept,
         ...(populatedConfig.headers || {}),
       },
-      credentials: populatedConfig.withCredentials ? "include" : "same-origin",
+      credentials: "include",
       signal: abortController.signal,
     };
     if (fetchOptions?.headers && populatedConfig.reqMethod === "POST") {
