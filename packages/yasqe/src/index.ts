@@ -1519,7 +1519,11 @@ export interface ApiKeyAuthConfig {
   headerName: string;
   apiKey: string;
 }
-export type AuthConfig = BasicAuthConfig | BearerAuthConfig | ApiKeyAuthConfig;
+export interface OAuth2AuthConfig {
+  accessToken: string;
+  idToken?: string; // ID token for authentication (Azure AD, OIDC)
+}
+export type AuthConfig = BasicAuthConfig | BearerAuthConfig | ApiKeyAuthConfig | OAuth2AuthConfig;
 export interface RequestConfig<Y> {
   queryArgument: string | ((yasqe: Y) => string) | undefined;
   endpoint: string | ((yasqe: Y) => string);
@@ -1536,6 +1540,7 @@ export interface RequestConfig<Y> {
   basicAuth: BasicAuthConfig | ((yasqe: Y) => BasicAuthConfig | undefined) | undefined;
   bearerAuth: BearerAuthConfig | ((yasqe: Y) => BearerAuthConfig | undefined) | undefined;
   apiKeyAuth: ApiKeyAuthConfig | ((yasqe: Y) => ApiKeyAuthConfig | undefined) | undefined;
+  oauth2Auth: OAuth2AuthConfig | ((yasqe: Y) => OAuth2AuthConfig | undefined) | undefined;
 }
 export type PlainRequestConfig = {
   [K in keyof RequestConfig<any>]: Exclude<RequestConfig<any>[K], Function>;

@@ -1014,6 +1014,7 @@ interface RequestConfig {
   basicAuth?: BasicAuthConfig | ((yasqe: Yasqe) => BasicAuthConfig | undefined);
   bearerAuth?: BearerAuthConfig | ((yasqe: Yasqe) => BearerAuthConfig | undefined);
   apiKeyAuth?: ApiKeyAuthConfig | ((yasqe: Yasqe) => ApiKeyAuthConfig | undefined);
+  oauth2Auth?: OAuth2AuthConfig | ((yasqe: Yasqe) => OAuth2AuthConfig | undefined);
 }
 
 interface BasicAuthConfig {
@@ -1028,6 +1029,11 @@ interface BearerAuthConfig {
 interface ApiKeyAuthConfig {
   headerName: string;
   apiKey: string;
+}
+
+interface OAuth2AuthConfig {
+  accessToken: string;
+  idToken?: string;
 }
 ```
 
@@ -1067,11 +1073,12 @@ YASGUI supports multiple authentication methods for SPARQL endpoints: Basic Auth
 
 #### Authentication Types
 
-YASGUI supports three authentication types:
+YASGUI supports four authentication types:
 
 1. **Basic Authentication**: Username and password sent as HTTP Basic Auth
 2. **Bearer Token**: Token sent in the `Authorization: Bearer <token>` header
 3. **API Key**: Custom header with an API key (e.g., `X-API-Key: <key>`)
+4. **OAuth 2.0**: Industry-standard OAuth 2.0 with automatic token refresh
 
 #### Basic Authentication
 
@@ -1159,6 +1166,24 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://api.example.com/sparql", {
   }
 });
 
+// Add or update an endpoint with OAuth 2.0
+yasgui.persistentConfig.addOrUpdateEndpoint("https://oauth.example.com/sparql", {
+  label: "OAuth Protected Endpoint",
+  showAsButton: true,
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-client-id',
+    authorizationEndpoint: 'https://auth.example.com/oauth/authorize',
+    tokenEndpoint: 'https://auth.example.com/oauth/token',
+    redirectUri: 'https://yourapp.com/oauth2-callback', // optional
+    scope: 'read write', // optional
+    // The following are automatically populated after authentication:
+    // accessToken: '...',
+    // refreshToken: '...',
+    // tokenExpiry: 1234567890
+  }
+});
+
 // Get endpoint configuration
 const config = yasgui.persistentConfig.getEndpointConfig("https://example.com/sparql");
 
@@ -1170,6 +1195,72 @@ yasgui.persistentConfig.addOrUpdateEndpoint("https://example.com/sparql", {
 // Delete an endpoint completely
 yasgui.persistentConfig.deleteEndpointConfig("https://example.com/sparql");
 ```
+
+#### OAuth 2.0 Provider Examples
+
+**⚠️ Important Prerequisite:**
+Before OAuth 2.0 authentication can work, the **OAuth administrator must register the redirect URI** (callback URL) in the OAuth provider's application configuration. YASGUI uses the current page URL as the redirect URI by default (e.g., `https://yasgui.example.com/`). This URL must be added to the list of allowed redirect URIs in your OAuth application settings.
+
+**Microsoft Azure (Entra ID)**
+
+```javascript
+yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sparql", {
+  label: "Azure Protected Endpoint",
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-azure-client-id',
+    authorizationEndpoint: 'https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize',
+    tokenEndpoint: 'https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token',
+    scope: 'api://your-app-id/.default', // or specific scopes like 'openid profile'
+    redirectUri: window.location.origin + window.location.pathname // optional
+  }
+});
+```
+
+**Redirect URI Registration:** In Azure AD app registration, add your YASGUI URL to "Redirect URIs" under Authentication settings.
+
+**AWS Cognito**
+
+```javascript
+yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sparql", {
+  label: "AWS Cognito Protected Endpoint",
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-cognito-app-client-id',
+    authorizationEndpoint: 'https://your-domain.auth.region.amazoncognito.com/oauth2/authorize',
+    tokenEndpoint: 'https://your-domain.auth.region.amazoncognito.com/oauth2/token',
+    scope: 'openid profile', // adjust based on your needs
+    redirectUri: window.location.origin + window.location.pathname // optional
+  }
+});
+```
+
+**Redirect URI Registration:** In Cognito app client settings, add your YASGUI URL to "Allowed callback URLs".
+
+**Keycloak**
+
+```javascript
+yasgui.persistentConfig.addOrUpdateEndpoint("https://your-sparql-endpoint.com/sparql", {
+  label: "Keycloak Protected Endpoint",
+  authentication: {
+    type: 'oauth2',
+    clientId: 'your-keycloak-client-id',
+    authorizationEndpoint: 'https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/auth',
+    tokenEndpoint: 'https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/token',
+    scope: 'openid profile', // adjust based on your client configuration
+    redirectUri: window.location.origin + window.location.pathname // optional
+  }
+});
+```
+
+**Redirect URI Registration:** In Keycloak client configuration, add your YASGUI URL to "Valid Redirect URIs".
+
+**Important Notes:**
+- Replace placeholders like `{tenant-id}`, `{realm-name}`, `region`, etc. with your actual values
+- **The OAuth administrator must register the redirect URI** in the OAuth provider before authentication will work
+- For Azure, the client must be registered in Azure AD with public client flow enabled
+- For AWS Cognito, the app client should have "Authorization code grant" flow enabled
+- For Keycloak, the client should have "Standard Flow" enabled and "Access Type" set to "public"
 
 #### Dynamic Authentication
 

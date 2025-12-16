@@ -709,23 +709,53 @@ The endpoints table shows:
 
 **Configuring Authentication:**
 
-YASGUI supports HTTP Basic Authentication for endpoints that require username and password credentials.
+YASGUI supports multiple authentication methods for endpoints that require credentials.
 
 1. **Find your endpoint** in the SPARQL Endpoints table
 2. **Click "Configure"** in the Authentication column
-3. **Select authentication type** (currently HTTP Basic Authentication)
-4. **Enter credentials**:
-   - Username: Your endpoint username
-   - Password: Your endpoint password
-5. **Click "Save"** to apply
+3. **Select authentication type**:
+   - **HTTP Basic Authentication**: Username and password
+   - **Bearer Token**: Pre-configured access token
+   - **API Key**: Custom header with API key
+   - **OAuth 2.0**: Industry-standard OAuth 2.0 authorization
+4. **Enter credentials** based on your selected type (see below)
+5. **Click "Save"** (or "Save & Authenticate" for OAuth 2.0) to apply
+
+**Authentication Types:**
+
+*HTTP Basic Authentication:*
+- Username: Your endpoint username
+- Password: Your endpoint password
+- Use case: Simple username/password authentication
+
+*Bearer Token:*
+- Token: Your pre-configured bearer token
+- Use case: When you have a pre-generated access token
+
+*API Key (Custom Header):*
+- Header Name: The HTTP header name (e.g., X-API-Key)
+- API Key: Your API key value
+- Use case: Endpoints using custom header-based authentication
+
+*OAuth 2.0:*
+- Client ID: Your OAuth application's client ID
+- Authorization Endpoint: The OAuth provider's authorization URL
+- Token Endpoint: The OAuth provider's token exchange URL
+- Redirect URI: Callback URL (optional, defaults to current page)
+- Scope: Space-separated OAuth scopes (optional)
+- Use case: Secure, industry-standard authorization with automatic token refresh
+- **Process**: Click "Save & Authenticate" to open OAuth login window
+- **⚠️ Important**: The redirect URI must be registered with your OAuth provider by the OAuth administrator before authentication will work
 
 **Security Considerations:**
 
 ⚠️ **Important Security Notes:**
 
-- **Credentials are stored in browser localStorage**: Your username and password are stored locally in your browser
+- **Credentials are stored in browser localStorage**: Your authentication credentials are stored locally in your browser
 - **Only use with HTTPS endpoints**: Never send credentials to HTTP endpoints as they will be transmitted in plain text
 - **Be cautious on shared computers**: Clear your browser data when using YASGUI on shared or public computers
+- **OAuth 2.0 tokens**: Access tokens are automatically refreshed when expired (if refresh token is available)
+- **Token security**: OAuth 2.0 uses secure PKCE flow (Proof Key for Code Exchange) for enhanced security
 
 **How Authentication Works:**
 
@@ -735,9 +765,56 @@ Authentication is stored per-endpoint, which means:
 - Credentials persist across browser sessions (stored in localStorage)
 
 When authentication is configured:
+
+For **Basic Authentication**:
 1. YASGUI encodes your credentials using Base64 encoding
 2. Adds an `Authorization` header with the format: `Basic <encoded-credentials>`
 3. Sends this header with every SPARQL query request to that endpoint
+
+For **Bearer Token**:
+1. Uses the provided token as-is
+2. Adds an `Authorization` header with the format: `Bearer <token>`
+3. Sends this header with every SPARQL query request to that endpoint
+
+For **API Key**:
+1. Uses the specified custom header name and API key value
+2. Adds a custom header with the format: `<Header-Name>: <api-key>`
+3. Sends this header with every SPARQL query request to that endpoint
+
+For **OAuth 2.0**:
+1. Opens a popup window for OAuth provider authentication
+2. Uses Authorization Code flow with PKCE for secure token exchange
+3. Stores access token and refresh token
+4. Automatically checks token expiration before each query
+5. Automatically refreshes expired tokens using refresh token (if available)
+6. Adds an `Authorization` header with the format: `Bearer <access-token>`
+7. If token refresh fails, prompts user to re-authenticate
+
+**OAuth 2.0 Provider Examples:**
+
+**⚠️ Important Prerequisite:**
+Before using OAuth 2.0, the OAuth administrator must register the redirect URI (callback URL) in the OAuth provider's configuration. By default, YASGUI uses the current page URL as the redirect URI. For example, if YASGUI is hosted at `https://yasgui.example.com/`, this URL must be added to the allowed redirect URIs in your OAuth application settings.
+
+*Microsoft Azure (Entra ID):*
+- Authorization Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize`
+- Token Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token`
+- Scope: `api://your-app-id/.default` or `openid profile`
+- Note: Your app must be registered in Azure AD with public client flow enabled
+- **Redirect URI Registration**: Add your YASGUI URL to "Redirect URIs" in Azure AD app registration
+
+*AWS Cognito:*
+- Authorization Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/authorize`
+- Token Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/token`
+- Scope: `openid profile` (adjust as needed)
+- Note: Enable "Authorization code grant" flow in your app client settings
+- **Redirect URI Registration**: Add your YASGUI URL to "Allowed callback URLs" in Cognito app client settings
+
+*Keycloak:*
+- Authorization Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/auth`
+- Token Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/token`
+- Scope: `openid profile` (adjust based on client configuration)
+- Note: Client should have "Standard Flow" enabled and "Access Type" set to "public"
+- **Redirect URI Registration**: Add your YASGUI URL to "Valid Redirect URIs" in Keycloak client configuration
 
 ### Query History and Persistence
 

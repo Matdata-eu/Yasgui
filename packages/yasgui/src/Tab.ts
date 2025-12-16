@@ -9,6 +9,7 @@ import * as shareLink from "./linkUtils";
 import EndpointSelect from "./endpointSelect";
 import "./tab.scss";
 import { getRandomId, default as Yasgui, YasguiRequestConfig } from "./";
+import * as OAuth2Utils from "./OAuth2Utils";
 
 // Layout orientation toggle icons
 const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
@@ -477,9 +478,15 @@ export class Tab extends EventEmitter {
   public getName() {
     return this.persistentJson.name;
   }
-
-  public query(): Promise<any> {
+  public async query(): Promise<any> {
     if (!this.yasqe) return Promise.reject(new Error("No yasqe editor initialized"));
+
+    // Check and refresh OAuth 2.0 token if needed
+    const tokenValid = await this.ensureOAuth2TokenValid();
+    if (!tokenValid) {
+      return Promise.reject(new Error("OAuth 2.0 authentication failed"));
+    }
+
     return this.yasqe.query();
   }
 
@@ -528,9 +535,83 @@ export class Tab extends EventEmitter {
           apiKey: auth.apiKey,
         },
       };
+    } else if (auth.type === "oauth2") {
+      // For OAuth 2.0, return the current access token and ID token
+      // Token refresh is handled separately before query execution
+      if (auth.accessToken) {
+        return {
+          type: "oauth2" as const,
+          config: {
+            accessToken: auth.accessToken,
+            idToken: auth.idToken,
+          },
+        };
+      }
     }
 
     return undefined;
+  }
+
+  /**
+   * Check and refresh OAuth 2.0 token if needed
+   * Should be called before query execution
+   */
+  private async ensureOAuth2TokenValid(): Promise<boolean> {
+    const endpoint = this.getEndpoint();
+    if (!endpoint) return true;
+
+    const endpointConfig = this.yasgui.persistentConfig.getEndpointConfig(endpoint);
+    if (!endpointConfig || !endpointConfig.authentication) return true;
+
+    const auth = endpointConfig.authentication;
+    if (auth.type !== "oauth2") return true;
+
+    // Check if token is expired
+    if (OAuth2Utils.isTokenExpired(auth.tokenExpiry)) {
+      // Try to refresh the token if we have a refresh token
+      if (auth.refreshToken) {
+        try {
+          const tokenResponse = await OAuth2Utils.refreshOAuth2Token(
+            {
+              clientId: auth.clientId,
+              tokenEndpoint: auth.tokenEndpoint,
+            },
+            auth.refreshToken,
+          );
+
+          const tokenExpiry = OAuth2Utils.calculateTokenExpiry(tokenResponse.expires_in);
+
+          // Update stored authentication with new tokens
+          this.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {
+            authentication: {
+              ...auth,
+              accessToken: tokenResponse.access_token,
+              idToken: tokenResponse.id_token,
+              refreshToken: tokenResponse.refresh_token || auth.refreshToken,
+              tokenExpiry,
+            },
+          });
+
+          return true;
+        } catch (error) {
+          console.error("Failed to refresh OAuth 2.0 token:", error);
+          // Token refresh failed, user needs to re-authenticate
+          alert(
+            "Your OAuth 2.0 session has expired and could not be refreshed. Please re-authenticate by clicking the Settings button (gear icon) and selecting the SPARQL Endpoints tab.",
+          );
+          return false;
+        }
+      } else {
+        // No refresh token available, user needs to re-authenticate
+        alert(
+          "Your OAuth 2.0 session has expired. Please re-authenticate by clicking the Settings button (gear icon) and selecting the SPARQL Endpoints tab.",
+        );
+        return false;
+      }
+    }
+
+    // Token is still valid
+    return true;
   }
 
   /**
@@ -606,6 +687,8 @@ export class Tab extends EventEmitter {
             processedReqConfig.bearerAuth = endpointAuth.config;
           } else if (endpointAuth.type === "apiKey" && typeof processedReqConfig.apiKeyAuth === "undefined") {
             processedReqConfig.apiKeyAuth = endpointAuth.config;
+          } else if (endpointAuth.type === "oauth2" && typeof processedReqConfig.oauth2Auth === "undefined") {
+            processedReqConfig.oauth2Auth = endpointAuth.config;
           }
         }
 
