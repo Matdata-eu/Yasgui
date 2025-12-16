@@ -39,6 +39,10 @@ export default class Error implements Plugin<never> {
     endpointDown.textContent = "Endpoint is down";
     list.appendChild(endpointDown);
 
+    const credExpired = document.createElement("li");
+    credExpired.textContent = "Credentials have expired";
+    list.appendChild(credExpired);
+
     const cors = document.createElement("li");
     const firstPart = document.createElement("span");
     firstPart.textContent = "Endpoint is not accessible from the YASGUI server and website, and the endpoint is not ";
