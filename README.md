@@ -64,12 +64,32 @@ YASGUI provides a complete SPARQL development environment with powerful features
 ### 🔧 Expert Features
 - **[Multiple Tabs](./docs/user-guide.md#query-tabs)** - Work on multiple queries simultaneously
 - **[Endpoint Management](./docs/user-guide.md#endpoint-quick-switch)** - Quick-switch between SPARQL endpoints
+- **[Authentication Support](./docs/developer-guide.md#authentication)** - Basic Auth, Bearer Token, API Key, OAuth2
 - **[Persistent Storage](./docs/user-guide.md#query-history-and-persistence)** - Auto-save queries and preferences
 - **[URL Sharing](./docs/user-guide.md#share-queries)** - Share queries via URL parameters
 - **[Fullscreen Mode](./docs/user-guide.md#fullscreen-mode)** - Maximize editor or results viewer
 - **[Export Results](./docs/developer-guide.md#yasr-class)** - Download results in various formats
+- **[Configuration Import/Export](./docs/user-guide.md#configuration-importexport)** - Backup and restore settings
 
 For detailed feature documentation, see the **[User Guide](./docs/user-guide.md)**.
+
+---
+
+## Browser Support
+
+YASGUI works on all modern browsers:
+
+- ✅ Chrome / Edge (latest)
+- ✅ Firefox (latest)
+- ✅ Safari (latest)
+- ✅ Opera (latest)
+
+**Requirements:**
+- JavaScript enabled
+- Cookies/LocalStorage enabled (for query persistence)
+- Modern ES6+ support
+
+---
 
 ## Installation
 
@@ -94,17 +114,22 @@ yarn add @matdata/yasgui
 
 ### Docker
 
+**Run with default endpoint:**
 ```bash
 docker pull mathiasvda/yasgui:latest
 docker run -p 8080:8080 mathiasvda/yasgui:latest
 ```
 
+Access at: `http://localhost:8080`
+
 **Custom endpoint:**
 ```bash
-docker run -p 8080:8080 -e YASGUI_DEFAULT_ENDPOINT=https://your-endpoint.com/sparql mathiasvda/yasgui:latest
+docker run -p 8080:8080 \
+  -e YASGUI_DEFAULT_ENDPOINT=https://your-endpoint.com/sparql \
+  mathiasvda/yasgui:latest
 ```
 
-For detailed installation instructions and usage examples, see the **[Developer Guide](./docs/developer-guide.md#installation)**.
+For detailed installation instructions and usage examples, see the **[Developer Guide](./docs/developer-guide.md#installation)** and **[User Guide - Docker](./docs/user-guide.md#running-yasgui-with-docker)**.
 
 ## Quick Start
 
@@ -146,7 +171,112 @@ const yasgui = new Yasgui(document.getElementById('yasgui'), {
 });
 ```
 
+### Authentication
+
+YASGUI supports multiple authentication methods for secure SPARQL endpoints:
+
+**Basic Authentication:**
+```javascript
+const yasgui = new Yasgui(document.getElementById('yasgui'), {
+  requestConfig: {
+    endpoint: 'https://secure-endpoint.com/sparql',
+    basicAuth: {
+      username: 'myuser',
+      password: 'mypassword'
+    }
+  }
+});
+```
+
+**Bearer Token (OAuth2/JWT):**
+```javascript
+const yasgui = new Yasgui(document.getElementById('yasgui'), {
+  requestConfig: {
+    endpoint: 'https://api.example.com/sparql',
+    bearerAuth: {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    }
+  }
+});
+```
+
+**API Key (Custom Headers):**
+```javascript
+const yasgui = new Yasgui(document.getElementById('yasgui'), {
+  requestConfig: {
+    endpoint: 'https://api.example.com/sparql',
+    apiKeyAuth: {
+      headerName: 'X-API-Key',
+      apiKey: 'your-api-key-here'
+    }
+  }
+});
+```
+
+Authentication can also be configured through the UI via the Settings modal (gear icon). For detailed authentication documentation including dynamic auth and OAuth2, see the **[Developer Guide - Authentication](./docs/developer-guide.md#authentication)**.
+
 For framework-specific examples and advanced usage, see the **[Developer Guide](./docs/developer-guide.md#usage-examples)**.
+
+---
+
+## Configuration Options
+
+YASGUI is highly configurable. Here are some common configuration options:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById('yasgui'), {
+  // Request configuration
+  requestConfig: {
+    endpoint: 'https://dbpedia.org/sparql',
+    method: 'POST',                        // GET or POST
+    headers: { 'Custom-Header': 'value' }, // Custom HTTP headers
+    args: [{ name: 'param', value: 'val' }] // URL parameters
+  },
+  
+  // UI configuration
+  theme: 'dark',                           // 'light' or 'dark'
+  orientation: 'horizontal',               // 'horizontal' or 'vertical'
+  showSnippetsBar: true,                   // Show code snippets
+  
+  // Persistence
+  persistenceId: 'my-yasgui-instance',     // Custom storage ID
+  persistencyExpire: 7 * 24 * 60 * 60,     // Storage expiration (7 days)
+  
+  // Default query
+  yasqe: {
+    value: 'SELECT * WHERE { ?s ?p ?o } LIMIT 10'
+  }
+});
+```
+
+For complete configuration options, see the **[Developer Guide - Configuration](./docs/developer-guide.md#configuration)**.
+
+---
+
+## Troubleshooting
+
+### CORS Issues
+
+If you encounter CORS errors when querying remote endpoints:
+
+1. **Use a CORS proxy** - Set up a proxy server that adds CORS headers
+2. **Configure the endpoint** - Some endpoints support CORS with proper configuration
+3. **Server-side queries** - Execute queries server-side and display results client-side
+
+See the **[User Guide - CORS Errors](./docs/user-guide.md#cors-errors)** for detailed solutions.
+
+### Local Endpoint Access
+
+To query local SPARQL endpoints from YASGUI:
+
+```bash
+# Example: Running a local endpoint accessible to YASGUI
+docker run -p 3030:3030 stain/jena-fuseki
+```
+
+Access at: `http://localhost:3030/dataset/sparql`
+
+For more details, see **[User Guide - Querying Local Endpoints](./docs/user-guide.md#querying-local-endpoints)**.
 
 ---
 
@@ -165,11 +295,35 @@ For detailed contribution guidelines, see the **[Developer Guide](./docs/develop
 
 ---
 
+## Support & Community
+
+### Getting Help
+
+- 📖 **[User Guide](./docs/user-guide.md)** - Comprehensive usage documentation
+- 🛠️ **[Developer Guide](./docs/developer-guide.md)** - API reference and integration
+- 🐛 **[Issue Tracker](https://github.com/Matdata-eu/Yasgui/issues)** - Report bugs or request features
+- 💬 **[Discussions](https://github.com/Matdata-eu/Yasgui/discussions)** - Ask questions and share ideas
+
+### Reporting Issues
+
+When reporting issues, please include:
+- Browser version and operating system
+- Steps to reproduce the problem
+- Expected vs. actual behavior
+- Console errors (if any)
+- Minimal example query demonstrating the issue
+
+---
+
 ## License
 
 MIT License - see [LICENSE](./LICENSE) file for details.
 
+### Credits
+
 This is a fork from [Zazuko](https://github.com/zazuko/Yasgui) who forked it from [Triply](https://github.com/TriplyDB/Yasgui).
+
+**Maintained by:** [Matdata](https://matdata.eu)
 
 ---
 
@@ -177,4 +331,4 @@ This is a fork from [Zazuko](https://github.com/zazuko/Yasgui) who forked it fro
 
 Release notes and changelog are available in the [Releases](https://github.com/Matdata-eu/Yasgui/releases) section.
 
-For instructions on writing release notes, see [release_notes_instructions.md](./docs/release_notes_instructions.md)
+For instructions on writing release notes, see [release-note-instructions.md](./docs/release-note-instructions.md).
