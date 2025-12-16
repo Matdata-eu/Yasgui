@@ -63,7 +63,7 @@
   background: var(--yasgui-bg-primary, white);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  max-width: 800px;
+  max-width: 1000px;
   width: 90%;
   max-height: 90vh;
   display: flex;
@@ -871,6 +871,24 @@
   }
 }
 
+.authHelpLink {
+  padding: 10px 12px;
+  background: var(--yasgui-bg-secondary, #f5f5f5);
+  border: 1px solid var(--yasgui-border-color, #e0e0e0);
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 12px;
+
+  a {
+    color: var(--yasgui-accent-color, #337ab7);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 .authSecurityNotice {
   padding: 12px;
   background: var(--yasgui-warning-bg, #fff3cd);
@@ -944,6 +962,33 @@
         background: var(--yasgui-accent-dark, #2563a1);
       }
     }
+  }
+}
+
+// OAuth 2.0 specific styling
+.authInputHelp {
+  font-size: 12px;
+  color: var(--yasgui-text-secondary, #666);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.oauth2TokenStatus {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+
+  &.authenticated {
+    background: var(--yasgui-success-bg, #d4edda);
+    color: var(--yasgui-success-text, #155724);
+    border: 1px solid var(--yasgui-success-border, #c3e6cb);
+  }
+
+  &.expired {
+    background: var(--yasgui-warning-bg, #fff3cd);
+    color: var(--yasgui-warning-text, #856404);
+    border: 1px solid var(--yasgui-warning-border, #ffeaa7);
   }
 }
 

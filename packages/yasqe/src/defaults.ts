@@ -177,6 +177,7 @@ SELECT * WHERE {
     basicAuth: undefined,
     bearerAuth: undefined,
     apiKeyAuth: undefined,
+    oauth2Auth: undefined,
   };
   return { ...config, requestConfig };
 }

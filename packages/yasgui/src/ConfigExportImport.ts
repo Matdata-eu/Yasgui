@@ -307,6 +307,7 @@ export function parseFromTurtle(turtle: string): Partial<PersistedJson> {
             basicAuth: undefined,
             bearerAuth: undefined,
             apiKeyAuth: undefined,
+            oauth2Auth: undefined,
           },
           yasr: {
             settings: {},
