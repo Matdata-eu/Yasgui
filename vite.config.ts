@@ -18,7 +18,7 @@ export default defineConfig({
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
   },
   optimizeDeps: {
-    include: ["vis-network", "@matdata/yasgui-graph-plugin", "yasgui-geo-tg"],
+    include: ["vis-network", "@matdata/yasgui-table-plugin", "@matdata/yasgui-graph-plugin", "yasgui-geo-tg"],
   },
   esbuild: {
     target: "es2020",

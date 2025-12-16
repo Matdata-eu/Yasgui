@@ -781,44 +781,59 @@ YASR (Results Viewer) uses plugins to visualize query results in different forma
 
 ### Table Plugin
 
-Displays SELECT query results in an interactive table.
+Displays SELECT query results in an interactive, high-performance table with advanced features.
 
 **Features:**
-- **Sortable Columns**: Click column headers to sort
-- **Pagination**: Navigate large result sets efficiently
+- **Virtual Scrolling**: Efficiently handles 10,000+ rows without pagination
+- **Sortable Columns**: Click column headers to sort ascending/descending
 - **Column Resizing**: Drag column borders to resize
-- **Filtering**: Filter rows by column values
-- **Cell Formatting**: URIs are clickable links, literals shown with datatypes
-- **Export**: Download results as CSV or copy as Markdown
+- **Real-time Search**: Filter rows by text with highlighting
+- **Cell Selection**: Select individual cells or ranges with Shift+Click, copy with Ctrl+C
+- **Cell Formatting**: URIs, literals, blank nodes, and datatypes properly rendered
+- **Tooltips**: Hover over any cell to view full content
+- **Copy to Clipboard**: Export as Markdown, CSV, or TSV (tab-delimited) with visual notifications
+- **CSV Download**: Integrated with YASR's download interface
+- **Dynamic Theming**: Automatically adapts to YASGUI light/dark theme changes
 - **Customizable Display**:
-  - **Simple View**: Toggle simple mode (hides row numbers, brackets, and datatypes)
-  - **Compact**: Toggle text ellipsis for long values (truncates with "...")
-  - **Prefixes**: Show/hide URI prefixes (enabled by default)
-  - **Datatypes**: Show/hide datatype annotations on literals (enabled by default)
+  - **URI Display**: Toggle between full URIs and prefixed abbreviations (e.g., `foaf:name`)
+  - **Datatypes**: Show/hide datatype annotations on literals (e.g., `"42"^^xsd:integer`)
+  - **Ellipsis Mode**: Truncate long cell content with "..." (hover for tooltip or click for modal)
+  - **Fit Controls**: Fit table to data width or window width
 
 **Controls:**
-- **Simple view**: Hides row numbers, brackets, and datatypes for a cleaner display
-- **Compact**: When enabled, long cell values are truncated with "..." and can be expanded by clicking
-- **Prefixes**: When enabled, URIs are displayed with namespace prefixes (e.g., `foaf:name` instead of full URI)
-- **Datatypes**: When enabled, literals show their datatype (e.g., `"42"^^xsd:integer`)
-- **Filter**: Text field to filter rows across all columns
-- **Page size**: Dropdown to select number of rows per page (10, 50, 100, 1000, or All)
-- **Copy as Markdown**: Button to copy the entire table in Markdown format to clipboard
+- **Search**: Text field to filter rows in real-time with highlighted matches
+- **URI Display**: Toggle between abbreviated (prefix:localName) and full URI display
+- **Datatypes**: Toggle visibility of datatype annotations on literal values
+- **Ellipsis**: Toggle content truncation for long values (hover shows tooltip)
+- **Fit to Data**: Resize columns to show all content without truncation
+- **Fit to Window**: Resize columns proportionally to fill viewport width
+- **Copy as Markdown**: Copy entire table in Markdown format with visual confirmation
+- **Copy as CSV**: Copy entire table as comma-separated values with visual confirmation
+- **Copy as TSV**: Copy entire table as tab-delimited values with visual confirmation
+- **Download CSV**: Access via YASR's download button for CSV file export
 
 **Best For:**
-- SELECT queries
-- Exploring structured data
-- Comparing values across multiple rows
-- Sharing results in documentation (using Markdown copy)
+- SELECT queries with large result sets (10,000+ rows)
+- Exploring structured data with complex URIs
+- Interactive data analysis with sorting and filtering
+- Sharing results in documentation (Markdown/CSV/TSV)
+- Extracting specific data subsets via cell selection
 
 **Usage:**
 - Execute a SELECT query
-- Table plugin activates automatically
-- Click column headers to sort
-- Use toggles to customize display
-- Click "Copy as Markdown" to copy table for pasting in Markdown documents
-- Use pagination controls at the bottom
-- Export via the download button
+- Table plugin activates automatically for SELECT results
+- Click column headers to sort (click again to reverse)
+- Type in search box to filter rows (highlights matches)
+- Hover over cells to see full content in tooltip
+- Click and drag to select cell ranges, then Ctrl+C to copy
+- Use copy buttons to export entire table in different formats
+- Use fit controls to optimize column widths
+- Toggle URI/datatype/ellipsis controls to customize view
+- Use YASR's download button for CSV file export
+- Preferences (column widths, sort state, display options) are saved to localStorage
+
+**More Information:**
+Visit the [Table Plugin Repository](https://github.com/Matdata-eu/yasgui-table-plugin) for detailed documentation.
 
 ### Boolean Plugin
 

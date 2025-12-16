@@ -12,6 +12,8 @@ import { default as Yasr, Config as YasrConfig } from "@matdata/yasr";
 import { addClass, removeClass } from "@matdata/yasgui-utils";
 import GeoPlugin from "yasgui-geo-tg";
 import GraphPlugin from "@matdata/yasgui-graph-plugin";
+import TablePlugin from "@matdata/yasgui-table-plugin";
+import "@matdata/yasgui-table-plugin/dist/yasgui-table-plugin.min.css";
 import { ThemeManager, Theme } from "./ThemeManager";
 import "./index.scss";
 import "./themes.scss";
@@ -19,6 +21,7 @@ import "../../yasr/src/scss/global.scss";
 import "codemirror/theme/material-palenight.css";
 
 // Register plugins to Yasr
+Yasr.registerPlugin("Table", TablePlugin);
 Yasr.registerPlugin("Geo", GeoPlugin);
 Yasr.registerPlugin("Graph", GraphPlugin);
 if (window) {

@@ -2840,6 +2840,7 @@ Releases are managed using Changesets:
 - **User Guide**: See `docs/user-guide.md`
 - **SPARQL Specification**: [https://www.w3.org/TR/sparql11-query/](https://www.w3.org/TR/sparql11-query/)
 - **CodeMirror Documentation**: [https://codemirror.net/5/](https://codemirror.net/5/)
+- **Graph Plugin**: [https://github.com/Matdata-eu/yasgui-table-plugin](https://github.com/Matdata-eu/yasgui-table-plugin)
 - **Graph Plugin**: [https://github.com/Matdata-eu/yasgui-graph-plugin](https://github.com/Matdata-eu/yasgui-graph-plugin)
 - **Geo Plugin**: [https://github.com/Thib-G/yasgui-geo-tg](https://github.com/Thib-G/yasgui-geo-tg)
 

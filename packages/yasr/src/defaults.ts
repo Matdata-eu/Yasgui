@@ -22,7 +22,7 @@ export default function get(): Config {
     maxPersistentResponseSize: 100000,
     prefixes: {},
     plugins: {},
-    pluginOrder: ["table", "response"], // Default plugins, others are sorted alphabetically
-    defaultPlugin: "table",
+    pluginOrder: ["Table", "response", "Geo", "Graph"],
+    defaultPlugin: "Table",
   };
 }
