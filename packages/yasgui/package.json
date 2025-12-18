@@ -33,8 +33,8 @@
     "jsuri": "^1.3.1",
     "lodash-es": "^4.17.15",
     "sortablejs": "^1.10.2",
-    "@matdata/yasgui-graph-plugin": "^1.3.0",
-    "@matdata/yasgui-table-plugin": "^1.0.0"
+    "@matdata/yasgui-graph-plugin": "^1.4.0",
+    "@matdata/yasgui-table-plugin": "^1.1.0"
   },
   "devDependencies": {
     "@types/autosuggest-highlight": "^3.1.0",
