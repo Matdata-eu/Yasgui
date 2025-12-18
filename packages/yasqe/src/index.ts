@@ -55,7 +55,7 @@ export class Yasqe extends CodeMirror {
   private queryBtn: HTMLButtonElement | undefined;
   private fullscreenBtn: HTMLButtonElement | undefined;
   private isFullscreen: boolean = false;
-  private resizeWrapper?: HTMLDivElement;
+  private horizontalResizeWrapper?: HTMLDivElement;
   private snippetsBar?: HTMLDivElement;
   private snippetsClickHandler?: (e: MouseEvent) => void;
   private snippetsResizeHandler?: () => void;
@@ -727,15 +727,15 @@ export class Yasqe extends CodeMirror {
   }
 
   private drawResizer() {
-    if (this.resizeWrapper) return;
-    this.resizeWrapper = document.createElement("div");
-    addClass(this.resizeWrapper, "resizeWrapper");
+    if (this.horizontalResizeWrapper) return;
+    this.horizontalResizeWrapper = document.createElement("div");
+    addClass(this.horizontalResizeWrapper, "horizontalResizeWrapper");
     const chip = document.createElement("div");
-    addClass(chip, "resizeChip");
-    this.resizeWrapper.appendChild(chip);
-    this.resizeWrapper.addEventListener("mousedown", this.initDrag, false);
-    this.resizeWrapper.addEventListener("dblclick", this.expandEditor);
-    this.rootEl.appendChild(this.resizeWrapper);
+    addClass(chip, "horizontalResizeChip");
+    this.horizontalResizeWrapper.appendChild(chip);
+    this.horizontalResizeWrapper.addEventListener("mousedown", this.initDrag, false);
+    this.horizontalResizeWrapper.addEventListener("dblclick", this.expandEditor);
+    this.rootEl.appendChild(this.horizontalResizeWrapper);
   }
   private initDrag() {
     document.documentElement.addEventListener("mousemove", this.doDrag, false);
@@ -1407,8 +1407,8 @@ export class Yasqe extends CodeMirror {
     // Abort running query
     this.abortQuery();
     this.unregisterEventListeners();
-    this.resizeWrapper?.removeEventListener("mousedown", this.initDrag, false);
-    this.resizeWrapper?.removeEventListener("dblclick", this.expandEditor);
+    this.horizontalResizeWrapper?.removeEventListener("mousedown", this.initDrag, false);
+    this.horizontalResizeWrapper?.removeEventListener("dblclick", this.expandEditor);
     if (this.snippetsClickHandler) {
       document.removeEventListener("click", this.snippetsClickHandler);
       this.snippetsClickHandler = undefined;

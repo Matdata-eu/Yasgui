@@ -78,6 +78,8 @@ export class Tab extends EventEmitter {
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
+  private verticalResizerEl?: HTMLDivElement;
+  private editorWrapperEl?: HTMLDivElement;
 
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
@@ -115,6 +117,7 @@ export class Tab extends EventEmitter {
     // Useful for adding an infos div that goes alongside the editor without needing to rebuild the whole Yasgui class
     const editorWrapper = document.createElement("div");
     editorWrapper.className = "editorwrapper";
+    this.editorWrapperEl = editorWrapper;
     const controlbarAndYasqeDiv = document.createElement("div");
     //controlbar
     this.controlBarEl = document.createElement("div");
@@ -132,6 +135,10 @@ export class Tab extends EventEmitter {
 
     this.initTabSettingsMenu();
     this.rootEl.appendChild(editorWrapper);
+
+    // Add vertical resizer for horizontal layout
+    this.drawVerticalResizer();
+
     this.rootEl.appendChild(this.yasrWrapperEl);
     this.initControlbar();
     this.initYasqe();
@@ -319,6 +326,12 @@ export class Tab extends EventEmitter {
         // Update button icon if it exists
         if (tab.orientationToggleButton) {
           tab.updateOrientationToggleIcon();
+        }
+
+        // Reset editor wrapper width when switching orientations
+        if (tab.editorWrapperEl) {
+          tab.editorWrapperEl.style.width = "";
+          tab.editorWrapperEl.style.flex = "";
         }
 
         // Refresh components to adjust to new layout
@@ -986,7 +999,94 @@ WHERE {
     });
   }
 
+  private drawVerticalResizer() {
+    if (this.verticalResizerEl || !this.rootEl) return;
+    this.verticalResizerEl = document.createElement("div");
+    addClass(this.verticalResizerEl, "verticalResizeWrapper");
+    const chip = document.createElement("div");
+    addClass(chip, "verticalResizeChip");
+    this.verticalResizerEl.appendChild(chip);
+    this.verticalResizerEl.addEventListener("mousedown", this.initVerticalDrag, false);
+    this.verticalResizerEl.addEventListener("dblclick", this.resetVerticalSplit, false);
+    this.rootEl.appendChild(this.verticalResizerEl);
+  }
+
+  private initVerticalDrag = () => {
+    document.documentElement.addEventListener("mousemove", this.doVerticalDrag, false);
+    document.documentElement.addEventListener("mouseup", this.stopVerticalDrag, false);
+  };
+
+  private calculateVerticalDragOffset(event: MouseEvent): number {
+    if (!this.rootEl) return 0;
+
+    let parentOffset = 0;
+    if (this.rootEl.offsetParent) {
+      parentOffset = (this.rootEl.offsetParent as HTMLElement).offsetLeft;
+    }
+
+    let scrollOffset = 0;
+    let parentElement = this.rootEl.parentElement;
+    while (parentElement) {
+      scrollOffset += parentElement.scrollLeft;
+      parentElement = parentElement.parentElement;
+    }
+
+    return event.clientX - parentOffset - this.rootEl.offsetLeft + scrollOffset;
+  }
+
+  private doVerticalDrag = (event: MouseEvent) => {
+    if (!this.editorWrapperEl || !this.rootEl) return;
+
+    const offset = this.calculateVerticalDragOffset(event);
+    const totalWidth = this.rootEl.offsetWidth;
+
+    // Ensure minimum widths (at least 200px for each panel)
+    const minWidth = 200;
+    const maxWidth = totalWidth - minWidth - 10; // 10px for resizer
+
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, offset));
+    this.editorWrapperEl.style.width = newWidth + "px";
+    this.editorWrapperEl.style.flex = "0 0 " + newWidth + "px";
+  };
+
+  private stopVerticalDrag = () => {
+    document.documentElement.removeEventListener("mousemove", this.doVerticalDrag, false);
+    document.documentElement.removeEventListener("mouseup", this.stopVerticalDrag, false);
+
+    // Refresh editors after resizing
+    if (this.yasqe) {
+      this.yasqe.refresh();
+    }
+    if (this.yasr) {
+      this.yasr.refresh();
+    }
+  };
+
+  private resetVerticalSplit = () => {
+    if (!this.editorWrapperEl) return;
+
+    // Reset to 50/50 split
+    this.editorWrapperEl.style.width = "";
+    this.editorWrapperEl.style.flex = "1 1 50%";
+
+    // Refresh editors after resizing
+    if (this.yasqe) {
+      this.yasqe.refresh();
+    }
+    if (this.yasr) {
+      this.yasr.refresh();
+    }
+  };
+
   destroy() {
+    // Clean up vertical resizer event listeners
+    if (this.verticalResizerEl) {
+      this.verticalResizerEl.removeEventListener("mousedown", this.initVerticalDrag, false);
+      this.verticalResizerEl.removeEventListener("dblclick", this.resetVerticalSplit, false);
+    }
+    document.documentElement.removeEventListener("mousemove", this.doVerticalDrag, false);
+    document.documentElement.removeEventListener("mouseup", this.stopVerticalDrag, false);
+
     this.removeAllListeners();
     this.settingsModal?.destroy();
     this.endpointSelect?.destroy();

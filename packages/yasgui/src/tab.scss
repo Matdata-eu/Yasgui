@@ -49,7 +49,7 @@
         flex: 1 1 50%;
         display: flex;
         flex-direction: column;
-        min-width: 0;
+        min-width: 400px;
         max-width: 50%;
         height: 100%;
         overflow: hidden;
@@ -97,10 +97,39 @@
         height: 100%;
       }
 
-      // Hide resize wrapper in horizontal mode (not applicable)
-      .resizeWrapper {
+      // Hide horizontal resize wrapper in horizontal mode (vertical resizer is used instead)
+      .horizontalResizeWrapper {
         display: none;
       }
+    }
+
+    // Vertical resizer for horizontal layout
+    .verticalResizeWrapper {
+      display: none; // Hidden by default (shown only in horizontal mode)
+      width: 10px;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      cursor: col-resize;
+      position: relative;
+      z-index: 10;
+
+      &:hover .verticalResizeChip {
+        visibility: visible;
+      }
+    }
+
+    .verticalResizeChip {
+      width: 4px;
+      height: 20%;
+      background-color: #d1d1d1;
+      visibility: hidden;
+      border-radius: 2px;
+    }
+
+    // Show vertical resizer only in horizontal mode
+    &.orientation-horizontal .verticalResizeWrapper {
+      display: flex;
     }
   }
 
