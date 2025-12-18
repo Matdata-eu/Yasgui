@@ -42,24 +42,47 @@
         display: flex;
         flex-direction: row;
         gap: 10px;
+        height: 100%;
       }
 
       .editorwrapper {
-        flex: 1;
+        flex: 1 1 50%;
         display: flex;
         flex-direction: column;
-      }
-
-      // Make YASQE fill the vertical space in horizontal mode
-      .yasqe {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
+        min-width: 0;
+        max-width: 50%;
+        height: 100%;
         overflow: hidden;
 
-        .CodeMirror {
+        // Unnamed div container needs full height
+        > div {
+          height: 100%;
           flex: 1;
+          display: flex;
+          flex-direction: column;
+
+          // Container for tab panels - takes remaining height after tabsList
+          > div:not(.controlbar) {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; // Required for flex children to shrink properly
+            overflow: hidden;
+
+            // Make YASQE fill the vertical space in horizontal mode
+            .yasqe {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              height: 100%;
+              overflow: hidden;
+
+              .CodeMirror {
+                flex: 1;
+                height: 100%;
+              }
+            }
+          }
         }
       }
 
