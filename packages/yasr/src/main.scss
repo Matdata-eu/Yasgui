@@ -1,13 +1,21 @@
 @use "scss/variables.scss";
+
 .yasr {
   display: flex;
   flex-direction: column;
-  min-height: 400px; // Minimum height for vertical layout to give plugins space
+  flex: 1;
+  min-height: 400px;
+  height: 100%;
+
+  .yasr_results {
+    flex: 1;
+  }
 
   .yasr_btn {
     border: none;
     background: inherit;
   }
+
   .svgImg {
     display: flex;
     flex-direction: row;
@@ -19,10 +27,10 @@
       align-self: center;
     }
   }
+
   .yasr_btn.yasr_external_ref_btn {
     font-weight: 600;
     user-select: none;
-    // Active and focus shouldn't color the button since it'll open a new page
     &:active,
     &:focus {
       color: inherit;
@@ -33,6 +41,7 @@
       height: 18px;
     }
   }
+
   a {
     color: #428bca;
     text-decoration: none;
@@ -43,21 +52,23 @@
       text-decoration: underline;
     }
   }
+
   .yasr_btnGroup {
     margin: 0;
     padding: 0;
     list-style: none;
     display: flex;
     overflow-x: auto;
-    overflow-y: hidden; // We shouldn't wrap, and therefore never draw a vertical scrollBar
+    overflow-y: hidden;
+
     .plugin_icon {
       height: 15px;
       width: 15px;
       margin-right: 5px;
       text-align: center;
     }
+
     .yasr_btn {
-      // redeclared here to target yasr_btns in btnGroup
       border-bottom: 2px solid transparent;
       &.selected {
         border-bottom: 2px solid var(--yasgui-accent-color, #337ab7);
@@ -69,13 +80,11 @@
     }
   }
 
-  // Default med screen +
   @media (max-width: 768px) {
     .yasr_btn {
       span {
         display: none;
       }
-
       .plugin_icon {
         margin-right: 0px;
       }
@@ -87,6 +96,7 @@
     flex-wrap: wrap;
     flex-shrink: 0;
   }
+
   .yasr_fallback_info:not(:empty) {
     flex-shrink: 0;
     margin-top: 5px;
@@ -97,10 +107,12 @@
       margin: 0;
     }
   }
+
   .yasr_help_variable {
     background: #dff0ff;
     color: #428bca;
   }
+
   .yasr_response_chip {
     color: #505050;
     background: #f5f5f5;
@@ -120,6 +132,7 @@
       display: none;
     }
   }
+
   .yasr_plugin_control {
     display: flex;
     margin-left: auto;
@@ -128,28 +141,30 @@
       display: none;
     }
   }
+
   .yasr_btn {
     color: var(--yasgui-button-text, #505050);
     fill: var(--yasgui-button-text, #505050);
     display: flex;
     align-items: center;
     justify-content: center;
-
     cursor: pointer;
     white-space: nowrap;
     padding: 6px 12px;
-    // border-radius: 4px;
     overflow: visible;
     box-sizing: border-box;
+
     &.btn_icon {
       padding: 4px 8px;
     }
+
     &[disabled],
     &.disabled {
       cursor: default;
       opacity: 0.5;
       box-shadow: none;
     }
+
     &:not(.disabled):hover {
       fill: var(--yasgui-button-hover, black);
       color: var(--yasgui-button-hover, black);
@@ -195,6 +210,7 @@
       flex: 1;
       overflow: auto;
     }
+
     &:focus,
     &.selected {
       color: var(--yasgui-accent-color, #337ab7);
@@ -231,11 +247,5 @@
   .space_element {
     flex-grow: 1;
     min-width: 10px;
-  }
-
-  .yasr_results {
-    flex: 1;
-    overflow: auto;
-    min-height: 0;
   }
 }

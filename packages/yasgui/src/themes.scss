@@ -38,10 +38,8 @@
   --yasgui-nav-bg: #eee;
   --yasgui-match-highlight-bg: #dbdeed;
 
-  // Layout dimensions (used for horizontal orientation)
-  --yasgui-header-height: 150px; // Height to subtract from viewport in horizontal layout
-  --yasgui-tabList-height: 70px; // Height to subtract from yasr in horizontal layout
-  --yasgui-min-height: 400px; // Minimum height for horizontal layout panels
+  // Minimum heights
+  --yasgui-yasr-min-height: 400px; // Minimum height for yasr
 
   --yasgui-endpoint-button-bg: #337ab7;
   --yasgui-endpoint-button-border: #337ab7;

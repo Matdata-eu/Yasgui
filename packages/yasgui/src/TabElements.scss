@@ -1,14 +1,19 @@
 @use "sass:color";
+
 $minTabHeight: 35px;
+
 .yasgui {
   .tabsList {
+    flex-shrink: 0; // Prevent tabs from shrinking
+    display: flex;
+    flex-wrap: wrap;
+
     .sortable-placeholder {
       min-width: 100px;
       min-height: $minTabHeight;
       border: 2px dotted color.adjust(#555, $lightness: 20%);
     }
-    display: flex;
-    flex-wrap: wrap;
+
     a {
       cursor: pointer;
       display: flex;
@@ -18,6 +23,7 @@ $minTabHeight: 35px;
       border-bottom: 2px solid transparent;
       box-sizing: border-box;
     }
+
     .themeToggle {
       cursor: pointer;
       height: 100%;
@@ -60,10 +66,12 @@ $minTabHeight: 35px;
       &:focus-visible {
         transform: scale(1.1);
       }
+
       &:focus {
         color: #faa857;
       }
     }
+
     .tab {
       position: relative;
       $activeColor: #337ab7;
@@ -82,6 +90,7 @@ $minTabHeight: 35px;
         animation-timing-function: ease;
         animation-iteration-count: infinite;
       }
+
       @keyframes slide {
         0% {
           left: 0;
@@ -96,24 +105,30 @@ $minTabHeight: 35px;
           right: 0;
         }
       }
+
       &.active .loader {
         background-color: $hoverColor;
       }
+
       &:hover .loader {
         background-color: $activeColor;
       }
+
       &.querying .loader {
         display: block;
       }
+
       &.active a {
         border-bottom-color: $activeColor;
         color: var(--yasgui-text-primary, #555);
       }
+
       input {
         display: none;
         outline: none;
         border: none;
       }
+
       &.renaming {
         span {
           display: none;
@@ -125,6 +140,7 @@ $minTabHeight: 35px;
           display: block;
         }
       }
+
       a {
         font-weight: 600;
         color: var(--yasgui-text-secondary, color.adjust(#555, $lightness: 20%));
@@ -135,14 +151,17 @@ $minTabHeight: 35px;
         padding: 0px 24px 0px 30px;
         white-space: nowrap;
         overflow: hidden;
+
         &:hover {
           border-bottom-color: $hoverColor;
           color: var(--yasgui-text-primary, #555);
         }
+
         &:focus {
           border-bottom-color: #faa857;
           color: var(--yasgui-text-primary, #555);
         }
+
         .closeTab {
           color: var(--yasgui-text-primary, #000);
           margin-left: 7px;
@@ -151,6 +170,7 @@ $minTabHeight: 35px;
           opacity: 0.2;
           font-weight: 700;
           padding: 2px;
+
           &:hover {
             opacity: 0.5;
           }

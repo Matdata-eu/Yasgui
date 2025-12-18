@@ -1,4 +1,12 @@
+// Main YASGUI container - fills 100% of parent element
+// Parent element (typically body) should have height: 100%; width: 100%
 .yasgui {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 800px; // Minimum to ensure usable UI (control bar + editor + yasr min)
+
   a {
     color: #337ab7;
     text-decoration: none;
@@ -26,6 +34,15 @@
         align-items: center !important;
       }
     }
+  }
+
+  // Container for tab panels - takes remaining height after tabsList
+  > div:not(.tabsList) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; // Required for flex children to shrink properly
+    overflow: hidden;
   }
 
   //css taken from https://www.muicss.com/docs/v1/css-js/forms

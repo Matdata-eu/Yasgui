@@ -2,8 +2,16 @@
   .tabPanel {
     display: none;
     position: relative;
+    flex: 1;
+    min-height: 0;
+
     &.active {
-      display: block;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .yasrWrapperEl {
+      height: 100%;
     }
 
     // Hide editor wrapper when yasr is in fullscreen
@@ -34,9 +42,6 @@
         display: flex;
         flex-direction: row;
         gap: 10px;
-        // Allow flexible height - can use 100vh or be constrained by parent
-        min-height: var(--yasgui-min-height);
-        max-height: calc(100vh - var(--yasgui-header-height));
       }
 
       .editorwrapper {
@@ -54,25 +59,26 @@
         overflow: hidden;
 
         .CodeMirror {
-          height: calc(100vh - var(--yasgui-header-height)) !important;
+          flex: 1;
         }
       }
 
       .yasrWrapperEl {
-        flex: 1;
+        flex: 1 1 50%;
         min-width: 0;
-        height: calc(100vh - var(--yasgui-tabList-height)) !important;
-        overflow: hidden;
+        min-height: 400px;
       }
 
       .yasr {
         margin-top: 0;
         height: 100%;
       }
+
+      // Hide resize wrapper in horizontal mode (not applicable)
+      .resizeWrapper {
+        display: none;
+      }
     }
-  }
-  .yasr {
-    margin-top: 5px;
   }
 
   .tabContextButton {
@@ -91,9 +97,9 @@
     .svgImg {
       width: 15px;
       height: 15px;
-      font-family: initial; //font families can slightly misalign svgs with the .svgimg div
+      font-family: initial;
     }
-    // IE11 Needs this specified otherwise it will not resize the svg
+
     svg {
       width: 20px;
       height: 20px;
@@ -108,6 +114,7 @@
   .controlbar {
     display: flex;
     align-content: center;
+    flex-shrink: 0;
     max-height: 35px;
   }
 }
