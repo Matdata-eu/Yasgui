@@ -126,11 +126,9 @@
     align-items: center;
     gap: 4px;
     margin-left: 4px;
-
-    // Hide on small screens (mobile)
-    @media (max-width: 768px) {
-      display: none;
-    }
+    position: relative;
+    flex-wrap: nowrap;
+    overflow: visible;
   }
 
   .endpointButton {
@@ -144,6 +142,7 @@
     font-weight: 500;
     white-space: nowrap;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 
     &:hover {
       background-color: var(--yasgui-endpoint-button-hover-bg, #286090);
@@ -163,6 +162,100 @@
     @media (max-width: 1024px) {
       padding: 4px 8px;
       font-size: 12px;
+    }
+
+    // Hidden state for overflow
+    &.endpointButtonHidden {
+      display: none;
+    }
+  }
+
+  // Overflow button (ellipsis menu)
+  .endpointOverflowBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 24px;
+    padding: 4px;
+    border: 1px solid var(--yasgui-endpoint-button-border, #337ab7);
+    background-color: var(--yasgui-endpoint-button-bg, #337ab7);
+    color: var(--yasgui-endpoint-button-text, #ffffff);
+    border-radius: 3px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      background-color: var(--yasgui-endpoint-button-hover-bg, #286090);
+      border-color: var(--yasgui-endpoint-button-hover-border, #286090);
+    }
+
+    &:focus {
+      outline: 2px solid var(--yasgui-endpoint-button-focus, #5cb3fd);
+      outline-offset: 2px;
+    }
+
+    &[aria-expanded="true"] {
+      background-color: var(--yasgui-endpoint-button-hover-bg, #286090);
+    }
+  }
+
+  // Overflow dropdown menu
+  .endpointOverflowDropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 150px;
+    max-width: 300px;
+    background-color: var(--yasgui-bg-primary, #ffffff);
+    border: 1px solid var(--yasgui-border-color, #ddd);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+
+    // Dark mode shadow
+    [data-theme="dark"] & {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  // Dropdown items
+  .endpointOverflowItem {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--yasgui-border-color, #ddd);
+    color: var(--yasgui-text-primary, rgba(0, 0, 0, 0.87));
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background-color 0.15s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: var(--yasgui-bg-tertiary, #eee);
+    }
+
+    &:focus {
+      outline: none;
+      background-color: var(--yasgui-bg-tertiary, #eee);
     }
   }
 }

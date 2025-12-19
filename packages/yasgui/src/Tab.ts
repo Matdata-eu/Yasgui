@@ -22,6 +22,13 @@ const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24">
   <rect x="2" y="12" width="20" height="10" stroke="currentColor" stroke-width="2" fill="none"/>
 </svg>`;
 
+// Overflow dropdown icon (three horizontal dots / ellipsis menu)
+const OVERFLOW_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
+  <circle cx="5" cy="12" r="2"/>
+  <circle cx="12" cy="12" r="2"/>
+  <circle cx="19" cy="12" r="2"/>
+</svg>`;
+
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
 }
@@ -75,6 +82,10 @@ export class Tab extends EventEmitter {
   private yasrWrapperEl: HTMLDivElement | undefined;
   private endpointSelect: EndpointSelect | undefined;
   private endpointButtonsContainer: HTMLDivElement | undefined;
+  private endpointOverflowButton: HTMLButtonElement | undefined;
+  private endpointOverflowDropdown: HTMLDivElement | undefined;
+  private endpointButtonConfigs: Array<{ endpoint: string; label: string }> = [];
+  private resizeObserver: ResizeObserver | undefined;
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
@@ -387,13 +398,196 @@ export class Tab extends EventEmitter {
     }
 
     this.refreshEndpointButtons();
+    this.initEndpointButtonsResizeObserver();
+  }
+
+  private initEndpointButtonsResizeObserver() {
+    if (!this.controlBarEl || !this.endpointButtonsContainer) return;
+
+    // Clean up existing observer
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+
+    // Create resize observer to detect when we need to show overflow
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateEndpointButtonsOverflow();
+    });
+
+    this.resizeObserver.observe(this.controlBarEl);
+  }
+
+  private updateEndpointButtonsOverflow() {
+    if (!this.endpointButtonsContainer || !this.controlBarEl) return;
+
+    // Get all actual endpoint buttons (not the overflow button)
+    const buttons = Array.from(
+      this.endpointButtonsContainer.querySelectorAll(".endpointButton:not(.endpointOverflowBtn)"),
+    ) as HTMLButtonElement[];
+
+    if (buttons.length === 0) {
+      this.hideOverflowButton();
+      return;
+    }
+
+    // Get the container's available width
+    const containerRect = this.controlBarEl.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+
+    // Calculate the space used by other elements (endpoint select, settings buttons, etc.)
+    const endpointButtonsRect = this.endpointButtonsContainer.getBoundingClientRect();
+    const buttonsContainerLeft = endpointButtonsRect.left - containerRect.left;
+
+    // Estimate available space for endpoint buttons (leave some margin for overflow button)
+    const overflowButtonWidth = 40; // Approximate width of overflow button
+    const availableWidth = containerWidth - buttonsContainerLeft - overflowButtonWidth - 20; // 20px margin
+
+    // Make all buttons temporarily visible to measure
+    buttons.forEach((btn) => btn.classList.remove("endpointButtonHidden"));
+
+    // Check if buttons overflow
+    let totalWidth = 0;
+    let overflowIndex = -1;
+
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      const btnWidth = btn.offsetWidth + 4; // Include gap
+      totalWidth += btnWidth;
+
+      if (totalWidth > availableWidth && overflowIndex === -1) {
+        overflowIndex = i;
+      }
+    }
+
+    if (overflowIndex === -1) {
+      // All buttons fit, hide overflow button
+      this.hideOverflowButton();
+      buttons.forEach((btn) => btn.classList.remove("endpointButtonHidden"));
+    } else {
+      // Some buttons need to go into overflow
+      buttons.forEach((btn, index) => {
+        if (index >= overflowIndex) {
+          btn.classList.add("endpointButtonHidden");
+        } else {
+          btn.classList.remove("endpointButtonHidden");
+        }
+      });
+      this.showOverflowButton(overflowIndex);
+    }
+  }
+
+  private showOverflowButton(overflowStartIndex: number) {
+    if (!this.endpointButtonsContainer) return;
+
+    // Create overflow button if it doesn't exist
+    if (!this.endpointOverflowButton) {
+      this.endpointOverflowButton = document.createElement("button");
+      addClass(this.endpointOverflowButton, "endpointOverflowBtn");
+      this.endpointOverflowButton.innerHTML = OVERFLOW_ICON;
+      this.endpointOverflowButton.title = "More endpoints";
+      this.endpointOverflowButton.setAttribute("aria-label", "More endpoint options");
+      this.endpointOverflowButton.setAttribute("aria-haspopup", "true");
+      this.endpointOverflowButton.setAttribute("aria-expanded", "false");
+
+      this.endpointOverflowButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.toggleOverflowDropdown();
+      });
+
+      this.endpointButtonsContainer.appendChild(this.endpointOverflowButton);
+    }
+
+    // Update the overflow button's data with which buttons are hidden
+    this.endpointOverflowButton.dataset.overflowStart = String(overflowStartIndex);
+    this.endpointOverflowButton.style.display = "flex";
+  }
+
+  private hideOverflowButton() {
+    if (this.endpointOverflowButton) {
+      this.endpointOverflowButton.style.display = "none";
+    }
+    this.closeOverflowDropdown();
+  }
+
+  private toggleOverflowDropdown() {
+    if (this.endpointOverflowDropdown && this.endpointOverflowDropdown.style.display !== "none") {
+      this.closeOverflowDropdown();
+    } else {
+      this.openOverflowDropdown();
+    }
+  }
+
+  private openOverflowDropdown() {
+    if (!this.endpointOverflowButton || !this.endpointButtonsContainer) return;
+
+    const overflowStartIndex = parseInt(this.endpointOverflowButton.dataset.overflowStart || "0", 10);
+    const overflowButtons = this.endpointButtonConfigs.slice(overflowStartIndex);
+
+    if (overflowButtons.length === 0) return;
+
+    // Create dropdown if it doesn't exist
+    if (!this.endpointOverflowDropdown) {
+      this.endpointOverflowDropdown = document.createElement("div");
+      addClass(this.endpointOverflowDropdown, "endpointOverflowDropdown");
+      this.endpointButtonsContainer.appendChild(this.endpointOverflowDropdown);
+    }
+
+    // Clear and populate dropdown
+    this.endpointOverflowDropdown.innerHTML = "";
+
+    overflowButtons.forEach((buttonConfig) => {
+      const item = document.createElement("button");
+      addClass(item, "endpointOverflowItem");
+      item.textContent = buttonConfig.label;
+      item.title = `Set endpoint to ${buttonConfig.endpoint}`;
+      item.setAttribute("aria-label", `Set endpoint to ${buttonConfig.endpoint}`);
+
+      item.addEventListener("click", () => {
+        this.setEndpoint(buttonConfig.endpoint);
+        this.closeOverflowDropdown();
+      });
+
+      this.endpointOverflowDropdown!.appendChild(item);
+    });
+
+    // Position and show dropdown
+    this.endpointOverflowDropdown.style.display = "block";
+    this.endpointOverflowButton.setAttribute("aria-expanded", "true");
+
+    // Add click-outside listener to close dropdown
+    const closeHandler = (e: MouseEvent) => {
+      if (
+        this.endpointOverflowDropdown &&
+        !this.endpointOverflowDropdown.contains(e.target as Node) &&
+        e.target !== this.endpointOverflowButton
+      ) {
+        this.closeOverflowDropdown();
+        document.removeEventListener("click", closeHandler);
+      }
+    };
+
+    // Delay adding listener to avoid immediate close
+    setTimeout(() => {
+      document.addEventListener("click", closeHandler);
+    }, 0);
+  }
+
+  private closeOverflowDropdown() {
+    if (this.endpointOverflowDropdown) {
+      this.endpointOverflowDropdown.style.display = "none";
+    }
+    if (this.endpointOverflowButton) {
+      this.endpointOverflowButton.setAttribute("aria-expanded", "false");
+    }
   }
 
   public refreshEndpointButtons() {
     if (!this.endpointButtonsContainer) return;
 
-    // Clear existing buttons
+    // Clear existing buttons (but keep overflow button reference)
     this.endpointButtonsContainer.innerHTML = "";
+    this.endpointOverflowButton = undefined;
+    this.endpointOverflowDropdown = undefined;
 
     // Get config buttons (for backwards compatibility) and filter out disabled ones
     const disabledButtons = this.yasgui.persistentConfig.getDisabledDevButtons();
@@ -411,6 +605,9 @@ export class Tab extends EventEmitter {
     const customButtons = this.yasgui.persistentConfig.getCustomEndpointButtons();
 
     const allButtons = [...configButtons, ...endpointButtons, ...customButtons];
+
+    // Store button configs for overflow dropdown
+    this.endpointButtonConfigs = allButtons;
 
     if (allButtons.length === 0) {
       // Hide container if no buttons
@@ -433,6 +630,11 @@ export class Tab extends EventEmitter {
       });
 
       this.endpointButtonsContainer!.appendChild(button);
+    });
+
+    // Trigger overflow check after rendering
+    requestAnimationFrame(() => {
+      this.updateEndpointButtonsOverflow();
     });
   }
 
@@ -1095,6 +1297,12 @@ WHERE {
     }
     document.documentElement.removeEventListener("mousemove", this.doVerticalDrag, false);
     document.documentElement.removeEventListener("mouseup", this.stopVerticalDrag, false);
+
+    // Clean up resize observer for endpoint buttons overflow
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = undefined;
+    }
 
     this.removeAllListeners();
     this.settingsModal?.destroy();

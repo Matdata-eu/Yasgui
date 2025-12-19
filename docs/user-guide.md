@@ -536,6 +536,14 @@ Custom endpoint configurations persist across browser sessions. You can delete e
 - The endpoint change triggers the same behavior as manually entering an endpoint
 - The new endpoint is used for all subsequent queries
 
+**Overflow Dropdown for Limited Space:**
+When the control bar is too narrow to display all endpoint buttons (e.g., when resizing the window or having many endpoints), buttons that don't fit are automatically grouped into an overflow dropdown menu:
+- A "more" button (⋯) appears at the end of the visible buttons
+- Click the overflow button to reveal a dropdown with the hidden endpoint buttons
+- The dropdown automatically adjusts as you resize the window
+- All endpoint buttons remain accessible even in constrained spaces
+- The overflow button only appears when needed and stays visible as long as there is room for it
+
 **Behavior:**
 - Clicking a button updates the endpoint textbox with the configured endpoint
 - The endpoint change is immediate and doesn't require confirmation
