@@ -91,6 +91,7 @@ export class TabListEl {
     tabLinkEl.href = "#" + this.tabId;
     tabLinkEl.id = "tab-" + this.tabId; // use the id for the tabpanel which is tabId to set the actual tab id
     tabLinkEl.setAttribute("aria-controls", this.tabId); // respective tabPanel id
+    tabLinkEl.draggable = false; // Prevent default link dragging that interferes with text selection
     tabLinkEl.addEventListener("blur", () => {
       if (!this.tabEl) return;
       if (this.tabEl.classList.contains("active")) {
@@ -222,6 +223,8 @@ export class TabList {
   }
   private handleKeydownArrowKeys = (e: KeyboardEvent) => {
     if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
+      // Don't handle arrow keys if we're typing in the rename input field
+      if (document.activeElement?.tagName === "INPUT") return;
       if (!this._tabsListEl) return;
       const numOfChildren = this._tabsListEl.childElementCount;
       if (typeof this.tabEntryIndex !== "number") return;
@@ -261,7 +264,7 @@ export class TabList {
         this.yasgui.emit("tabOrderChanged", this.yasgui, tabs);
         this.yasgui.persistentConfig.setTabOrder(tabs);
       },
-      filter: ".addTab, input",
+      filter: ".addTab, input, .renaming",
       preventOnFilter: false,
       onMove: (ev: any, _origEv: any) => {
         return hasClass(ev.related, "tab");
