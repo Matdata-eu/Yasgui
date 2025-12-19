@@ -75,7 +75,10 @@ export class TabListEl {
     };
     addClass(this.tabEl, "tab");
     this.tabEl.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.code === "Delete") handleDeleteTab();
+      // Don't handle Delete key if we're renaming the tab (input field is active)
+      if (e.code === "Delete" && !this.tabEl.classList.contains("renaming")) {
+        handleDeleteTab();
+      }
     });
 
     const handleDeleteTab = (e?: MouseEvent) => {
