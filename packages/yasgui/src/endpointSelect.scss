@@ -172,16 +172,16 @@
     color: var(--yasgui-endpoint-button-text, #ffffff);
     border-radius: 3px;
     cursor: pointer;
-    padding: 4px 10px;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: 4px;
-    position: relative;
+    height: auto;
 
     &:hover {
       background-color: var(--yasgui-endpoint-button-hover-bg, #286090);
@@ -197,18 +197,24 @@
       outline-offset: 2px;
     }
 
+    // Reduce padding on medium screens
+    @media (max-width: 1024px) {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
     // Hide on small screens (mobile)
     @media (max-width: 768px) {
-      display: none;
+      display: none !important;
     }
   }
 
   .endpointDropdownMenu {
     position: fixed;
-    background: white;
-    border: 1px solid #aaa;
+    background: var(--yasgui-bg-primary);
+    border: 1px solid var(--yasgui-border-color);
     border-radius: 3px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     min-width: 150px;
     max-width: 300px;
@@ -231,19 +237,19 @@
     cursor: pointer;
     font-size: 13px;
     white-space: nowrap;
-    color: #333;
+    color: var(--yasgui-text-primary);
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: #f0f0f0;
+      background-color: var(--yasgui-bg-secondary);
     }
 
     &:active {
-      background-color: #e0e0e0;
+      background-color: var(--yasgui-bg-tertiary);
     }
 
     &:not(:last-child) {
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--yasgui-border-color);
     }
   }
 }

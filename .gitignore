@@ -8,3 +8,4 @@ website/node_modules
 website/build
 website/.docusaurus
 dev/endpoint-buttons-test.html
+dev/test-dropdown-theme.html
