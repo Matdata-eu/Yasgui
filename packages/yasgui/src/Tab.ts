@@ -75,11 +75,14 @@ export class Tab extends EventEmitter {
   private yasrWrapperEl: HTMLDivElement | undefined;
   private endpointSelect: EndpointSelect | undefined;
   private endpointButtonsContainer: HTMLDivElement | undefined;
+  private endpointDropdownButton?: HTMLButtonElement;
+  private endpointDropdownMenu?: HTMLDivElement;
   private settingsModal?: TabSettingsModal;
   private currentOrientation: "vertical" | "horizontal";
   private orientationToggleButton?: HTMLButtonElement;
   private verticalResizerEl?: HTMLDivElement;
   private editorWrapperEl?: HTMLDivElement;
+  private resizeObserver?: ResizeObserver;
 
   constructor(yasgui: Yasgui, conf: PersistedJson) {
     super();
@@ -384,7 +387,62 @@ export class Tab extends EventEmitter {
       this.controlBarEl.appendChild(this.endpointButtonsContainer);
     }
 
+    // Create dropdown button
+    if (!this.endpointDropdownButton) {
+      this.endpointDropdownButton = document.createElement("button");
+      addClass(this.endpointDropdownButton, "endpointDropdownButton");
+      this.endpointDropdownButton.setAttribute("aria-label", "More endpoints");
+      this.endpointDropdownButton.title = "More endpoints";
+      this.endpointDropdownButton.innerHTML = "⋯"; // Three dots icon
+      this.endpointDropdownButton.style.display = "none"; // Hidden by default
+      this.controlBarEl.appendChild(this.endpointDropdownButton);
+
+      // Create dropdown menu
+      this.endpointDropdownMenu = document.createElement("div");
+      addClass(this.endpointDropdownMenu, "endpointDropdownMenu");
+      this.endpointDropdownMenu.style.display = "none";
+      this.controlBarEl.appendChild(this.endpointDropdownMenu);
+
+      // Toggle dropdown on button click
+      this.endpointDropdownButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.toggleDropdown();
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        if (
+          this.endpointDropdownMenu &&
+          this.endpointDropdownButton &&
+          !this.endpointDropdownMenu.contains(e.target as Node) &&
+          !this.endpointDropdownButton.contains(e.target as Node)
+        ) {
+          this.closeDropdown();
+        }
+      });
+    }
+
     this.refreshEndpointButtons();
+  }
+
+  private toggleDropdown() {
+    if (!this.endpointDropdownMenu || !this.endpointDropdownButton) return;
+    const isVisible = this.endpointDropdownMenu.style.display !== "none";
+    if (isVisible) {
+      this.closeDropdown();
+    } else {
+      // Position the dropdown below the button
+      const buttonRect = this.endpointDropdownButton.getBoundingClientRect();
+      this.endpointDropdownMenu.style.top = buttonRect.bottom + 4 + "px";
+      this.endpointDropdownMenu.style.left = buttonRect.right - 200 + "px"; // Align to right edge of button
+      this.endpointDropdownMenu.style.display = "block";
+    }
+  }
+
+  private closeDropdown() {
+    if (this.endpointDropdownMenu) {
+      this.endpointDropdownMenu.style.display = "none";
+    }
   }
 
   public refreshEndpointButtons() {
@@ -392,6 +450,9 @@ export class Tab extends EventEmitter {
 
     // Clear existing buttons
     this.endpointButtonsContainer.innerHTML = "";
+    if (this.endpointDropdownMenu) {
+      this.endpointDropdownMenu.innerHTML = "";
+    }
 
     // Get config buttons (for backwards compatibility)
     const configButtons = this.yasgui.config.endpointButtons || [];
@@ -410,25 +471,125 @@ export class Tab extends EventEmitter {
     if (allButtons.length === 0) {
       // Hide container if no buttons
       this.endpointButtonsContainer.style.display = "none";
+      if (this.endpointDropdownButton) {
+        this.endpointDropdownButton.style.display = "none";
+      }
       return;
     }
 
     // Show container
     this.endpointButtonsContainer.style.display = "flex";
 
+    // Create all buttons first
     allButtons.forEach((buttonConfig) => {
       const button = document.createElement("button");
       addClass(button, "endpointButton");
       button.textContent = buttonConfig.label;
       button.title = `Set endpoint to ${buttonConfig.endpoint}`;
       button.setAttribute("aria-label", `Set endpoint to ${buttonConfig.endpoint}`);
+      button.setAttribute("data-endpoint", buttonConfig.endpoint);
 
       button.addEventListener("click", () => {
         this.setEndpoint(buttonConfig.endpoint);
+        this.closeDropdown();
       });
 
       this.endpointButtonsContainer!.appendChild(button);
     });
+
+    // Set up ResizeObserver to handle overflow
+    this.setupButtonOverflowHandling();
+  }
+
+  private setupButtonOverflowHandling() {
+    if (!this.controlBarEl || !this.endpointButtonsContainer) return;
+
+    // Disconnect existing observer if any
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+
+    // Create new observer
+    this.resizeObserver = new ResizeObserver(() => {
+      this.handleButtonOverflow();
+    });
+
+    // Observe controlbar for size changes
+    this.resizeObserver.observe(this.controlBarEl);
+
+    // Initial check
+    requestAnimationFrame(() => {
+      this.handleButtonOverflow();
+    });
+  }
+
+  private handleButtonOverflow() {
+    if (!this.endpointButtonsContainer || !this.endpointDropdownButton || !this.endpointDropdownMenu) return;
+
+    const buttons = Array.from(
+      this.endpointButtonsContainer.querySelectorAll(".endpointButton"),
+    ) as HTMLButtonElement[];
+    if (buttons.length === 0) return;
+
+    // Show all buttons initially to measure
+    buttons.forEach((btn) => (btn.style.display = ""));
+    this.endpointDropdownButton.style.display = "none";
+
+    // Get available width
+    const containerRect = this.endpointButtonsContainer.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const dropdownButtonWidth = 40; // Approximate width of dropdown button
+
+    let totalWidth = 0;
+    let overflowIndex = buttons.length;
+
+    // Calculate which buttons fit
+    for (let i = 0; i < buttons.length; i++) {
+      const buttonRect = buttons[i].getBoundingClientRect();
+      const buttonWidth = buttonRect.width + 4; // Add gap
+
+      if (totalWidth + buttonWidth + dropdownButtonWidth > containerWidth && i > 0) {
+        overflowIndex = i;
+        break;
+      }
+      totalWidth += buttonWidth;
+    }
+
+    // If some buttons overflow, show dropdown
+    if (overflowIndex < buttons.length) {
+      this.endpointDropdownButton.style.display = "flex";
+
+      // Hide overflow buttons from container
+      buttons.forEach((btn, index) => {
+        if (index >= overflowIndex) {
+          btn.style.display = "none";
+        }
+      });
+
+      // Add overflow buttons to dropdown menu
+      this.endpointDropdownMenu.innerHTML = "";
+      buttons.slice(overflowIndex).forEach((btn) => {
+        const menuItem = document.createElement("button");
+        addClass(menuItem, "endpointDropdownItem");
+        menuItem.textContent = btn.textContent;
+        menuItem.title = btn.title;
+        menuItem.setAttribute("data-endpoint", btn.getAttribute("data-endpoint") || "");
+
+        menuItem.addEventListener("click", () => {
+          const endpoint = menuItem.getAttribute("data-endpoint");
+          if (endpoint) {
+            this.setEndpoint(endpoint);
+          }
+          this.closeDropdown();
+        });
+
+        this.endpointDropdownMenu!.appendChild(menuItem);
+      });
+    } else {
+      // All buttons fit, hide dropdown
+      this.endpointDropdownButton.style.display = "none";
+      this.closeDropdown();
+    }
   }
 
   public setEndpoint(endpoint: string, endpointHistory?: string[]) {
@@ -1086,6 +1247,12 @@ WHERE {
     }
     document.documentElement.removeEventListener("mousemove", this.doVerticalDrag, false);
     document.documentElement.removeEventListener("mouseup", this.stopVerticalDrag, false);
+
+    // Clean up ResizeObserver
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = undefined;
+    }
 
     this.removeAllListeners();
     this.settingsModal?.destroy();

@@ -165,4 +165,85 @@
       font-size: 12px;
     }
   }
+
+  .endpointDropdownButton {
+    border: 1px solid var(--yasgui-endpoint-button-border, #337ab7);
+    background-color: var(--yasgui-endpoint-button-bg, #337ab7);
+    color: var(--yasgui-endpoint-button-text, #ffffff);
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 4px 10px;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    position: relative;
+
+    &:hover {
+      background-color: var(--yasgui-endpoint-button-hover-bg, #286090);
+      border-color: var(--yasgui-endpoint-button-hover-border, #286090);
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+
+    &:focus {
+      outline: 2px solid var(--yasgui-endpoint-button-focus, #5cb3fd);
+      outline-offset: 2px;
+    }
+
+    // Hide on small screens (mobile)
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  .endpointDropdownMenu {
+    position: fixed;
+    background: white;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 150px;
+    max-width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    // Hide on small screens (mobile)
+    @media (max-width: 768px) {
+      display: none !important;
+    }
+  }
+
+  .endpointDropdownItem {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    color: #333;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #f0f0f0;
+    }
+
+    &:active {
+      background-color: #e0e0e0;
+    }
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+  }
 }
