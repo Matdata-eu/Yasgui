@@ -357,6 +357,22 @@ Basic integration in a static HTML page:
 </html>
 ```
 
+> **Important:** If you want YASGUI to fill the entire page, you **must** set `height: 100%` on all parent elements, including `html` and `body`:
+>
+> ```css
+> html, body {
+>   height: 100%;
+>   margin: 0;
+>   padding: 0;
+> }
+> 
+> #yasgui {
+>   height: 100%;
+> }
+> ```
+>
+> Using `height: 100%` ensures proper scaling when users zoom in/out in the browser. Avoid using viewport units like `100vh` on the container as they don't scale correctly with browser zoom. 
+
 ### Node.js / ES Modules
 
 Using YASGUI in a Node.js application or with module bundlers:
