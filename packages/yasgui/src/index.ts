@@ -13,6 +13,7 @@ import { addClass, removeClass } from "@matdata/yasgui-utils";
 import GeoPlugin from "yasgui-geo-tg";
 import GraphPlugin from "@matdata/yasgui-graph-plugin";
 import TablePlugin from "@matdata/yasgui-table-plugin";
+import "@matdata/yasgui-graph-plugin/dist/yasgui-graph-plugin.min.css";
 import "@matdata/yasgui-table-plugin/dist/yasgui-table-plugin.min.css";
 import { ThemeManager, Theme } from "./ThemeManager";
 import "./index.scss";
