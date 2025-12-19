@@ -143,6 +143,13 @@ export class TabListEl {
       this.yasgui.getTab(this.tabId)?.setName(renameEl.value);
       removeClass(this.tabEl, "renaming");
     };
+    // Prevent sortablejs from detecting drag events on the input field
+    renameEl.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+    });
+    renameEl.addEventListener("dragstart", (e) => {
+      e.stopPropagation();
+    });
     tabLinkEl.appendChild(this.renameEl);
     tabLinkEl.oncontextmenu = (ev: MouseEvent) => {
       // Close possible old
@@ -254,7 +261,8 @@ export class TabList {
         this.yasgui.emit("tabOrderChanged", this.yasgui, tabs);
         this.yasgui.persistentConfig.setTabOrder(tabs);
       },
-      filter: ".addTab",
+      filter: ".addTab, input",
+      preventOnFilter: false,
       onMove: (ev: any, _origEv: any) => {
         return hasClass(ev.related, "tab");
       },
