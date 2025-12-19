@@ -82,7 +82,7 @@ export default class TabSettingsModal {
     this.prefixButton = document.createElement("button");
     this.prefixButton.setAttribute("aria-label", "Insert Prefixes");
     this.prefixButton.title = "Insert saved prefixes into query";
-    this.prefixButton.textContent = "PREFIX";
+    this.prefixButton.textContent = "P";
     addClass(this.prefixButton, "tabPrefixButton");
     controlBarEl.appendChild(this.prefixButton);
     this.prefixButton.onclick = () => this.insertPrefixesIntoQuery();
