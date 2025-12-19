@@ -15,6 +15,7 @@ export interface PersistedJson {
   theme?: "light" | "dark";
   orientation?: "vertical" | "horizontal";
   showSnippetsBar?: boolean;
+  disabledDevButtons?: string[]; // Endpoints of developer-configured buttons that are disabled by user
 }
 function getDefaults(): PersistedJson {
   return {
@@ -233,5 +234,38 @@ export default class PersistentConfig {
   public updatePersistedConfig(config: Partial<PersistedJson>) {
     Object.assign(this.persistedJson, config);
     this.toStorage();
+  }
+
+  /**
+   * Get list of disabled developer-configured endpoint buttons
+   */
+  public getDisabledDevButtons(): string[] {
+    return this.persistedJson.disabledDevButtons || [];
+  }
+
+  /**
+   * Set list of disabled developer-configured endpoint buttons
+   */
+  public setDisabledDevButtons(endpoints: string[]) {
+    this.persistedJson.disabledDevButtons = endpoints;
+    this.toStorage();
+  }
+
+  /**
+   * Toggle a developer button enabled/disabled state
+   */
+  public toggleDevButton(endpoint: string, enabled: boolean) {
+    const disabled = this.getDisabledDevButtons();
+    if (enabled) {
+      // Remove from disabled list
+      const filtered = disabled.filter((e) => e !== endpoint);
+      this.setDisabledDevButtons(filtered);
+    } else {
+      // Add to disabled list
+      if (!disabled.includes(endpoint)) {
+        disabled.push(endpoint);
+        this.setDisabledDevButtons(disabled);
+      }
+    }
   }
 }

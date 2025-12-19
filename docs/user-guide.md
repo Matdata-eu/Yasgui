@@ -502,20 +502,33 @@ The endpoint quick switch buttons feature allows you to quickly switch between d
 
 **Features:**
 - **One-click switching**: Instantly switch to a different SPARQL endpoint
-- **Predefined buttons**: Administrators can configure endpoint buttons during initialization
-- **User-defined buttons**: Add your own custom endpoint buttons through the Settings interface
-- **Persistent storage**: Custom buttons are saved in local storage and persist across sessions
+- **Developer-configured buttons**: Administrators can configure endpoint buttons during initialization
+- **User-configurable buttons**: Enable/disable developer-configured buttons or add your own
+- **Persistent storage**: Custom buttons and preferences are saved in local storage
 - **Fully themed**: Buttons automatically adapt to light and dark themes
 - **Accessible**: Buttons are fully accessible with ARIA labels
 
+**Developer-Configured Endpoint Buttons:**
+
+If the developer has configured endpoint buttons when initializing YASGUI, you can manage them through the Settings interface:
+
+1. Click the Settings button (⚙) in the control bar
+2. Navigate to the "Endpoints" tab
+3. Look for the "Developer-Configured Endpoint Buttons" section at the top
+4. Toggle the "Enabled" checkbox for each button to show or hide it
+
+This allows you to customize which developer-configured buttons appear in your toolbar without losing the configuration.
+
 **How to Add Custom Endpoints:**
 1. Click the Settings button (⚙) in the control bar
-2. Navigate to the "Endpoint Buttons" tab
-3. Enter a button label and endpoint URL
-4. Click "+ Add Button"
-5. Click "Save" to apply changes
+2. Navigate to the "Endpoints" tab
+3. Scroll to the "SPARQL Endpoints" section
+4. Enter an endpoint URL in the "Add New Endpoint" field
+5. Click "+ Add Endpoint"
+6. Optionally add a label and enable "Show as Button"
+7. Changes are saved automatically
 
-Custom buttons appear alongside predefined buttons and persist across browser sessions. You can remove custom buttons by clicking the × button next to each entry.
+Custom endpoint configurations persist across browser sessions. You can delete endpoints by clicking the "Delete" button.
 
 **How to Switch Endpoints:**
 - Buttons are displayed next to the endpoint textbox in the control bar
@@ -665,20 +678,16 @@ Access comprehensive configuration options through the Settings modal.
 - Named/default graphs configuration
 - Custom HTTP headers
 
-**Endpoint Buttons Tab:**
-- Add custom endpoint quick-switch buttons
-- Remove user-defined buttons
-- Manage endpoint collection
+**Endpoints Tab:**
+- **Developer-Configured Endpoint Buttons**: Enable/disable developer-configured buttons
+- **SPARQL Endpoints**: Manage all your endpoints in one place
+- Configure authentication per endpoint
+- Add labels and create quick-switch buttons
+- Automatically tracks accessed endpoints
 
 **Formatting Tab:**
 - Select formatter (sparql-formatter or legacy)
 - Enable/disable auto-format on query execution
-
-**SPARQL Endpoints Tab:**
-- Manage all your SPARQL endpoints in one place
-- Configure authentication per endpoint
-- Add labels and create quick-switch buttons
-- Automatically tracks accessed endpoints
 
 All settings are saved automatically to local storage.
 
@@ -689,20 +698,30 @@ YASGUI automatically tracks all SPARQL endpoints you access and lets you manage 
 **Accessing the Endpoints Manager:**
 
 1. **Open Settings**: Click the settings icon (⚙️) in the control bar
-2. **Navigate to SPARQL Endpoints**: Click on the "SPARQL Endpoints" tab in the settings modal
+2. **Navigate to Endpoints**: Click on the "Endpoints" tab in the settings modal
 
-**Managing Endpoints:**
+**Developer-Configured Endpoint Buttons:**
 
-The endpoints table shows:
+If the developer has configured endpoint buttons during initialization, you'll see them in the "Developer-Configured Endpoint Buttons" section:
+
+- **Label**: The display name for the button
+- **Endpoint**: The SPARQL endpoint URL
+- **Enabled**: Toggle to show/hide the button in the toolbar
+
+You can enable or disable any developer-configured button by checking or unchecking the "Enabled" checkbox. Your preferences are saved locally and persist across sessions.
+
+**Managing User Endpoints:**
+
+The SPARQL Endpoints table shows:
 - **Endpoint**: The URL of the SPARQL endpoint
 - **Label**: Optional friendly name for the endpoint
 - **Button**: Checkbox to show endpoint as a quick-switch button (requires label)
-- **Authentication**: Configure HTTP Basic Authentication
+- **Authentication**: Configure authentication (Basic, Bearer, API Key, OAuth2)
 - **Actions**: Delete endpoint from the list
 
 **Adding Quick-Switch Buttons:**
 
-1. Find your endpoint in the list
+1. Find your endpoint in the list (or add a new one)
 2. Enter a label (e.g., "DBpedia", "Wikidata")
 3. Check the "Button" checkbox
 4. The endpoint will now appear as a button in the control bar

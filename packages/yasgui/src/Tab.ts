@@ -12,12 +12,12 @@ import { getRandomId, default as Yasgui, YasguiRequestConfig } from "./";
 import * as OAuth2Utils from "./OAuth2Utils";
 
 // Layout orientation toggle icons
-const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
+const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24">
   <rect x="2" y="4" width="9" height="16" stroke="currentColor" stroke-width="2" fill="none"/>
   <rect x="13" y="4" width="9" height="16" stroke="currentColor" stroke-width="2" fill="none"/>
 </svg>`;
 
-const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24" class="svgImg">
+const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24">
   <rect x="2" y="2" width="20" height="8" stroke="currentColor" stroke-width="2" fill="none"/>
   <rect x="2" y="12" width="20" height="10" stroke="currentColor" stroke-width="2" fill="none"/>
 </svg>`;
@@ -393,8 +393,11 @@ export class Tab extends EventEmitter {
     // Clear existing buttons
     this.endpointButtonsContainer.innerHTML = "";
 
-    // Get config buttons (for backwards compatibility)
-    const configButtons = this.yasgui.config.endpointButtons || [];
+    // Get config buttons (for backwards compatibility) and filter out disabled ones
+    const disabledButtons = this.yasgui.persistentConfig.getDisabledDevButtons();
+    const configButtons = (this.yasgui.config.endpointButtons || []).filter(
+      (button) => !disabledButtons.includes(button.endpoint),
+    );
 
     // Get endpoint configs where showAsButton is true
     const endpointConfigs = this.yasgui.persistentConfig.getEndpointConfigs();
@@ -440,12 +443,14 @@ export class Tab extends EventEmitter {
     if (this.persistentJson.requestConfig.endpoint !== endpoint) {
       this.persistentJson.requestConfig.endpoint = endpoint;
       this.emit("change", this, this.persistentJson);
-      this.emit("endpointChange", this, endpoint);
 
       // Auto-track this endpoint in endpoint configs (if not already present)
       if (endpoint && !this.yasgui.persistentConfig.getEndpointConfig(endpoint)) {
         this.yasgui.persistentConfig.addOrUpdateEndpoint(endpoint, {});
       }
+
+      // Emit after endpoint is tracked
+      this.emit("endpointChange", this, endpoint);
     }
     if (this.endpointSelect instanceof EndpointSelect) {
       this.endpointSelect.setEndpoint(endpoint, endpointHistory);

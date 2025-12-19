@@ -137,14 +137,14 @@
     border: none;
     background: none;
     align-self: center;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding: 6px;
     cursor: pointer;
     color: var(--yasgui-button-text, #505050);
     fill: var(--yasgui-button-text, #505050);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 
     .svgImg {
       width: 15px;
@@ -161,6 +161,16 @@
       color: var(--yasgui-button-hover, black);
       fill: var(--yasgui-button-hover, black);
     }
+
+    // Responsive spacing - reduce padding on smaller screens
+    @media (max-width: 768px) {
+      padding: 2px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
   }
 
   .controlbar {
@@ -168,5 +178,6 @@
     align-content: center;
     flex-shrink: 0;
     max-height: 35px;
+    gap: 2px;
   }
 }

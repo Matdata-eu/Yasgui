@@ -67,7 +67,7 @@ export default class TabSettingsModal {
     // Theme toggle button (if enabled)
     if (this.tab.yasgui.config.showThemeToggle) {
       this.themeToggleButton = document.createElement("button");
-      addClass(this.themeToggleButton, "themeToggle");
+      addClass(this.themeToggleButton, "tabContextButton", "themeToggle");
       this.themeToggleButton.setAttribute("aria-label", "Toggle between light and dark theme");
       this.themeToggleButton.title = "Toggle theme";
       this.themeToggleButton.innerHTML = this.getThemeToggleIcon();
@@ -82,8 +82,10 @@ export default class TabSettingsModal {
     this.prefixButton = document.createElement("button");
     this.prefixButton.setAttribute("aria-label", "Insert Prefixes");
     this.prefixButton.title = "Insert saved prefixes into query";
-    this.prefixButton.textContent = "P";
-    addClass(this.prefixButton, "tabPrefixButton");
+    this.prefixButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M9 5v2h6.59L4 18.59 5.41 20 17 8.41V15h2V5z"/>
+    </svg>`;
+    addClass(this.prefixButton, "tabContextButton", "prefixButton");
     controlBarEl.appendChild(this.prefixButton);
     this.prefixButton.onclick = () => this.insertPrefixesIntoQuery();
 
@@ -272,6 +274,13 @@ export default class TabSettingsModal {
           content.innerHTML = "";
           this.drawEditorSettings(content as HTMLElement);
         }
+        // Refresh endpoints list when switching to endpoints tab
+        if (tabName === "endpoints") {
+          const endpointsList = content.querySelector(".endpointsTable");
+          if (endpointsList) {
+            this.renderEndpointsList(endpointsList as HTMLElement);
+          }
+        }
       } else {
         removeClass(content as HTMLElement, "active");
       }
@@ -453,6 +462,12 @@ export default class TabSettingsModal {
   }
 
   private drawEndpointsSettings(container: HTMLElement) {
+    // Developer-configured endpoint buttons section (if any)
+    const devButtons = this.tab.yasgui.config.endpointButtons;
+    if (devButtons && devButtons.length > 0) {
+      this.drawDeveloperButtonsSettings(container);
+    }
+
     const section = document.createElement("div");
     addClass(section, "settingsSection");
 
@@ -475,6 +490,92 @@ export default class TabSettingsModal {
     section.appendChild(endpointsList);
 
     container.appendChild(section);
+  }
+
+  private drawDeveloperButtonsSettings(container: HTMLElement) {
+    const section = document.createElement("div");
+    addClass(section, "settingsSection");
+
+    const label = document.createElement("label");
+    label.textContent = "Developer-Configured Endpoint Buttons";
+    addClass(label, "settingsLabel");
+
+    const help = document.createElement("div");
+    help.textContent = "These endpoint buttons were configured by the developer. You can enable or disable them.";
+    addClass(help, "settingsHelp");
+
+    section.appendChild(label);
+    section.appendChild(help);
+
+    // List of dev buttons
+    const devButtonsList = document.createElement("div");
+    addClass(devButtonsList, "devButtonsTable");
+    this.renderDeveloperButtonsList(devButtonsList);
+    section.appendChild(devButtonsList);
+
+    container.appendChild(section);
+  }
+
+  private renderDeveloperButtonsList(container: HTMLElement) {
+    container.innerHTML = "";
+    const devButtons = this.tab.yasgui.config.endpointButtons || [];
+    const disabledButtons = this.tab.yasgui.persistentConfig.getDisabledDevButtons();
+
+    // Create table
+    const table = document.createElement("table");
+    addClass(table, "devButtonsTableElement");
+
+    // Header
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const headers = ["Label", "Endpoint", "Enabled"];
+    headers.forEach((h) => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement("tbody");
+
+    devButtons.forEach((button) => {
+      const row = document.createElement("tr");
+
+      // Label column
+      const labelCell = document.createElement("td");
+      labelCell.textContent = button.label;
+      addClass(labelCell, "devButtonLabelCell");
+      row.appendChild(labelCell);
+
+      // Endpoint column
+      const endpointCell = document.createElement("td");
+      endpointCell.textContent = button.endpoint;
+      endpointCell.title = button.endpoint;
+      addClass(endpointCell, "endpointCell");
+      row.appendChild(endpointCell);
+
+      // Enabled checkbox
+      const enabledCell = document.createElement("td");
+      const enabledCheckbox = document.createElement("input");
+      enabledCheckbox.type = "checkbox";
+      enabledCheckbox.checked = !disabledButtons.includes(button.endpoint);
+      enabledCheckbox.setAttribute("aria-label", `Toggle ${button.label} button`);
+      enabledCheckbox.title = "Show/hide this button";
+      enabledCheckbox.onchange = () => {
+        this.tab.yasgui.persistentConfig.toggleDevButton(button.endpoint, enabledCheckbox.checked);
+        this.tab.refreshEndpointButtons();
+      };
+      enabledCell.appendChild(enabledCheckbox);
+      addClass(enabledCell, "centerCell");
+      row.appendChild(enabledCell);
+
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    container.appendChild(table);
   }
 
   private renderEndpointsList(container: HTMLElement) {
@@ -1187,6 +1288,14 @@ export default class TabSettingsModal {
     const editorContent = this.modalContent.querySelector("#editor-content");
     if (editorContent && editorContent.innerHTML === "") {
       this.drawEditorSettings(editorContent as HTMLElement);
+    }
+    // Refresh endpoints list in case new endpoints were added while modal was closed
+    const endpointsContent = this.modalContent.querySelector("#endpoints-content");
+    if (endpointsContent) {
+      const endpointsList = endpointsContent.querySelector(".endpointsTable");
+      if (endpointsList) {
+        this.renderEndpointsList(endpointsList as HTMLElement);
+      }
     }
     addClass(this.modalOverlay, "open");
   }
