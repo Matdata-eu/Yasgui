@@ -337,6 +337,8 @@ export class Tab extends EventEmitter {
         // Refresh components to adjust to new layout
         if (tab.yasqe) {
           tab.yasqe.refresh();
+          // Trigger snippets overflow detection after layout change
+          tab.yasqe.refreshSnippetsBar();
         }
         if (tab.yasr) {
           tab.yasr.refresh();
@@ -1061,6 +1063,8 @@ WHERE {
     // Refresh editors after resizing
     if (this.yasqe) {
       this.yasqe.refresh();
+      // Trigger snippets overflow detection after horizontal resize
+      this.yasqe.refreshSnippetsBar();
     }
     if (this.yasr) {
       this.yasr.refresh();

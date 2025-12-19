@@ -767,6 +767,10 @@ export class Yasqe extends CodeMirror {
     }
     // Refresh the editor to make sure the 'hidden' lines are rendered
     this.refresh();
+    // Trigger snippets overflow detection after resize
+    if (this.snippetsResizeHandler) {
+      this.snippetsResizeHandler();
+    }
   }
   public duplicateLine() {
     const cur = this.getDoc().getCursor();
@@ -1292,6 +1296,10 @@ export class Yasqe extends CodeMirror {
 
   public refreshSnippetsBar() {
     this.drawSnippetsBar();
+    // Also trigger overflow detection after redrawing
+    if (this.snippetsResizeHandler) {
+      this.snippetsResizeHandler();
+    }
   }
 
   /**
