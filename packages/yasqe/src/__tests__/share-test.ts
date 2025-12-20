@@ -50,7 +50,7 @@ describe("Share Functionality", () => {
       const segments = [
         "wget",
         "'https://example.com/sparql'",
-        "--post-data",
+        "--body-data",
         "'query=SELECT'",
         "--method",
         "POST",
@@ -62,7 +62,7 @@ describe("Share Functionality", () => {
 
       expect(wgetString).to.include("wget");
       expect(wgetString).to.include("\\\n");
-      expect(wgetString).to.include("--post-data");
+      expect(wgetString).to.include("--body-data");
     });
   });
 

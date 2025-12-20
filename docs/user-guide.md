@@ -929,7 +929,7 @@ Invoke-WebRequest @params
 *wget:*
 ```bash
 wget 'https://example.com/sparql' \
-  --post-data 'query=SELECT%20...' \
+  --body-data 'query=SELECT%20...' \
   --method POST \
   --header 'Authorization: Bearer token' \
   --header 'Accept: application/sparql-results+json' \

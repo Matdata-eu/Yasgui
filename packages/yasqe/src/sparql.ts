@@ -523,15 +523,16 @@ export function getAsWgetString(yasqe: Yasqe, _config?: Config["requestConfig"])
   } else if (ajaxConfig.reqMethod === "POST") {
     segments.push(`'${url}'`);
     const data = queryString.stringify(ajaxConfig.args);
-    segments.push("--post-data", `'${data}'`);
+    // Use --body-data when --method is specified (required for wget compatibility)
+    segments.push("--body-data", `'${data}'`);
   } else {
     // Handle other methods
     console.warn("Unexpected request-method for wget", ajaxConfig.reqMethod);
     segments.push(`'${url}'`);
     const data = queryString.stringify(ajaxConfig.args);
     if (data) {
-      // Use --post-data for compatibility (works with most methods in wget)
-      segments.push("--post-data", `'${data}'`);
+      // Use --body-data when --method is specified (required for wget compatibility)
+      segments.push("--body-data", `'${data}'`);
     }
   }
 
