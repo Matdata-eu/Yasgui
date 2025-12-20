@@ -372,7 +372,13 @@ function normalizeUrl(url: string): string {
       fullUrl += url;
     } else {
       // Relative path
-      fullUrl += window.location.pathname + url;
+      let basePath = window.location.pathname;
+      // If pathname does not end with "/", treat it as a file and use its directory
+      if (!basePath.endsWith("/")) {
+        const lastSlashIndex = basePath.lastIndexOf("/");
+        basePath = lastSlashIndex >= 0 ? basePath.substring(0, lastSlashIndex + 1) : "/";
+      }
+      fullUrl += basePath + url;
     }
     return fullUrl;
   }
