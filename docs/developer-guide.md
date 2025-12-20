@@ -1056,6 +1056,47 @@ const yasqe = new Yasqe(document.getElementById('yasqe'), {
 
 **Other URL Shortener Examples:**
 
+*YOURLS (Your Own URL Shortener):*
+```javascript
+createShortLink: async (yasqe, longUrl) => {
+  const YOURLS_API_URL = 'https://your-domain.com/yourls-api.php'; // Your YOURLS instance
+  const YOURLS_SIGNATURE = 'your-signature-token'; // Found in YOURLS admin > Tools
+  
+  try {
+    const params = new URLSearchParams({
+      signature: YOURLS_SIGNATURE,
+      action: 'shorturl',
+      url: longUrl,
+      format: 'json',
+      // Optional: custom keyword
+      // keyword: 'my-custom-keyword'
+    });
+    
+    const response = await fetch(`${YOURLS_API_URL}?${params.toString()}`, {
+      method: 'GET'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === 'fail') {
+      throw new Error(data.message || 'Failed to shorten URL');
+    }
+    
+    return data.shorturl; // Returns shortened URL
+    
+  } catch (error) {
+    console.error('YOURLS shortening error:', error);
+    throw error;
+  }
+}
+```
+
+**Note:** YOURLS can authenticate using either a signature token (recommended) or username/password. The signature token is more secure and can be found in your YOURLS admin panel under Tools > Signature Token.
+
 *TinyURL:*
 ```javascript
 createShortLink: async (yasqe, longUrl) => {
