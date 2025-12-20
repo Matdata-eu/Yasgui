@@ -18,6 +18,12 @@ import CodeMirror from "./CodeMirror";
 import { YasqeAjaxConfig } from "./sparql";
 import { spfmt } from "sparql-formatter";
 
+// Toast notification timing constants
+const TOAST_DEFAULT_DURATION = 3000; // 3 seconds
+const TOAST_WARNING_DURATION = 4000; // 4 seconds for warnings
+const TOAST_WARNING_DELAY = 500; // Delay before showing auth warning
+const TOAST_FADEOUT_DURATION = 300; // Fade out animation duration
+
 export interface Yasqe {
   on(eventName: "query", handler: (instance: Yasqe, req: Request, abortController?: AbortController) => void): void;
   off(eventName: "query", handler: (instance: Yasqe, req: Request, abortController?: AbortController) => void): void;
@@ -262,12 +268,6 @@ export class Yasqe extends CodeMirror {
         let popup: HTMLDivElement | undefined = document.createElement("div");
         popup.className = "yasqe_sharePopup";
         buttons.appendChild(popup);
-
-        // Toast notification constants
-        const TOAST_DEFAULT_DURATION = 3000; // 3 seconds
-        const TOAST_WARNING_DURATION = 4000; // 4 seconds for warnings
-        const TOAST_WARNING_DELAY = 500; // Delay before showing auth warning
-        const TOAST_FADEOUT_DURATION = 300; // Fade out animation duration
 
         // Toast notification element for warnings
         let toastElement: HTMLDivElement | undefined;

@@ -395,8 +395,8 @@ export function hasAuthenticationCredentials(ajaxConfig: PopulatedAjaxConfig): b
     for (const headerName in ajaxConfig.headers) {
       const lowerHeader = headerName.toLowerCase();
       // Match common authentication header patterns
+      // Note: Authorization is already checked above, so skip it here
       if (
-        lowerHeader === "authorization" ||
         lowerHeader.startsWith("x-api-key") ||
         lowerHeader.startsWith("x-auth-") ||
         lowerHeader === "apikey" ||
@@ -530,7 +530,8 @@ export function getAsWgetString(yasqe: Yasqe, _config?: Config["requestConfig"])
     segments.push(`'${url}'`);
     const data = queryString.stringify(ajaxConfig.args);
     if (data) {
-      segments.push("--body-data", `'${data}'`);
+      // Use --post-data for compatibility (works with most methods in wget)
+      segments.push("--post-data", `'${data}'`);
     }
   }
 
