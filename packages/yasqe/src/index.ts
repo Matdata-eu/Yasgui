@@ -263,10 +263,16 @@ export class Yasqe extends CodeMirror {
         popup.className = "yasqe_sharePopup";
         buttons.appendChild(popup);
 
+        // Toast notification constants
+        const TOAST_DEFAULT_DURATION = 3000; // 3 seconds
+        const TOAST_WARNING_DURATION = 4000; // 4 seconds for warnings
+        const TOAST_WARNING_DELAY = 500; // Delay before showing auth warning
+        const TOAST_FADEOUT_DURATION = 300; // Fade out animation duration
+
         // Toast notification element for warnings
         let toastElement: HTMLDivElement | undefined;
 
-        const showToast = (message: string, duration: number = 3000) => {
+        const showToast = (message: string, duration: number = TOAST_DEFAULT_DURATION) => {
           // Remove existing toast if any
           if (toastElement) {
             toastElement.remove();
@@ -284,7 +290,7 @@ export class Yasqe extends CodeMirror {
               setTimeout(() => {
                 toastElement?.remove();
                 toastElement = undefined;
-              }, 300);
+              }, TOAST_FADEOUT_DURATION);
             }
           }, duration);
         };
@@ -316,8 +322,8 @@ export class Yasqe extends CodeMirror {
             // Show warning if credentials are included
             if (hasAuth) {
               setTimeout(() => {
-                showToast("⚠️ Warning: Authentication credentials included in copied content", 4000);
-              }, 500);
+                showToast("⚠️ Warning: Authentication credentials included in copied content", TOAST_WARNING_DURATION);
+              }, TOAST_WARNING_DELAY);
             }
           } catch (err) {
             console.error("Failed to copy to clipboard:", err);

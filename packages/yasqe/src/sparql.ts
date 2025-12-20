@@ -390,11 +390,19 @@ export function hasAuthenticationCredentials(ajaxConfig: PopulatedAjaxConfig): b
     return true;
   }
 
-  // Check for API Key headers (any custom header that looks like authentication)
+  // Check for API Key headers - use more specific patterns to avoid false positives
   if (ajaxConfig.headers) {
     for (const headerName in ajaxConfig.headers) {
       const lowerHeader = headerName.toLowerCase();
-      if (lowerHeader.includes("key") || lowerHeader.includes("token") || lowerHeader.includes("auth")) {
+      // Match common authentication header patterns
+      if (
+        lowerHeader === "authorization" ||
+        lowerHeader.startsWith("x-api-key") ||
+        lowerHeader.startsWith("x-auth-") ||
+        lowerHeader === "apikey" ||
+        lowerHeader === "api-key" ||
+        (lowerHeader.includes("token") && (lowerHeader.startsWith("x-") || lowerHeader.includes("auth")))
+      ) {
         return true;
       }
     }
@@ -474,6 +482,23 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
     lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
     lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
     lines.push("}");
+  } else {
+    // Handle other methods (PUT, DELETE, etc.)
+    console.warn("Unexpected request-method for PowerShell", ajaxConfig.reqMethod);
+    const body = queryString.stringify(ajaxConfig.args);
+    lines.push("$params = @{");
+    lines.push(`    Uri = "${url}"`);
+    lines.push(`    Method = "${ajaxConfig.reqMethod}"`);
+    if (headersLines.length > 0) {
+      lines.push("    Headers = @{");
+      lines.push(headersLines.join("\n"));
+      lines.push("    }");
+    }
+    if (body) {
+      lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
+      lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
+    }
+    lines.push("}");
   }
 
   lines.push("");
@@ -499,6 +524,14 @@ export function getAsWgetString(yasqe: Yasqe, _config?: Config["requestConfig"])
     segments.push(`'${url}'`);
     const data = queryString.stringify(ajaxConfig.args);
     segments.push("--post-data", `'${data}'`);
+  } else {
+    // Handle other methods
+    console.warn("Unexpected request-method for wget", ajaxConfig.reqMethod);
+    segments.push(`'${url}'`);
+    const data = queryString.stringify(ajaxConfig.args);
+    if (data) {
+      segments.push("--body-data", `'${data}'`);
+    }
   }
 
   segments.push("--method", ajaxConfig.reqMethod);
