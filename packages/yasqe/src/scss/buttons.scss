@@ -487,6 +487,32 @@
   font-size: 14px;
   max-width: 400px;
   animation: yasqe_toast-fadein 0.3s ease-in;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &.yasqe_toast-warning {
+    background-color: #ffc107;
+    color: #000;
+    padding: 14px 20px;
+    box-shadow: 0 3px 10px rgba(255, 193, 7, 0.4);
+
+    .yasqe_toast-icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+
+      svg {
+        width: 24px;
+        height: 24px;
+        fill: #000;
+      }
+    }
+  }
+
+  .yasqe_toast-message {
+    flex: 1;
+  }
 
   &.yasqe_toast-fadeout {
     animation: yasqe_toast-fadeout 0.3s ease-out;

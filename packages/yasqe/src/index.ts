@@ -272,15 +272,33 @@ export class Yasqe extends CodeMirror {
         // Toast notification element for warnings
         let toastElement: HTMLDivElement | undefined;
 
-        const showToast = (message: string, duration: number = TOAST_DEFAULT_DURATION) => {
+        const showToast = (
+          message: string,
+          duration: number = TOAST_DEFAULT_DURATION,
+          type: "info" | "warning" = "info",
+        ) => {
           // Remove existing toast if any
           if (toastElement) {
             toastElement.remove();
           }
 
           toastElement = document.createElement("div");
-          toastElement.className = "yasqe_toast";
-          toastElement.textContent = message;
+          toastElement.className = type === "warning" ? "yasqe_toast yasqe_toast-warning" : "yasqe_toast";
+
+          // Add warning icon for warning toasts
+          if (type === "warning") {
+            const iconWrapper = document.createElement("span");
+            iconWrapper.className = "yasqe_toast-icon";
+            const icon = drawSvgStringAsElement(imgs.warning);
+            iconWrapper.appendChild(icon);
+            toastElement.appendChild(iconWrapper);
+          }
+
+          const messageSpan = document.createElement("span");
+          messageSpan.className = "yasqe_toast-message";
+          messageSpan.textContent = message;
+          toastElement.appendChild(messageSpan);
+
           document.body.appendChild(toastElement);
 
           // Auto-remove after duration
@@ -322,7 +340,11 @@ export class Yasqe extends CodeMirror {
             // Show warning if credentials are included
             if (hasAuth) {
               setTimeout(() => {
-                showToast("⚠️ Warning: Authentication credentials included in copied content", TOAST_WARNING_DURATION);
+                showToast(
+                  "Warning: Authentication credentials included in copied content",
+                  TOAST_WARNING_DURATION,
+                  "warning",
+                );
               }, TOAST_WARNING_DELAY);
             }
           } catch (err) {
