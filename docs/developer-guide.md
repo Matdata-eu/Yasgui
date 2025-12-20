@@ -33,6 +33,7 @@ This comprehensive guide covers everything developers need to know to integrate,
     - [YASQE Configuration](#yasqe-configuration)
       - [YASQE Example](#yasqe-example)
       - [Code Snippets](#code-snippets)
+      - [Share Configuration](#share-configuration)
     - [YASR Configuration](#yasr-configuration)
       - [YASR Example](#yasr-example)
     - [Request Configuration](#request-configuration)
@@ -919,6 +920,221 @@ const yasqe = new Yasqe(document.getElementById('yasqe'), {
   snippets: []
 });
 ```
+
+#### Share Configuration
+
+Configure how users can share their SPARQL queries with multiple output formats including URLs, cURL, PowerShell, and wget commands.
+
+**Configuration Options:**
+
+```typescript
+interface YasqeConfig {
+  // ... other config options
+  
+  // Function to create a shareable link (required to show share button)
+  createShareableLink?: (yasqe: Yasqe) => string;
+  
+  // Optional URL shortener function
+  createShortLink?: (yasqe: Yasqe, longUrl: string) => Promise<string>;
+  
+  // Function to consume/parse shared links
+  consumeShareLink?: (yasqe: Yasqe) => void;
+}
+```
+
+**Basic Share Configuration:**
+
+```javascript
+import Yasqe from '@matdata/yasqe';
+
+const yasqe = new Yasqe(document.getElementById('yasqe'), {
+  requestConfig: {
+    endpoint: 'https://dbpedia.org/sparql',
+    method: 'POST'
+  },
+  
+  // Enable share button with URL generation
+  createShareableLink: (yasqe) => {
+    const query = yasqe.getValue();
+    const endpoint = yasqe.getRequestConfig().endpoint;
+    
+    // Create shareable URL with query parameters
+    const params = new URLSearchParams({
+      query: query,
+      endpoint: endpoint
+    });
+    
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  },
+  
+  // Parse shared URLs on page load
+  consumeShareLink: (yasqe) => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get('query');
+    const endpoint = params.get('endpoint');
+    
+    if (query) yasqe.setValue(query);
+    if (endpoint) {
+      yasqe.setRequestConfig({
+        ...yasqe.getRequestConfig(),
+        endpoint: endpoint
+      });
+    }
+  }
+});
+```
+
+**URL Shortener Configuration (Kutt Example):**
+
+Configure a URL shortener service to create shorter, more shareable links. This example shows integration with [Kutt](https://kutt.it), but any URL shortener API can be used.
+
+```javascript
+import Yasqe from '@matdata/yasqe';
+
+const yasqe = new Yasqe(document.getElementById('yasqe'), {
+  requestConfig: {
+    endpoint: 'https://dbpedia.org/sparql'
+  },
+  
+  // Basic shareable link creation
+  createShareableLink: (yasqe) => {
+    const query = yasqe.getValue();
+    const config = yasqe.getRequestConfig();
+    
+    const params = new URLSearchParams({
+      query: query,
+      endpoint: config.endpoint || ''
+    });
+    
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  },
+  
+  // URL shortener integration (Kutt example)
+  createShortLink: async (yasqe, longUrl) => {
+    const KUTT_API_URL = 'https://kutt.it/api/v2/links';
+    const KUTT_API_KEY = 'your-api-key-here'; // Store securely, don't commit!
+    
+    try {
+      const response = await fetch(KUTT_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': KUTT_API_KEY
+        },
+        body: JSON.stringify({
+          target: longUrl,
+          // Optional: custom short code
+          // customurl: 'my-custom-code',
+          // Optional: domain (if using custom domain)
+          // domain: 'example.com',
+          // Optional: expiration
+          // expire_in: '2 hours'
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to shorten URL');
+      }
+      
+      const data = await response.json();
+      return data.link; // Returns shortened URL
+      
+    } catch (error) {
+      console.error('URL shortening error:', error);
+      throw error; // Error will be displayed to user
+    }
+  },
+  
+  consumeShareLink: (yasqe) => {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get('query');
+    if (query) yasqe.setValue(query);
+  }
+});
+```
+
+**Other URL Shortener Examples:**
+
+*TinyURL:*
+```javascript
+createShortLink: async (yasqe, longUrl) => {
+  const response = await fetch(
+    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
+  );
+  return await response.text();
+}
+```
+
+*Bitly:*
+```javascript
+createShortLink: async (yasqe, longUrl) => {
+  const BITLY_TOKEN = 'your-bitly-token';
+  
+  const response = await fetch('https://api-ssl.bitly.com/v4/shorten', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${BITLY_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ long_url: longUrl })
+  });
+  
+  const data = await response.json();
+  return data.link;
+}
+```
+
+*Custom Backend:*
+```javascript
+createShortLink: async (yasqe, longUrl) => {
+  const response = await fetch('/api/shorten', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: longUrl })
+  });
+  
+  const data = await response.json();
+  return data.shortUrl;
+}
+```
+
+**Share Button Features:**
+
+When the share button is enabled (by configuring `createShareableLink`), users can:
+
+1. **Copy URL** - Copies the shareable URL to clipboard
+2. **Shorten URL** - Creates and copies a shortened URL (only shown if `createShortLink` is configured)
+3. **Copy cURL** - Generates a cURL command with all headers and authentication
+4. **Copy PowerShell** - Generates a PowerShell `Invoke-WebRequest` command
+5. **Copy wget** - Generates a wget command
+
+All command formats include:
+- Complete SPARQL query
+- Endpoint URL
+- HTTP method (GET/POST)
+- All configured headers
+- Authentication credentials (with security warning)
+
+**Security Considerations:**
+
+⚠️ When users copy command-line formats (cURL, PowerShell, wget) that include authentication credentials, YASQE displays a warning toast notification. This helps prevent accidental sharing of sensitive credentials.
+
+**Best Practices:**
+
+1. **Store API keys securely** - Never commit API keys to version control
+2. **Use environment variables** - Load API keys from environment or configuration
+3. **Implement rate limiting** - Prevent abuse of URL shortener services
+4. **Handle errors gracefully** - Provide user-friendly error messages
+5. **Consider privacy** - Be transparent about what data is included in shared URLs
+
+**Troubleshooting:**
+
+- If the share button doesn't appear, ensure `createShareableLink` is configured
+- If "Shorten URL" doesn't appear, check that `createShortLink` is configured
+- Check browser console for API errors when shortening fails
+- Verify API keys and endpoints are correct
+- Ensure CORS is properly configured for your URL shortener API
 
 ### YASR Configuration
 
