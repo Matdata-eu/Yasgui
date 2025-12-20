@@ -435,6 +435,11 @@ export function getAsCurlString(yasqe: Yasqe, _config?: Config["requestConfig"])
 
   segments.push("-X", ajaxConfig.reqMethod);
 
+  // Add Accept header if present
+  if (ajaxConfig.accept) {
+    segments.push("-H", `'Accept: ${ajaxConfig.accept}'`);
+  }
+
   for (const header in ajaxConfig.headers) {
     segments.push("-H", `'${header}: ${ajaxConfig.headers[header]}'`);
   }
@@ -452,8 +457,30 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
   let url = normalizeUrl(ajaxConfig.url);
   const lines: string[] = [];
 
-  // Build headers object
+  // Determine output file extension based on Accept header
+  const acceptHeader = ajaxConfig.accept;
+  let fileExtension = "json"; // default
+  if (acceptHeader) {
+    if (acceptHeader.includes("text/turtle") || acceptHeader.includes("application/x-turtle")) {
+      fileExtension = "ttl";
+    } else if (acceptHeader.includes("application/rdf+xml")) {
+      fileExtension = "xml";
+    } else if (acceptHeader.includes("application/n-triples")) {
+      fileExtension = "nt";
+    } else if (acceptHeader.includes("application/ld+json")) {
+      fileExtension = "jsonld";
+    } else if (acceptHeader.includes("text/csv")) {
+      fileExtension = "csv";
+    } else if (acceptHeader.includes("text/tab-separated-values")) {
+      fileExtension = "tsv";
+    }
+  }
+
+  // Build headers object, including Accept header
   const headersLines: string[] = [];
+  if (acceptHeader) {
+    headersLines.push(`    "Accept" = "${acceptHeader.replace(/"/g, '`"')}"`);
+  }
   for (const header in ajaxConfig.headers) {
     headersLines.push(`    "${header}" = "${ajaxConfig.headers[header].replace(/"/g, '`"')}"`);
   }
@@ -468,6 +495,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push(headersLines.join("\n"));
       lines.push("    }");
     }
+    lines.push(`    OutFile = "result.${fileExtension}"`);
     lines.push("}");
   } else if (ajaxConfig.reqMethod === "POST") {
     const body = queryString.stringify(ajaxConfig.args);
@@ -481,6 +509,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
     }
     lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
     lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
+    lines.push(`    OutFile = "result.${fileExtension}"`);
     lines.push("}");
   } else {
     // Handle other methods (PUT, DELETE, etc.)
@@ -498,6 +527,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
       lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
     }
+    lines.push(`    OutFile = "result.${fileExtension}"`);
     lines.push("}");
   }
 
@@ -537,6 +567,11 @@ export function getAsWgetString(yasqe: Yasqe, _config?: Config["requestConfig"])
   }
 
   segments.push("--method", ajaxConfig.reqMethod);
+
+  // Add Accept header if present
+  if (ajaxConfig.accept) {
+    segments.push("--header", `'Accept: ${ajaxConfig.accept}'`);
+  }
 
   for (const header in ajaxConfig.headers) {
     segments.push("--header", `'${header}: ${ajaxConfig.headers[header]}'`);

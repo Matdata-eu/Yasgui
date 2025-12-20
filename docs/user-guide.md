@@ -916,11 +916,12 @@ $params = @{
     Uri = "https://example.com/sparql"
     Method = "Post"
     Headers = @{
-        "Authorization" = "Bearer token"
         "Accept" = "application/sparql-results+json"
+        "Authorization" = "Bearer token"
     }
     ContentType = "application/x-www-form-urlencoded"
     Body = "query=SELECT%20..."
+    OutFile = "result.json"
 }
 
 Invoke-WebRequest @params

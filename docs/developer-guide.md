@@ -1114,7 +1114,9 @@ All command formats include:
 - Endpoint URL
 - HTTP method (GET/POST)
 - All configured headers
+- Accept header (based on query type: JSON for SELECT/ASK, text/turtle for CONSTRUCT/DESCRIBE)
 - Authentication credentials (with security warning)
+- Output file specification (PowerShell only, with appropriate extension based on Accept header)
 
 **Security Considerations:**
 

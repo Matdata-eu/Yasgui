@@ -31,10 +31,12 @@ describe("Share Functionality", () => {
         '    Uri = "https://example.com/sparql"',
         '    Method = "Post"',
         "    Headers = @{",
+        '        "Accept" = "application/sparql-results+json"',
         '        "Authorization" = "Bearer token"',
         "    }",
         '    ContentType = "application/x-www-form-urlencoded"',
         '    Body = "query=SELECT"',
+        '    OutFile = "result.json"',
         "}",
         "",
         "Invoke-WebRequest @params",
@@ -44,6 +46,8 @@ describe("Share Functionality", () => {
       expect(psString).to.include("$params");
       expect(psString).to.include("Invoke-WebRequest");
       expect(psString).to.include("Headers");
+      expect(psString).to.include("OutFile");
+      expect(psString).to.include("Accept");
     });
 
     it("should format wget commands with proper line breaks", () => {
