@@ -262,87 +262,156 @@ export class Yasqe extends CodeMirror {
         let popup: HTMLDivElement | undefined = document.createElement("div");
         popup.className = "yasqe_sharePopup";
         buttons.appendChild(popup);
+
+        // Toast notification element for warnings
+        let toastElement: HTMLDivElement | undefined;
+
+        const showToast = (message: string, duration: number = 3000) => {
+          // Remove existing toast if any
+          if (toastElement) {
+            toastElement.remove();
+          }
+
+          toastElement = document.createElement("div");
+          toastElement.className = "yasqe_toast";
+          toastElement.textContent = message;
+          document.body.appendChild(toastElement);
+
+          // Auto-remove after duration
+          setTimeout(() => {
+            if (toastElement) {
+              toastElement.classList.add("yasqe_toast-fadeout");
+              setTimeout(() => {
+                toastElement?.remove();
+                toastElement = undefined;
+              }, 300);
+            }
+          }, duration);
+        };
+
         document.body.addEventListener(
           "click",
           (event) => {
             if (popup && event.target !== popup && !popup.contains(<any>event.target)) {
               popup.remove();
               popup = undefined;
+              // Clean up toast when popup closes
+              if (toastElement) {
+                toastElement.remove();
+                toastElement = undefined;
+              }
             }
           },
           true,
         );
-        var input = document.createElement("input");
-        input.type = "text";
-        input.value = this.config.createShareableLink(this);
 
-        input.onfocus = function () {
-          input.select();
-        };
-        // Work around Chrome's little problem
-        input.onmouseup = function () {
-          // $this.unbind("mouseup");
-          return false;
-        };
         popup.innerHTML = "";
 
-        var inputWrapper = document.createElement("div");
-        inputWrapper.className = "inputWrapper";
+        // Helper function to copy text to clipboard
+        const copyToClipboard = async (text: string, buttonText: string, hasAuth: boolean = false) => {
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast(`${buttonText} copied to clipboard!`);
 
-        inputWrapper.appendChild(input);
+            // Show warning if credentials are included
+            if (hasAuth) {
+              setTimeout(() => {
+                showToast("⚠️ Warning: Authentication credentials included in copied content", 4000);
+              }, 500);
+            }
+          } catch (err) {
+            console.error("Failed to copy to clipboard:", err);
+            showToast("Failed to copy to clipboard", 2000);
+          }
+        };
 
-        popup.appendChild(inputWrapper);
+        // Create title
+        const title = document.createElement("div");
+        title.className = "yasqe_sharePopup_title";
+        title.textContent = "Share Query";
+        popup.appendChild(title);
 
-        // We need to track which buttons are drawn here since the two implementations don't play nice together
-        const popupInputButtons: HTMLButtonElement[] = [];
+        // Create button container
+        const buttonContainer = document.createElement("div");
+        buttonContainer.className = "yasqe_sharePopup_buttons";
+        popup.appendChild(buttonContainer);
+
+        // URL button
+        const urlBtn = document.createElement("button");
+        urlBtn.innerText = "Copy URL";
+        urlBtn.className = "yasqe_btn yasqe_btn-sm yasqe_shareBtn";
+        buttonContainer.appendChild(urlBtn);
+        urlBtn.onclick = async () => {
+          const url = this.config.createShareableLink(this);
+          await copyToClipboard(url, "URL");
+        };
+
+        // URL Shorten button (if configured)
         const createShortLink = this.config.createShortLink;
         if (createShortLink) {
-          popup.className = popup.className += " enableShort";
-          const shortBtn = document.createElement("button");
-          popupInputButtons.push(shortBtn);
-          shortBtn.innerHTML = "Shorten";
-          shortBtn.className = "yasqe_btn yasqe_btn-sm shorten";
-          popup.appendChild(shortBtn);
-          shortBtn.onclick = () => {
-            popupInputButtons.forEach((button) => (button.disabled = true));
-            createShortLink(this, input.value).then(
-              (value) => {
-                input.value = value;
-                input.focus();
-              },
-              (err) => {
-                const errSpan = document.createElement("span");
-                errSpan.className = "shortlinkErr";
-                // Throwing a string or an object should work
-                let textContent = "An error has occurred";
-                if (typeof err === "string" && err.length !== 0) {
-                  textContent = err;
-                } else if (err.message && err.message.length !== 0) {
-                  textContent = err.message;
-                }
-                errSpan.textContent = textContent;
-                input.replaceWith(errSpan);
-              },
-            );
+          const shortenBtn = document.createElement("button");
+          shortenBtn.innerText = "Shorten URL";
+          shortenBtn.className = "yasqe_btn yasqe_btn-sm yasqe_shareBtn";
+          buttonContainer.appendChild(shortenBtn);
+          shortenBtn.onclick = async () => {
+            shortenBtn.disabled = true;
+            shortenBtn.innerText = "Shortening...";
+            try {
+              const longUrl = this.config.createShareableLink(this);
+              const shortUrl = await createShortLink(this, longUrl);
+              await copyToClipboard(shortUrl, "Shortened URL");
+              shortenBtn.innerText = "Shorten URL";
+              shortenBtn.disabled = false;
+            } catch (err) {
+              shortenBtn.innerText = "Shorten URL";
+              shortenBtn.disabled = false;
+              let errorMsg = "Failed to shorten URL";
+              if (typeof err === "string" && err.length !== 0) {
+                errorMsg = err;
+              } else if ((err as any).message && (err as any).message.length !== 0) {
+                errorMsg = (err as any).message;
+              }
+              showToast(errorMsg, 3000);
+            }
           };
         }
 
+        // cURL button
         const curlBtn = document.createElement("button");
-        popupInputButtons.push(curlBtn);
-        curlBtn.innerText = "cURL";
-        curlBtn.className = "yasqe_btn yasqe_btn-sm curl";
-        popup.appendChild(curlBtn);
-        curlBtn.onclick = () => {
-          popupInputButtons.forEach((button) => (button.disabled = true));
-          input.value = this.getAsCurlString();
-          input.focus();
-          popup?.appendChild(curlBtn);
+        curlBtn.innerText = "Copy cURL";
+        curlBtn.className = "yasqe_btn yasqe_btn-sm yasqe_shareBtn";
+        buttonContainer.appendChild(curlBtn);
+        curlBtn.onclick = async () => {
+          const curlString = this.getAsCurlString();
+          const hasAuth = this.hasAuthenticationCredentials();
+          await copyToClipboard(curlString, "cURL command", hasAuth);
+        };
+
+        // PowerShell button
+        const psBtn = document.createElement("button");
+        psBtn.innerText = "Copy PowerShell";
+        psBtn.className = "yasqe_btn yasqe_btn-sm yasqe_shareBtn";
+        buttonContainer.appendChild(psBtn);
+        psBtn.onclick = async () => {
+          const psString = this.getAsPowerShellString();
+          const hasAuth = this.hasAuthenticationCredentials();
+          await copyToClipboard(psString, "PowerShell command", hasAuth);
+        };
+
+        // wget button
+        const wgetBtn = document.createElement("button");
+        wgetBtn.innerText = "Copy wget";
+        wgetBtn.className = "yasqe_btn yasqe_btn-sm yasqe_shareBtn";
+        buttonContainer.appendChild(wgetBtn);
+        wgetBtn.onclick = async () => {
+          const wgetString = this.getAsWgetString();
+          const hasAuth = this.hasAuthenticationCredentials();
+          await copyToClipboard(wgetString, "wget command", hasAuth);
         };
 
         const svgPos = svgShare.getBoundingClientRect();
         popup.style.top = svgShare.offsetTop + svgPos.height + "px";
         popup.style.left = svgShare.offsetLeft + svgShare.clientWidth - popup.clientWidth + "px";
-        input.focus();
       };
     }
     /**
@@ -1396,6 +1465,19 @@ export class Yasqe extends CodeMirror {
 
   public getAsCurlString(config?: Sparql.YasqeAjaxConfig): string {
     return Sparql.getAsCurlString(this, config);
+  }
+
+  public getAsPowerShellString(config?: Sparql.YasqeAjaxConfig): string {
+    return Sparql.getAsPowerShellString(this, config);
+  }
+
+  public getAsWgetString(config?: Sparql.YasqeAjaxConfig): string {
+    return Sparql.getAsWgetString(this, config);
+  }
+
+  public hasAuthenticationCredentials(config?: Sparql.YasqeAjaxConfig): boolean {
+    const ajaxConfig = Sparql.getAjaxConfig(this, config);
+    return ajaxConfig ? Sparql.hasAuthenticationCredentials(ajaxConfig) : false;
   }
 
   public abortQuery() {

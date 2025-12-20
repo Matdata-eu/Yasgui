@@ -360,38 +360,154 @@ export function getAcceptHeader(yasqe: Yasqe, _config: Config["requestConfig"]) 
   }
   return acceptHeader;
 }
+/**
+ * Helper to normalize URL for command-line tools
+ */
+function normalizeUrl(url: string): string {
+  if (url.indexOf("http") !== 0) {
+    // Relative or absolute URL - add domain, schema, etc
+    let fullUrl = `${window.location.protocol}//${window.location.host}`;
+    if (url.indexOf("/") === 0) {
+      // Absolute path
+      fullUrl += url;
+    } else {
+      // Relative path
+      fullUrl += window.location.pathname + url;
+    }
+    return fullUrl;
+  }
+  return url;
+}
+
+/**
+ * Check if ajax config contains authentication credentials
+ */
+export function hasAuthenticationCredentials(ajaxConfig: PopulatedAjaxConfig): boolean {
+  if (!ajaxConfig) return false;
+
+  // Check for Authorization header (Bearer, Basic, OAuth2)
+  if (ajaxConfig.headers && ajaxConfig.headers["Authorization"]) {
+    return true;
+  }
+
+  // Check for API Key headers (any custom header that looks like authentication)
+  if (ajaxConfig.headers) {
+    for (const headerName in ajaxConfig.headers) {
+      const lowerHeader = headerName.toLowerCase();
+      if (lowerHeader.includes("key") || lowerHeader.includes("token") || lowerHeader.includes("auth")) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Generate cURL command string
+ */
 export function getAsCurlString(yasqe: Yasqe, _config?: Config["requestConfig"]) {
   let ajaxConfig = getAjaxConfig(yasqe, getRequestConfigSettings(yasqe, _config));
   if (!ajaxConfig) return "";
-  let url = ajaxConfig.url;
-  if (ajaxConfig.url.indexOf("http") !== 0) {
-    //this is either a relative or absolute url, which is not supported by CURL.
-    //Add domain, schema, etc etc
-    url = `${window.location.protocol}//${window.location.host}`;
-    if (ajaxConfig.url.indexOf("/") === 0) {
-      //its an absolute path
-      url += ajaxConfig.url;
-    } else {
-      //relative, so append current location to url first
-      url += window.location.pathname + ajaxConfig.url;
-    }
-  }
+
+  let url = normalizeUrl(ajaxConfig.url);
   const segments: string[] = ["curl"];
 
   if (ajaxConfig.reqMethod === "GET") {
     url += `?${queryString.stringify(ajaxConfig.args)}`;
-    segments.push(url);
+    segments.push(`'${url}'`);
   } else if (ajaxConfig.reqMethod === "POST") {
-    segments.push(url);
-    segments.push("--data", queryString.stringify(ajaxConfig.args));
+    segments.push(`'${url}'`);
+    const data = queryString.stringify(ajaxConfig.args);
+    segments.push("--data", `'${data}'`);
   } else {
-    // I don't expect to get here but let's be sure
     console.warn("Unexpected request-method", ajaxConfig.reqMethod);
-    segments.push(url);
+    segments.push(`'${url}'`);
   }
+
   segments.push("-X", ajaxConfig.reqMethod);
+
   for (const header in ajaxConfig.headers) {
-    segments.push(`-H  '${header}: ${ajaxConfig.headers[header]}'`);
+    segments.push("-H", `'${header}: ${ajaxConfig.headers[header]}'`);
   }
-  return segments.join(" ");
+
+  return segments.join(" \\\n  ");
+}
+
+/**
+ * Generate PowerShell command string
+ */
+export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestConfig"]): string {
+  let ajaxConfig = getAjaxConfig(yasqe, getRequestConfigSettings(yasqe, _config));
+  if (!ajaxConfig) return "";
+
+  let url = normalizeUrl(ajaxConfig.url);
+  const lines: string[] = [];
+
+  // Build headers object
+  const headersLines: string[] = [];
+  for (const header in ajaxConfig.headers) {
+    headersLines.push(`    "${header}" = "${ajaxConfig.headers[header].replace(/"/g, '`"')}"`);
+  }
+
+  if (ajaxConfig.reqMethod === "GET") {
+    url += `?${queryString.stringify(ajaxConfig.args)}`;
+    lines.push("$params = @{");
+    lines.push(`    Uri = "${url}"`);
+    lines.push(`    Method = "Get"`);
+    if (headersLines.length > 0) {
+      lines.push("    Headers = @{");
+      lines.push(headersLines.join("\n"));
+      lines.push("    }");
+    }
+    lines.push("}");
+  } else if (ajaxConfig.reqMethod === "POST") {
+    const body = queryString.stringify(ajaxConfig.args);
+    lines.push("$params = @{");
+    lines.push(`    Uri = "${url}"`);
+    lines.push(`    Method = "Post"`);
+    if (headersLines.length > 0) {
+      lines.push("    Headers = @{");
+      lines.push(headersLines.join("\n"));
+      lines.push("    }");
+    }
+    lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
+    lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
+    lines.push("}");
+  }
+
+  lines.push("");
+  lines.push("Invoke-WebRequest @params");
+
+  return lines.join("\n");
+}
+
+/**
+ * Generate wget command string
+ */
+export function getAsWgetString(yasqe: Yasqe, _config?: Config["requestConfig"]): string {
+  let ajaxConfig = getAjaxConfig(yasqe, getRequestConfigSettings(yasqe, _config));
+  if (!ajaxConfig) return "";
+
+  let url = normalizeUrl(ajaxConfig.url);
+  const segments: string[] = ["wget"];
+
+  if (ajaxConfig.reqMethod === "GET") {
+    url += `?${queryString.stringify(ajaxConfig.args)}`;
+    segments.push(`'${url}'`);
+  } else if (ajaxConfig.reqMethod === "POST") {
+    segments.push(`'${url}'`);
+    const data = queryString.stringify(ajaxConfig.args);
+    segments.push("--post-data", `'${data}'`);
+  }
+
+  segments.push("--method", ajaxConfig.reqMethod);
+
+  for (const header in ajaxConfig.headers) {
+    segments.push("--header", `'${header}: ${ajaxConfig.headers[header]}'`);
+  }
+
+  segments.push("-O -");
+
+  return segments.join(" \\\n  ");
 }
