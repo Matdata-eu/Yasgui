@@ -36,6 +36,37 @@
           { endpoint: "https://data-interop.era.europa.eu/api/sparql", label: "ERA" }
         ],
         yasqe: {
+          createShortLink: async (yasqe, longUrl) => {
+            const YOURLS_API_URL = 'https://shorter.matdata.eu/api.php';
+            
+            try {
+              const params = new URLSearchParams({
+                action: 'shorturl',
+                url: longUrl,
+                format: 'json',
+              });
+              
+              const response = await fetch(`${YOURLS_API_URL}?${params.toString()}`, {
+                method: 'GET'
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              const data = await response.json();
+              
+              if (data.status === 'fail') {
+                throw new Error(data.message || 'Failed to shorten URL');
+              }
+              
+              return data.shorturl;
+              
+            } catch (error) {
+              console.error('YOURLS shortening error:', error);
+              throw error;
+            }
+          },
           snippets: [
             { label: "SELECT", code: "SELECT * WHERE {\n  ?s ?p ?o .\n} LIMIT 10", group: "QUERY" },
             { label: "CONSTRUCT", code: "CONSTRUCT {\n  ?s ?p ?o .\n} WHERE {\n  ?s ?p ?o .\n} LIMIT 10", group: "QUERY" },

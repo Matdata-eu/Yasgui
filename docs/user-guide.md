@@ -863,19 +863,79 @@ YASGUI automatically saves your work locally.
 
 ### Share Queries
 
-Share your queries with colleagues using URL parameters.
+Share your queries with colleagues using multiple formats including URL parameters, cURL, PowerShell, and wget commands.
+
+**Share Button:**
+
+YASQE provides a share button (when `createShareableLink` is configured) that offers multiple sharing options:
+
+1. **Copy URL** - Copies the shareable URL to your clipboard
+2. **Shorten URL** - Creates a shortened URL (if URL shortener is configured)
+3. **Copy cURL** - Generates and copies a cURL command for command-line execution
+4. **Copy PowerShell** - Generates and copies a PowerShell command using `Invoke-WebRequest`
+5. **Copy wget** - Generates and copies a wget command
 
 **How to Share:**
+
 YASGUI supports URL-based query sharing:
 1. Craft your query in YASGUI
-2. The URL updates to include query parameters
-3. Share the URL with others
-4. Recipients see your query pre-loaded when they visit the link
+2. Click the share button (sharing icon in the top-right corner)
+3. Select your preferred format
+4. The content is automatically copied to your clipboard
+5. Share with others or execute in your terminal
 
 **URL Parameters:**
 - `query`: The SPARQL query
 - `endpoint`: The endpoint URL
 - Other tab configurations
+
+**Command-Line Formats:**
+
+All command-line formats (cURL, PowerShell, wget) include:
+- The complete SPARQL query
+- All configured headers
+- Authentication credentials (if configured)
+- Proper HTTP method (GET or POST)
+
+⚠️ **Security Notice:** When copying commands with authentication credentials, a warning notification will appear. Be cautious about sharing these commands as they contain sensitive authentication information.
+
+**Example Formats:**
+
+*cURL:*
+```bash
+curl 'https://example.com/sparql' \
+  --data 'query=SELECT%20...' \
+  -X POST \
+  -H 'Authorization: Bearer token' \
+  -H 'Accept: application/sparql-results+json'
+```
+
+*PowerShell:*
+```powershell
+$params = @{
+    Uri = "https://example.com/sparql"
+    Method = "Post"
+    Headers = @{
+        "Accept" = "application/sparql-results+json"
+        "Authorization" = "Bearer token"
+    }
+    ContentType = "application/x-www-form-urlencoded"
+    Body = "query=SELECT%20..."
+    OutFile = "result.json"
+}
+
+Invoke-WebRequest @params
+```
+
+*wget:*
+```bash
+wget 'https://example.com/sparql' \
+  --body-data 'query=SELECT%20...' \
+  --method POST \
+  --header 'Authorization: Bearer token' \
+  --header 'Accept: application/sparql-results+json' \
+  -O -
+```
 
 ---
 
