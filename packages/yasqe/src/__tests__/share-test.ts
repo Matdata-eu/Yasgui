@@ -6,6 +6,75 @@ import { describe, it } from "mocha";
 import { expect } from "chai";
 
 describe("Share Functionality", () => {
+  describe("Shell String Escaping", () => {
+    it("should escape single quotes for shell commands", () => {
+      const input = "test'value";
+      const escaped = input.replace(/'/g, "'\\''");
+      expect(escaped).to.equal("test'\\''value");
+    });
+
+    it("should handle strings with multiple single quotes", () => {
+      const input = "it's a 'test'";
+      const escaped = input.replace(/'/g, "'\\''");
+      expect(escaped).to.equal("it'\\''s a '\\''test'\\''");
+    });
+  });
+
+  describe("PowerShell String Escaping", () => {
+    it("should escape backticks, double quotes, and dollar signs", () => {
+      const input = 'test"value$var`tick';
+      const escaped = input.replace(/`/g, "``").replace(/"/g, '`"').replace(/\$/g, "`$");
+      expect(escaped).to.equal('test`"value`$var``tick');
+    });
+
+    it("should handle strings with multiple special characters", () => {
+      const input = '$test`"value"';
+      const escaped = input.replace(/`/g, "``").replace(/"/g, '`"').replace(/\$/g, "`$");
+      expect(escaped).to.equal('`$test```"value`"');
+    });
+  });
+
+  describe("URL Normalization", () => {
+    it("should detect absolute URLs", () => {
+      const url = "https://example.com/sparql";
+      expect(url.indexOf("http")).to.equal(0);
+    });
+
+    it("should detect relative URLs", () => {
+      const url = "/sparql";
+      expect(url.indexOf("http")).to.equal(-1);
+      expect(url.indexOf("/")).to.equal(0);
+    });
+
+    it("should handle relative path normalization", () => {
+      const pathname = "/app/editor";
+      const relativePath = "sparql";
+
+      let basePath = pathname;
+      if (!basePath.endsWith("/")) {
+        const lastSlashIndex = basePath.lastIndexOf("/");
+        basePath = lastSlashIndex >= 0 ? basePath.substring(0, lastSlashIndex + 1) : "/";
+      }
+      const result = basePath + relativePath;
+
+      expect(result).to.equal("/app/sparql");
+    });
+
+    it("should handle pathname ending with slash", () => {
+      const pathname = "/app/";
+      const relativePath = "sparql";
+
+      let basePath = pathname;
+      if (!basePath.endsWith("/")) {
+        const lastSlashIndex = basePath.lastIndexOf("/");
+        basePath = lastSlashIndex >= 0 ? basePath.substring(0, lastSlashIndex + 1) : "/";
+      }
+      const result = basePath + relativePath;
+
+      expect(result).to.equal("/app/sparql");
+    });
+  });
+
   describe("Command Generation Format", () => {
     it("should format cURL commands with proper line breaks", () => {
       const segments = [

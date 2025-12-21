@@ -371,7 +371,7 @@ function normalizeUrl(url: string): string {
       // Absolute path
       fullUrl += url;
     } else {
-      // Relative path
+      // Relative path - ensure proper path joining
       let basePath = window.location.pathname;
       // If pathname does not end with "/", treat it as a file and use its directory
       if (!basePath.endsWith("/")) {
@@ -400,14 +400,16 @@ export function hasAuthenticationCredentials(ajaxConfig: PopulatedAjaxConfig): b
   if (ajaxConfig.headers) {
     for (const headerName in ajaxConfig.headers) {
       const lowerHeader = headerName.toLowerCase();
-      // Match common authentication header patterns
-      // Note: Authorization is already checked above, so skip it here
+      // Match common authentication header patterns with stricter rules to avoid false positives
+      // Only match headers that are clearly authentication-related
       if (
         lowerHeader.startsWith("x-api-key") ||
         lowerHeader.startsWith("x-auth-") ||
         lowerHeader === "apikey" ||
         lowerHeader === "api-key" ||
-        (lowerHeader.includes("token") && (lowerHeader.startsWith("x-") || lowerHeader.includes("auth")))
+        // Only match token headers that end with "token" or have "auth" in the middle
+        (lowerHeader.endsWith("-token") && lowerHeader.startsWith("x-")) ||
+        (lowerHeader.includes("-auth-") && lowerHeader.includes("token"))
       ) {
         return true;
       }
@@ -415,6 +417,13 @@ export function hasAuthenticationCredentials(ajaxConfig: PopulatedAjaxConfig): b
   }
 
   return false;
+}
+
+/**
+ * Escape single quotes for shell commands by replacing ' with '\''
+ */
+function escapeShellString(str: string): string {
+  return str.replace(/'/g, "'\\''");
 }
 
 /**
@@ -429,28 +438,36 @@ export function getAsCurlString(yasqe: Yasqe, _config?: Config["requestConfig"])
 
   if (ajaxConfig.reqMethod === "GET") {
     url += `?${queryString.stringify(ajaxConfig.args)}`;
-    segments.push(`'${url}'`);
+    segments.push(`'${escapeShellString(url)}'`);
   } else if (ajaxConfig.reqMethod === "POST") {
-    segments.push(`'${url}'`);
+    segments.push(`'${escapeShellString(url)}'`);
     const data = queryString.stringify(ajaxConfig.args);
-    segments.push("--data", `'${data}'`);
+    segments.push("--data", `'${escapeShellString(data)}'`);
   } else {
     console.warn("Unexpected request-method", ajaxConfig.reqMethod);
-    segments.push(`'${url}'`);
+    segments.push(`'${escapeShellString(url)}'`);
   }
 
   segments.push("-X", ajaxConfig.reqMethod);
 
   // Add Accept header if present
   if (ajaxConfig.accept) {
-    segments.push("-H", `'Accept: ${ajaxConfig.accept}'`);
+    segments.push("-H", `'Accept: ${escapeShellString(ajaxConfig.accept)}'`);
   }
 
   for (const header in ajaxConfig.headers) {
-    segments.push("-H", `'${header}: ${ajaxConfig.headers[header]}'`);
+    segments.push("-H", `'${escapeShellString(header)}: ${escapeShellString(ajaxConfig.headers[header])}'`);
   }
 
   return segments.join(" \\\n  ");
+}
+
+/**
+ * Escape PowerShell string by handling special characters
+ */
+function escapePowerShellString(str: string): string {
+  // Escape backtick, double quote, and dollar sign
+  return str.replace(/`/g, "``").replace(/"/g, '`"').replace(/\$/g, "`$");
 }
 
 /**
@@ -485,16 +502,18 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
   // Build headers object, including Accept header
   const headersLines: string[] = [];
   if (acceptHeader) {
-    headersLines.push(`    "Accept" = "${acceptHeader.replace(/"/g, '`"')}"`);
+    headersLines.push(`    "Accept" = "${escapePowerShellString(acceptHeader)}"`);
   }
   for (const header in ajaxConfig.headers) {
-    headersLines.push(`    "${header}" = "${ajaxConfig.headers[header].replace(/"/g, '`"')}"`);
+    headersLines.push(
+      `    "${escapePowerShellString(header)}" = "${escapePowerShellString(ajaxConfig.headers[header])}"`,
+    );
   }
 
   if (ajaxConfig.reqMethod === "GET") {
     url += `?${queryString.stringify(ajaxConfig.args)}`;
     lines.push("$params = @{");
-    lines.push(`    Uri = "${url}"`);
+    lines.push(`    Uri = "${escapePowerShellString(url)}"`);
     lines.push(`    Method = "Get"`);
     if (headersLines.length > 0) {
       lines.push("    Headers = @{");
@@ -506,7 +525,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
   } else if (ajaxConfig.reqMethod === "POST") {
     const body = queryString.stringify(ajaxConfig.args);
     lines.push("$params = @{");
-    lines.push(`    Uri = "${url}"`);
+    lines.push(`    Uri = "${escapePowerShellString(url)}"`);
     lines.push(`    Method = "Post"`);
     if (headersLines.length > 0) {
       lines.push("    Headers = @{");
@@ -514,7 +533,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push("    }");
     }
     lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
-    lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
+    lines.push(`    Body = "${escapePowerShellString(body)}"`);
     lines.push(`    OutFile = "result.${fileExtension}"`);
     lines.push("}");
   } else {
@@ -555,32 +574,33 @@ export function getAsWgetString(yasqe: Yasqe, _config?: Config["requestConfig"])
 
   if (ajaxConfig.reqMethod === "GET") {
     url += `?${queryString.stringify(ajaxConfig.args)}`;
-    segments.push(`'${url}'`);
+    segments.push(`'${escapeShellString(url)}'`);
   } else if (ajaxConfig.reqMethod === "POST") {
-    segments.push(`'${url}'`);
+    segments.push(`'${escapeShellString(url)}'`);
     const data = queryString.stringify(ajaxConfig.args);
-    // Use --body-data when --method is specified (required for wget compatibility)
-    segments.push("--body-data", `'${data}'`);
+    segments.push("--post-data", `'${escapeShellString(data)}'`);
   } else {
     // Handle other methods
     console.warn("Unexpected request-method for wget", ajaxConfig.reqMethod);
-    segments.push(`'${url}'`);
+    segments.push(`'${escapeShellString(url)}'`);
     const data = queryString.stringify(ajaxConfig.args);
     if (data) {
-      // Use --body-data when --method is specified (required for wget compatibility)
-      segments.push("--body-data", `'${data}'`);
+      segments.push("--post-data", `'${escapeShellString(data)}'`);
     }
   }
 
-  segments.push("--method", ajaxConfig.reqMethod);
+  // Only add --method for non-GET requests
+  if (ajaxConfig.reqMethod !== "GET") {
+    segments.push("--method", ajaxConfig.reqMethod);
+  }
 
   // Add Accept header if present
   if (ajaxConfig.accept) {
-    segments.push("--header", `'Accept: ${ajaxConfig.accept}'`);
+    segments.push("--header", `'Accept: ${escapeShellString(ajaxConfig.accept)}'`);
   }
 
   for (const header in ajaxConfig.headers) {
-    segments.push("--header", `'${header}: ${ajaxConfig.headers[header]}'`);
+    segments.push("--header", `'${escapeShellString(header)}: ${escapeShellString(ajaxConfig.headers[header])}'`);
   }
 
   segments.push("-O -");

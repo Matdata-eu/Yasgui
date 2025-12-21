@@ -1012,7 +1012,14 @@ const yasqe = new Yasqe(document.getElementById('yasqe'), {
   // URL shortener integration (Kutt example)
   createShortLink: async (yasqe, longUrl) => {
     const KUTT_API_URL = 'https://kutt.it/api/v2/links';
-    const KUTT_API_KEY = 'your-api-key-here'; // Store securely, don't commit!
+    // Important: Load API key from a secure config or environment variable
+    // Never hardcode real API keys in source code!
+    // Example: Load from window.__CONFIG__ set by server-rendered template
+    const KUTT_API_KEY = window.__CONFIG__?.KUTT_API_KEY;
+    
+    if (!KUTT_API_KEY) {
+      throw new Error('Kutt API key not configured. Load it from a secure config or environment variable.');
+    }
     
     try {
       const response = await fetch(KUTT_API_URL, {
@@ -1100,29 +1107,72 @@ createShortLink: async (yasqe, longUrl) => {
 *TinyURL:*
 ```javascript
 createShortLink: async (yasqe, longUrl) => {
-  const response = await fetch(
-    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
-  );
-  return await response.text();
+  try {
+    const response = await fetch(
+      `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`TinyURL request failed with status ${response.status}`);
+    }
+
+    const shortUrl = await response.text();
+
+    // Basic validation: ensure the response is a valid TinyURL link
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(shortUrl);
+    } catch {
+      throw new Error('TinyURL response was not a valid URL');
+    }
+
+    if (!/^https?:\/\/(www\.)?tinyurl\.com\//.test(parsedUrl.href)) {
+      throw new Error('TinyURL response did not contain a TinyURL link');
+    }
+
+    return parsedUrl.href;
+  } catch (error) {
+    console.error('TinyURL shortening error:', error);
+    throw error;
+  }
 }
 ```
 
 *Bitly:*
 ```javascript
 createShortLink: async (yasqe, longUrl) => {
-  const BITLY_TOKEN = 'your-bitly-token';
+  // Load token from secure config
+  const BITLY_TOKEN = window.__CONFIG__?.BITLY_TOKEN;
   
-  const response = await fetch('https://api-ssl.bitly.com/v4/shorten', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${BITLY_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ long_url: longUrl })
-  });
+  if (!BITLY_TOKEN) {
+    throw new Error('Bitly token not configured');
+  }
   
-  const data = await response.json();
-  return data.link;
+  try {
+    const response = await fetch('https://api-ssl.bitly.com/v4/shorten', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${BITLY_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ long_url: longUrl })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Bitly API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data || typeof data.link !== 'string') {
+      throw new Error('Bitly API response missing expected "link" property');
+    }
+
+    return data.link;
+  } catch (error) {
+    console.error('Failed to create Bitly short link:', error);
+    throw error;
+  }
 }
 ```
 

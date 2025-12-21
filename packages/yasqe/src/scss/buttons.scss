@@ -473,7 +473,9 @@
   }
 }
 
-// Toast notification styles
+// Toast notification styles - scoped with yasqe_ prefix
+// These are appended to document.body and must be outside .yasqe selector
+// The yasqe_ prefix prevents naming conflicts with other components
 .yasqe_toast {
   position: fixed;
   bottom: 20px;

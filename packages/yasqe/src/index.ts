@@ -271,6 +271,7 @@ export class Yasqe extends CodeMirror {
 
         // Toast notification element for warnings
         let toastElement: HTMLDivElement | undefined;
+        let toastTimeout: number | undefined;
 
         const showToast = (
           message: string,
@@ -280,6 +281,10 @@ export class Yasqe extends CodeMirror {
           // Remove existing toast if any
           if (toastElement) {
             toastElement.remove();
+          }
+          // Clear existing timeout
+          if (toastTimeout !== undefined) {
+            clearTimeout(toastTimeout);
           }
 
           toastElement = document.createElement("div");
@@ -302,7 +307,7 @@ export class Yasqe extends CodeMirror {
           document.body.appendChild(toastElement);
 
           // Auto-remove after duration
-          setTimeout(() => {
+          toastTimeout = window.setTimeout(() => {
             if (toastElement) {
               toastElement.classList.add("yasqe_toast-fadeout");
               setTimeout(() => {
@@ -313,29 +318,52 @@ export class Yasqe extends CodeMirror {
           }, duration);
         };
 
-        document.body.addEventListener(
-          "click",
-          (event) => {
-            if (popup && event.target !== popup && !popup.contains(<any>event.target)) {
-              popup.remove();
-              popup = undefined;
-              // Clean up toast when popup closes
-              if (toastElement) {
-                toastElement.remove();
-                toastElement = undefined;
-              }
+        // Create event listener that can be removed
+        const closePopupHandler = (event: MouseEvent) => {
+          if (popup && event.target !== popup && !popup.contains(<any>event.target)) {
+            popup.remove();
+            popup = undefined;
+            // Clean up toast when popup closes
+            if (toastElement) {
+              toastElement.remove();
+              toastElement = undefined;
             }
-          },
-          true,
-        );
+            if (toastTimeout !== undefined) {
+              clearTimeout(toastTimeout);
+            }
+            // Remove this event listener to prevent memory leak
+            document.body.removeEventListener("click", closePopupHandler, true);
+          }
+        };
+
+        document.body.addEventListener("click", closePopupHandler, true);
 
         popup.innerHTML = "";
 
         // Helper function to copy text to clipboard
         const copyToClipboard = async (text: string, buttonText: string, hasAuth: boolean = false) => {
           try {
-            await navigator.clipboard.writeText(text);
-            showToast(`${buttonText} copied to clipboard!`);
+            // Check if Clipboard API is available
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+              // Fallback for older browsers or non-secure contexts
+              const textArea = document.createElement("textarea");
+              textArea.value = text;
+              textArea.style.position = "fixed";
+              textArea.style.left = "-999999px";
+              document.body.appendChild(textArea);
+              textArea.select();
+              try {
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                showToast(`${buttonText} copied to clipboard!`);
+              } catch (err) {
+                document.body.removeChild(textArea);
+                throw new Error("Copy command not supported");
+              }
+            } else {
+              await navigator.clipboard.writeText(text);
+              showToast(`${buttonText} copied to clipboard!`);
+            }
 
             // Show warning if credentials are included
             if (hasAuth) {
@@ -349,7 +377,7 @@ export class Yasqe extends CodeMirror {
             }
           } catch (err) {
             console.error("Failed to copy to clipboard:", err);
-            showToast("Failed to copy to clipboard", 2000);
+            showToast("Failed to copy to clipboard. Please copy manually.", 2000);
           }
         };
 
@@ -437,9 +465,20 @@ export class Yasqe extends CodeMirror {
           await copyToClipboard(wgetString, "wget command", hasAuth);
         };
 
-        const svgPos = svgShare.getBoundingClientRect();
-        popup.style.top = svgShare.offsetTop + svgPos.height + "px";
-        popup.style.left = svgShare.offsetLeft + svgShare.clientWidth - popup.clientWidth + "px";
+        // Position popup after layout is complete
+        const positionPopup = () => {
+          if (!popup) return;
+          const svgPos = svgShare.getBoundingClientRect();
+          popup.style.top = svgShare.offsetTop + svgPos.height + "px";
+          popup.style.left = svgShare.offsetLeft + svgShare.clientWidth - popup.clientWidth + "px";
+        };
+
+        if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(positionPopup);
+        } else {
+          // Fallback for environments without requestAnimationFrame
+          setTimeout(positionPopup, 0);
+        }
       };
     }
     /**
