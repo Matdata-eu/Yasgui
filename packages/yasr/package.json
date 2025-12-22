@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@types/codemirror": "0.0.100",
+    "@types/d3": "^7.4.0",
     "@types/jquery": "^3.5.32",
     "@types/lodash-es": "^4.17.3",
     "@types/n3": "^1.1.5",
