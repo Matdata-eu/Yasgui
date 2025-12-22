@@ -285,13 +285,17 @@ For more details, see **[User Guide - Querying Local Endpoints](./docs/user-guid
 We welcome contributions! To get started:
 
 1. Fork the repository
-2. Clone and install: `npm install`
+2. Clone and install: `PUPPETEER_SKIP_DOWNLOAD=1 npm ci`
 3. Run dev server: `npm run dev`
 4. Make your changes
 5. Run tests: `npm test`
 6. Submit a pull request
 
-For detailed contribution guidelines, see the **[Developer Guide](./docs/developer-guide.md#contributing)**.
+**📋 For detailed contribution guidelines, including our plugin development policy, see [CONTRIBUTING.md](./CONTRIBUTING.md).**
+
+Additional resources:
+- **[Developer Guide](./docs/developer-guide.md)** - API reference and integration guide
+- **[Plugin Development](./docs/developer-guide.md#plugin-development)** - How to create plugins
 
 ---
 
