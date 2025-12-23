@@ -116,7 +116,27 @@ If you want to create a new plugin:
 4. **Publish to npm** for easy installation by users
 5. **Share with the community** by mentioning it in GitHub Discussions
 
-For detailed plugin development instructions, see the [Developer Guide - Plugin Development](./docs/developer-guide.md#plugin-development) section.
+##### Plugin Requirements
+
+All plugins **must** implement the following requirements:
+
+**📚 Help Reference & Download Functionality**
+- **`helpReference`**: Provide a URL to documentation/help page for your plugin
+- **`download()`**: Implement download functionality to allow users to export results in appropriate formats
+
+**📐 Responsive Design**
+- **Utilize 100% of available width and height** of the parent element
+- **Define minimum usable dimensions** when applicable (e.g., minimum width/height for proper visualization)
+- **Respond to layout changes**: Support both vertical and horizontal orientations when the layout changes
+- **Handle resize events**: Redraw or adjust visualization when container size changes
+
+**🎨 Theme Support**
+- **Implement both dark and light mode** support
+- **Use CSS custom properties** for colors (e.g., `--yasgui-bg-primary`, `--yasgui-text-primary`)
+- **Watch for theme changes** using `MutationObserver` on `document.documentElement`
+- **Smooth transitions** between themes for better user experience
+
+For detailed plugin development instructions and code examples, see the [Developer Guide - Plugin Development](./docs/developer-guide.md#plugin-development) section.
 
 ## Development Workflow
 
