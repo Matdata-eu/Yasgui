@@ -21,6 +21,10 @@ import "./main.scss";
 export interface PersistentConfig {
   selectedPlugin?: string;
   pluginsConfig?: { [pluginName: string]: any };
+  pluginOrder?: {
+    select?: string[]; // Preferred order for SELECT/ASK queries
+    construct?: string[]; // Preferred order for CONSTRUCT/DESCRIBE queries
+  };
 }
 
 export interface Yasr {
@@ -170,6 +174,22 @@ export class Yasr extends EventEmitter {
     }
   }
 
+  /**
+   * Determines if current results are from a SELECT/ASK query or a CONSTRUCT/DESCRIBE query
+   * @returns 'select' for SELECT/ASK queries, 'construct' for CONSTRUCT/DESCRIBE queries
+   */
+  private getQueryResultType(): "select" | "construct" {
+    if (!this.results) return "select";
+    const type = this.results.getType();
+    // CONSTRUCT and DESCRIBE return graph data (turtle, trig, rdf+json, etc.)
+    // SELECT and ASK return tabular data (json, xml, csv, tsv)
+    if (type === "json" || type === "xml" || type === "csv" || type === "tsv") {
+      return "select";
+    }
+    // turtle, trig, etc. are graph formats
+    return "construct";
+  }
+
   private getCompatiblePlugins(): string[] {
     if (!this.results)
       return Object.keys(
@@ -182,6 +202,42 @@ export class Yasr extends EventEmitter {
         supportedPlugins.push({ name: pluginName, priority: this.plugins[pluginName].priority });
       }
     }
+
+    // Get the user's preferred order based on query result type
+    const queryType = this.getQueryResultType();
+    const storageId = this.getStorageId(this.config.persistenceLabelConfig);
+    let userPreferredOrder: string[] | undefined;
+
+    if (storageId) {
+      const persistentConfig: PersistentConfig | undefined = this.storage.get(storageId);
+      if (persistentConfig?.pluginOrder) {
+        userPreferredOrder =
+          queryType === "select" ? persistentConfig.pluginOrder.select : persistentConfig.pluginOrder.construct;
+      }
+    }
+
+    if (userPreferredOrder && userPreferredOrder.length > 0) {
+      // Use user-defined order, fallback to priority-based order for plugins not in the list
+      const orderedPlugins: string[] = [];
+      const supportedPluginNames = supportedPlugins.map((p) => p.name);
+
+      // First, add plugins in user's preferred order that are supported
+      for (const pluginName of userPreferredOrder) {
+        if (supportedPluginNames.includes(pluginName)) {
+          orderedPlugins.push(pluginName);
+        }
+      }
+
+      // Then add any remaining supported plugins sorted by priority
+      const remainingPlugins = supportedPlugins
+        .filter((p) => !orderedPlugins.includes(p.name))
+        .sort((p1, p2) => p2.priority - p1.priority)
+        .map((p) => p.name);
+
+      return [...orderedPlugins, ...remainingPlugins];
+    }
+
+    // Fallback to priority-based order (existing behavior)
     return supportedPlugins.sort((p1, p2) => p2.priority - p1.priority).map((p) => p.name);
   }
   public draw() {
@@ -559,10 +615,67 @@ export class Yasr extends EventEmitter {
     }
   }
   public getPersistentConfig(): PersistentConfig {
+    const storageId = this.getStorageId(this.config.persistenceLabelConfig);
+    let existingPluginOrder: PersistentConfig["pluginOrder"] = undefined;
+
+    // Retrieve existing plugin order from storage
+    if (storageId) {
+      const stored: PersistentConfig | undefined = this.storage.get(storageId);
+      if (stored?.pluginOrder) {
+        existingPluginOrder = stored.pluginOrder;
+      }
+    }
+
     return {
       selectedPlugin: this.getSelectedPluginName(),
       pluginsConfig: mapValues(this.config.plugins, (plugin) => plugin.dynamicConfig),
+      pluginOrder: existingPluginOrder,
     };
+  }
+
+  /**
+   * Get the current plugin order preferences
+   */
+  public getPluginOrder(): PersistentConfig["pluginOrder"] {
+    const storageId = this.getStorageId(this.config.persistenceLabelConfig);
+    if (storageId) {
+      const persistentConfig: PersistentConfig | undefined = this.storage.get(storageId);
+      return persistentConfig?.pluginOrder;
+    }
+    return undefined;
+  }
+
+  /**
+   * Set plugin order preferences for SELECT and/or CONSTRUCT queries
+   */
+  public setPluginOrder(order: { select?: string[]; construct?: string[] }) {
+    const storageId = this.getStorageId(this.config.persistenceLabelConfig);
+    if (storageId) {
+      const persistentConfig: PersistentConfig = this.getPersistentConfig();
+      persistentConfig.pluginOrder = {
+        ...(persistentConfig.pluginOrder || {}),
+        ...order,
+      };
+      this.storage.set(storageId, persistentConfig, this.config.persistencyExpire, this.handleLocalStorageQuotaFull);
+      this.emit("change", this);
+    }
+  }
+
+  /**
+   * Get list of all available plugins with their labels
+   */
+  public getAvailablePlugins(): { name: string; label: string; priority: number }[] {
+    const plugins: { name: string; label: string; priority: number }[] = [];
+    for (const pluginName in this.plugins) {
+      const plugin = this.plugins[pluginName];
+      if (plugin.hideFromSelection) continue;
+      plugins.push({
+        name: pluginName,
+        label: plugin.label || pluginName,
+        priority: plugin.priority,
+      });
+    }
+    return plugins.sort((a, b) => b.priority - a.priority);
   }
   //This doesnt store the plugin complete config. Only those configs we want persisted
   public storePluginConfig(pluginName: string, conf: any) {
