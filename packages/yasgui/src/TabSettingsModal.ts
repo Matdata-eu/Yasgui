@@ -5,6 +5,7 @@ import * as ConfigExportImport from "./ConfigExportImport";
 import { VERSION } from "./version";
 import * as OAuth2Utils from "./OAuth2Utils";
 import PersistentConfig from "./PersistentConfig";
+import sortablejs from "sortablejs";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -142,6 +143,11 @@ export default class TabSettingsModal {
     addClass(prefixTab, "modalNavButton");
     prefixTab.onclick = () => this.switchTab("prefix");
 
+    const outputTab = document.createElement("button");
+    outputTab.textContent = "Output Preferences";
+    addClass(outputTab, "modalNavButton");
+    outputTab.onclick = () => this.switchTab("output");
+
     const editorTab = document.createElement("button");
     editorTab.textContent = "Editor";
     addClass(editorTab, "modalNavButton");
@@ -165,6 +171,7 @@ export default class TabSettingsModal {
     sidebar.appendChild(requestTab);
     sidebar.appendChild(endpointsTab);
     sidebar.appendChild(prefixTab);
+    sidebar.appendChild(outputTab);
     sidebar.appendChild(editorTab);
     sidebar.appendChild(importExportTab);
     sidebar.appendChild(shortcutsTab);
@@ -193,6 +200,11 @@ export default class TabSettingsModal {
     prefixContent.id = "prefix-content";
     this.drawPrefixSettings(prefixContent);
 
+    const outputContent = document.createElement("div");
+    addClass(outputContent, "modalTabContent");
+    outputContent.id = "output-content";
+    this.drawOutputSettings(outputContent);
+
     const editorContent = document.createElement("div");
     addClass(editorContent, "modalTabContent");
     editorContent.id = "editor-content";
@@ -216,6 +228,7 @@ export default class TabSettingsModal {
     contentArea.appendChild(requestContent);
     contentArea.appendChild(endpointsContent);
     contentArea.appendChild(prefixContent);
+    contentArea.appendChild(outputContent);
     contentArea.appendChild(editorContent);
     contentArea.appendChild(importExportContent);
     contentArea.appendChild(shortcutsContent);
@@ -325,6 +338,173 @@ export default class TabSettingsModal {
     section.appendChild(checkboxContainer);
 
     container.appendChild(section);
+  }
+
+  private drawOutputSettings(container: HTMLElement) {
+    const yasr = this.tab.getYasr();
+    if (!yasr) {
+      const notice = document.createElement("p");
+      addClass(notice, "settingsHelp");
+      notice.textContent = "Output settings will be available after running a query.";
+      container.appendChild(notice);
+      return;
+    }
+
+    // Introduction
+    const intro = document.createElement("p");
+    addClass(intro, "settingsHelp");
+    intro.textContent =
+      "Configure the preferred order of output plugins for different query types. Plugins at the top of the list will be preferred when displaying results.";
+    container.appendChild(intro);
+
+    // Get available plugins
+    const availablePlugins = yasr.getAvailablePlugins();
+    const currentOrder = yasr.getPluginOrder() || { select: [], construct: [] };
+
+    // Initialize with priority-based order if empty
+    if (!currentOrder.select || currentOrder.select.length === 0) {
+      currentOrder.select = availablePlugins.map((p) => p.name);
+    }
+    if (!currentOrder.construct || currentOrder.construct.length === 0) {
+      currentOrder.construct = availablePlugins.map((p) => p.name);
+    }
+
+    // SELECT/ASK queries section
+    const selectSection = document.createElement("div");
+    addClass(selectSection, "settingsSection", "pluginOrderSection");
+
+    const selectLabel = document.createElement("h3");
+    addClass(selectLabel, "settingsLabel");
+    selectLabel.textContent = "SELECT / ASK Query Results";
+
+    const selectHelp = document.createElement("p");
+    addClass(selectHelp, "settingsHelp");
+    selectHelp.textContent = "Preferred plugin order for tabular query results (SELECT, ASK).";
+
+    const selectList = document.createElement("ul");
+    addClass(selectList, "pluginOrderList");
+    selectList.id = "select-plugin-order";
+
+    // Populate SELECT list
+    currentOrder.select.forEach((pluginName) => {
+      const plugin = availablePlugins.find((p) => p.name === pluginName);
+      if (plugin) {
+        const item = this.createPluginOrderItem(plugin.name, plugin.label);
+        selectList.appendChild(item);
+      }
+    });
+
+    // Add any plugins not in the current order
+    availablePlugins.forEach((plugin) => {
+      if (!currentOrder.select!.includes(plugin.name)) {
+        const item = this.createPluginOrderItem(plugin.name, plugin.label);
+        selectList.appendChild(item);
+      }
+    });
+
+    selectSection.appendChild(selectLabel);
+    selectSection.appendChild(selectHelp);
+    selectSection.appendChild(selectList);
+
+    // CONSTRUCT/DESCRIBE queries section
+    const constructSection = document.createElement("div");
+    addClass(constructSection, "settingsSection", "pluginOrderSection");
+
+    const constructLabel = document.createElement("h3");
+    addClass(constructLabel, "settingsLabel");
+    constructLabel.textContent = "CONSTRUCT / DESCRIBE Query Results";
+
+    const constructHelp = document.createElement("p");
+    addClass(constructHelp, "settingsHelp");
+    constructHelp.textContent = "Preferred plugin order for graph query results (CONSTRUCT, DESCRIBE).";
+
+    const constructList = document.createElement("ul");
+    addClass(constructList, "pluginOrderList");
+    constructList.id = "construct-plugin-order";
+
+    // Populate CONSTRUCT list
+    currentOrder.construct.forEach((pluginName) => {
+      const plugin = availablePlugins.find((p) => p.name === pluginName);
+      if (plugin) {
+        const item = this.createPluginOrderItem(plugin.name, plugin.label);
+        constructList.appendChild(item);
+      }
+    });
+
+    // Add any plugins not in the current order
+    availablePlugins.forEach((plugin) => {
+      if (!currentOrder.construct!.includes(plugin.name)) {
+        const item = this.createPluginOrderItem(plugin.name, plugin.label);
+        constructList.appendChild(item);
+      }
+    });
+
+    constructSection.appendChild(constructLabel);
+    constructSection.appendChild(constructHelp);
+    constructSection.appendChild(constructList);
+
+    container.appendChild(selectSection);
+    container.appendChild(constructSection);
+
+    // Initialize drag and drop
+    this.initializePluginOrderDragDrop(selectList, "select", yasr);
+    this.initializePluginOrderDragDrop(constructList, "construct", yasr);
+  }
+
+  private createPluginOrderItem(pluginName: string, pluginLabel: string): HTMLLIElement {
+    const item = document.createElement("li");
+    addClass(item, "pluginOrderItem");
+    item.setAttribute("data-plugin-name", pluginName);
+
+    const dragHandle = document.createElement("span");
+    addClass(dragHandle, "pluginOrderDragHandle");
+    dragHandle.innerHTML = "☰"; // Hamburger menu icon
+    dragHandle.title = "Drag to reorder";
+
+    const label = document.createElement("span");
+    addClass(label, "pluginOrderLabel");
+    label.textContent = pluginLabel;
+
+    item.appendChild(dragHandle);
+    item.appendChild(label);
+
+    return item;
+  }
+
+  private initializePluginOrderDragDrop(listEl: HTMLElement, queryType: "select" | "construct", yasr: any) {
+    sortablejs.create(listEl, {
+      animation: 150,
+      handle: ".pluginOrderDragHandle",
+      ghostClass: "pluginOrderGhost",
+      chosenClass: "pluginOrderChosen",
+      dragClass: "pluginOrderDrag",
+      onEnd: () => {
+        // Get the new order from the list
+        const items = listEl.querySelectorAll("li[data-plugin-name]");
+        const newOrder: string[] = [];
+        items.forEach((item) => {
+          const pluginName = item.getAttribute("data-plugin-name");
+          if (pluginName) {
+            newOrder.push(pluginName);
+          }
+        });
+
+        // Save the new order
+        const currentOrder = yasr.getPluginOrder() || { select: [], construct: [] };
+        if (queryType === "select") {
+          currentOrder.select = newOrder;
+        } else {
+          currentOrder.construct = newOrder;
+        }
+        yasr.setPluginOrder(currentOrder);
+
+        // Show feedback
+        this.showNotification(
+          `${queryType === "select" ? "SELECT/ASK" : "CONSTRUCT/DESCRIBE"} plugin order updated`,
+          "success",
+        );
+      },
+    });
   }
 
   private drawEditorSettings(container: HTMLElement) {
