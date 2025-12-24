@@ -1142,11 +1142,36 @@ YASGUI automatically selects the most appropriate plugin based on:
 - Query type (SELECT, CONSTRUCT, ASK, DESCRIBE)
 - Response content type
 - Data structure
+- Your configured plugin order preferences (see below)
 
 **Manual Selection:**
 - Use the plugin selector buttons at the top of the results area
 - Available plugins depend on the query results
 - Your selection is saved per tab
+
+**Configuring Plugin Order Preferences:**
+
+You can customize the order in which plugins are preferred when displaying query results. This allows you to prioritize your favorite visualization methods.
+
+1. **Open Settings**: Click the gear icon (⚙️) in the control bar
+2. **Navigate to Output Preferences**: Select the "Output Preferences" tab in the settings sidebar
+3. **Configure Preferences**: You'll see two separate lists:
+   - **SELECT / ASK Query Results**: For tabular query results
+   - **CONSTRUCT / DESCRIBE Query Results**: For graph query results
+4. **Reorder Plugins**: Drag plugins using the handle (☰) to reorder them
+   - Plugins at the top of the list will be preferred when displaying results
+   - The first compatible plugin in your list will be automatically selected
+5. **Save Changes**: Your preferences are saved automatically as you reorder
+
+**Example Use Cases:**
+- If you prefer viewing raw JSON responses, move the "Response" plugin to the top of the SELECT list
+- For graph visualizations, prioritize the "Graph" plugin over the "Response" plugin in the CONSTRUCT list
+- Customize separately for different query types based on your workflow
+
+**Notes:**
+- Plugin order preferences are persistent and apply across all tabs
+- The actual plugin used depends on both your preference order and plugin compatibility with the current results
+- If your preferred plugin cannot handle the current results, the next compatible plugin in your list will be used automatically
 
 ---
 

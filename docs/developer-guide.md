@@ -2241,6 +2241,38 @@ const plugins = yasr.getPlugins();
 console.log('Available plugins:', Object.keys(plugins));
 ```
 
+##### `getAvailablePlugins(): { name: string; label: string; priority: number }[]`
+
+Get list of all available plugins with their labels and priorities (excludes hidden plugins).
+
+```javascript
+const availablePlugins = yasr.getAvailablePlugins();
+console.log('Available plugins:', availablePlugins);
+// Output: [{ name: 'table', label: 'Table', priority: 10 }, ...]
+```
+
+##### `getPluginOrder(): { select?: string[]; construct?: string[] } | undefined`
+
+Get the current plugin order preferences for SELECT/ASK and CONSTRUCT/DESCRIBE queries.
+
+```javascript
+const pluginOrder = yasr.getPluginOrder();
+console.log('SELECT order:', pluginOrder?.select);
+console.log('CONSTRUCT order:', pluginOrder?.construct);
+```
+
+##### `setPluginOrder(order: { select?: string[]; construct?: string[] }): void`
+
+Set plugin order preferences to customize which plugins are preferred for different query types.
+
+```javascript
+// Set preferred order for SELECT queries
+yasr.setPluginOrder({
+  select: ['response', 'table'],
+  construct: ['graph', 'response']
+});
+```
+
 ##### `download(filename?: string): void`
 
 Download results using current plugin's download method.
