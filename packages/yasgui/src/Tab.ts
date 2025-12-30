@@ -224,12 +224,31 @@ export class Tab extends EventEmitter {
     } catch (e) {
       const err = asWorkspaceBackendError(e);
       if (err.code === "CONFLICT") {
-        const extra =
-          meta.backendType === "git"
-            ? " Resolve the conflict externally (e.g., pull/rebase/merge) and then try saving again."
-            : " Refresh the query and try again.";
-        window.alert(`Save conflict.${extra}`);
-        return;
+        if (meta.backendType === "git") {
+          // Best-effort self-heal: some providers use a file sha for optimistic concurrency.
+          // If our stored version tag is stale/incorrect but the remote content is unchanged,
+          // refresh the tag and retry once.
+          try {
+            const latest = await backend.readQuery(queryId);
+            const latestHash = hashQueryText(latest.queryText);
+            if (meta.lastSavedTextHash && meta.lastSavedTextHash === latestHash && latest.versionTag) {
+              await backend.writeQuery(queryId, this.getQueryTextForSave(), { expectedVersionTag: latest.versionTag });
+            } else {
+              window.alert(
+                "Save conflict. Resolve the conflict externally (e.g., pull/rebase/merge) and then try saving again.",
+              );
+              return;
+            }
+          } catch {
+            window.alert(
+              "Save conflict. Resolve the conflict externally (e.g., pull/rebase/merge) and then try saving again.",
+            );
+            return;
+          }
+        } else {
+          window.alert("Save conflict. Refresh the query and try again.");
+          return;
+        }
       }
       window.alert(err.message);
       return;
@@ -1003,15 +1022,8 @@ export class Tab extends EventEmitter {
       return;
     }
 
-    const expectedVersionTag = (() => {
-      if (!meta?.lastSavedVersionRef) return undefined;
-      if (meta.backendType === "git") return (meta.lastSavedVersionRef as any)?.commitSha;
-      return undefined;
-    })();
-
     try {
       await backend.writeQuery(newPath, this.getQueryTextForSave(), {
-        expectedVersionTag,
         message: `Rename ${oldFilename} to ${newFilename}`,
       });
 

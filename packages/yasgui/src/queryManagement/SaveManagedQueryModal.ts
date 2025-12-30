@@ -181,12 +181,12 @@ export default class SaveManagedQueryModal {
     this.nameEl.addEventListener("input", () => {
       if (this.filenameTouched) return;
       const suggested = this.suggestFilenameFromName(this.nameEl.value);
-      if (suggested) this.filenameEl.value = suggested;
+      if (suggested) this.filenameEl.value = suggested.replace(/\.sparql$/i, "");
     });
 
     this.filenameEl = document.createElement("input");
     this.filenameEl.type = "text";
-    this.filenameEl.placeholder = "Filename (e.g., my-query.sparql)";
+    this.filenameEl.placeholder = "Filename (e.g., my-query)";
     this.filenameEl.setAttribute("aria-label", "Filename");
     this.filenameEl.addEventListener("input", () => {
       this.filenameTouched = true;
@@ -346,12 +346,13 @@ export default class SaveManagedQueryModal {
     let resolvedFilename = filename;
 
     if (isGit) {
+      resolvedFilename = resolvedFilename.replace(/\.sparql$/i, "");
       if (!resolvedFilename) {
         window.alert("Please enter a filename");
         return;
       }
       // Derive a tab label for convenience.
-      const base = resolvedFilename.replace(/^.*\//, "").replace(/\.sparql$/i, "");
+      const base = resolvedFilename.replace(/^.*\//, "");
       resolvedName = base || resolvedFilename;
     } else if (isSparql) {
       if (!resolvedName) {
@@ -418,7 +419,7 @@ export default class SaveManagedQueryModal {
 
     const defaultFilename =
       defaults?.filename ?? (defaultName ? (this.suggestFilenameFromName(defaultName) ?? "") : "");
-    this.filenameEl.value = defaultFilename;
+    this.filenameEl.value = defaultFilename.replace(/\.sparql$/i, "");
     this.messageEl.value = defaults?.message ?? "";
 
     this.folderPickerOpen = false;

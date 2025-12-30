@@ -7,6 +7,7 @@ import { asWorkspaceBackendError } from "./backends/errors";
 import { getEndpointToAutoSwitch } from "./openManagedQuery";
 import { hashQueryText } from "./textHash";
 import type { BackendType, VersionRef, ManagedTabMetadata } from "./types";
+import { normalizeQueryFilename } from "./normalizeQueryFilename";
 
 import "./QueryBrowser.scss";
 
@@ -555,8 +556,49 @@ export default class QueryBrowser {
         const trimmed = next.trim();
         if (!trimmed || trimmed === entry.label) return;
 
+        // For git workspaces we can deterministically compute the new path, so we can
+        // also update any already-open managed tabs that reference this query.
+        const gitRenameInfo = (() => {
+          if (backend.type !== "git") return undefined;
+          const parts = entry.id.split("/").filter(Boolean);
+          parts.pop();
+          const folderPrefix = parts.join("/");
+          const safe = trimmed.replace(/[\\/]/g, "-");
+          const newFilename = normalizeQueryFilename(safe);
+          const newPath = folderPrefix ? `${folderPrefix}/${newFilename}` : newFilename;
+          return { oldPath: entry.id, newPath };
+        })();
+
         try {
           await backend.renameQuery!(entry.id, trimmed);
+
+          if (gitRenameInfo && gitRenameInfo.newPath && gitRenameInfo.oldPath) {
+            for (const tab of Object.values(this.yasgui._tabs)) {
+              const meta = (tab as any).getManagedQueryMetadata?.() as ManagedTabMetadata | undefined;
+              if (!meta) continue;
+              if (meta.backendType !== "git") continue;
+              if (meta.workspaceId !== this.selectedWorkspaceId) continue;
+              const currentPath = (meta.queryRef as any)?.path as string | undefined;
+              if (currentPath !== gitRenameInfo.oldPath) continue;
+
+              try {
+                const read = await backend.readQuery(gitRenameInfo.newPath);
+                const lastSavedTextHash = hashQueryText(read.queryText);
+                const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
+
+                (tab as any).setManagedQueryMetadata?.({
+                  ...meta,
+                  queryRef: { ...(meta.queryRef as any), path: gitRenameInfo.newPath },
+                  lastSavedTextHash,
+                  lastSavedVersionRef,
+                });
+                (tab as any).setName?.(trimmed);
+              } catch {
+                // Best-effort: if refreshing metadata fails, the Query Browser still reflects the rename.
+              }
+            }
+          }
+
           this.queryPreviewById.delete(entry.id);
           this.folderEntriesById.clear();
           this.invalidateRenderCache();

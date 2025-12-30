@@ -314,8 +314,8 @@ export class GiteaProviderClient implements GitProviderClient {
     const { owner, repo, host } = parseOwnerRepo(config.remoteUrl);
     const apiBase = inferApiBase(config, host);
 
-    const { text } = await this.readFileAtRef(config, apiBase, owner, repo, queryId, versionId);
-    return { queryText: text, versionTag: versionId };
+    const { text, sha } = await this.readFileAtRef(config, apiBase, owner, repo, queryId, versionId);
+    return { queryText: text, versionTag: sha };
   }
 
   async deleteQuery(config: GitWorkspaceConfig, queryId: string): Promise<void> {

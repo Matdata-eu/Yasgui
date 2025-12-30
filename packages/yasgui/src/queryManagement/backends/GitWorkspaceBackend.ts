@@ -1,6 +1,7 @@
 import type { GitWorkspaceConfig, FolderEntry, ReadResult, VersionInfo, WriteQueryOptions } from "../types";
 import type { WorkspaceBackend } from "./WorkspaceBackend";
 import { WorkspaceBackendError } from "./errors";
+import { normalizeQueryFilename } from "../normalizeQueryFilename";
 
 export interface GitProviderClient {
   validateAccess(config: GitWorkspaceConfig): Promise<void>;
@@ -66,5 +67,30 @@ export default class GitWorkspaceBackend implements WorkspaceBackend {
   async deleteQuery(_queryId: string): Promise<void> {
     if (!this.client) throw this.missingClientError();
     return this.client.deleteQuery(this.config, _queryId);
+  }
+
+  async renameQuery(queryId: string, newLabel: string): Promise<void> {
+    if (!this.client) throw this.missingClientError();
+
+    const next = (newLabel || "").trim();
+    if (!next) throw new WorkspaceBackendError("UNKNOWN", "New name is required");
+
+    const parts = queryId.split("/").filter(Boolean);
+    const oldFilename = parts.pop() || queryId;
+    const folderPrefix = parts.join("/");
+
+    const safe = next.replace(/[\\/]/g, "-");
+    const newFilename = normalizeQueryFilename(safe);
+    const newPath = folderPrefix ? `${folderPrefix}/${newFilename}` : newFilename;
+
+    if (newPath === queryId) return;
+
+    const read = await this.client.readQuery(this.config, queryId);
+
+    await this.client.writeQuery(this.config, newPath, read.queryText, {
+      message: `Rename ${oldFilename} to ${newFilename}`,
+    });
+
+    await this.client.deleteQuery(this.config, queryId);
   }
 }

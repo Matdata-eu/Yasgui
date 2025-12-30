@@ -132,6 +132,8 @@ export class GithubProviderClient implements GitProviderClient {
 
     const res = await fetch(`${apiBase}${path}`, {
       ...init,
+      // Avoid stale results after create/delete/rename.
+      cache: "no-store",
       headers: {
         ...headers,
         ...(init?.headers as any),
@@ -252,24 +254,22 @@ export class GithubProviderClient implements GitProviderClient {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
     const filePath = joinPath(config.rootPath, queryId);
 
-    // Determine current file sha (if any) so we can update.
-    let currentSha: string | undefined;
-    try {
-      const res = await this.readFileAtRef(config, queryId);
-      currentSha = res.sha;
-    } catch (e) {
-      const err = e as any;
-      if (err?.code !== "NOT_FOUND") throw e;
+    // If the caller provides an expected version tag, treat it as the current file sha.
+    // This avoids an extra GET (and avoids noisy 404s when the file was moved/renamed).
+    let currentSha: string | undefined = options?.expectedVersionTag?.trim() || undefined;
+    if (!currentSha) {
+      // Determine current file sha (if any) so we can update.
+      try {
+        const res = await this.readFileAtRef(config, queryId);
+        currentSha = res.sha;
+      } catch (e) {
+        const err = e as any;
+        if (err?.code !== "NOT_FOUND") throw e;
+      }
     }
 
-    if (options?.expectedVersionTag && currentSha && options.expectedVersionTag !== currentSha) {
-      throw new WorkspaceBackendError(
-        "CONFLICT",
-        "The file changed remotely since it was last opened. Please reload the managed query and try saving again.",
-      );
-    }
-
-    const message = (options?.message || `Update ${queryId}`).trim();
+    const defaultMessage = currentSha ? `Update ${queryId}` : `Add ${queryId}`;
+    const message = (options?.message || defaultMessage).trim();
     const body: any = {
       message,
       content: base64EncodeUtf8(queryText),
@@ -318,8 +318,10 @@ export class GithubProviderClient implements GitProviderClient {
   }
 
   async readVersion(config: GitWorkspaceConfig, queryId: string, versionId: string): Promise<ReadResult> {
-    const { text } = await this.readFileAtRef(config, queryId, versionId);
-    return { queryText: text, versionTag: versionId };
+    // `versionId` is a commit sha, but writes use the file blob sha for optimistic concurrency.
+    // Use the returned file sha so saving still works after opening a historical version.
+    const { text, sha } = await this.readFileAtRef(config, queryId, versionId);
+    return { queryText: text, versionTag: sha };
   }
 
   async deleteQuery(config: GitWorkspaceConfig, queryId: string): Promise<void> {

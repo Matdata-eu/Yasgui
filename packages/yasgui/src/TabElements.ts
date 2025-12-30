@@ -88,6 +88,7 @@ export class TabListEl {
 
     this.tabEl.addEventListener("keydown", (e: KeyboardEvent) => {
       // Don't handle Delete key if we're renaming the tab (input field is active)
+      if (!this.tabEl) return;
       if (e.code === "Delete" && !this.tabEl.classList.contains("renaming")) {
         handleDeleteTab();
       }
@@ -147,15 +148,20 @@ export class TabListEl {
     const renameEl = (this.renameEl = document.createElement("input"));
     renameEl.type = "text";
     renameEl.value = name;
+    let renameSubmitted = false;
+    const submitRename = () => {
+      if (renameSubmitted) return;
+      renameSubmitted = true;
+      void this.yasgui.getTab(this.tabId)?.renameTab(renameEl.value);
+      removeClass(this.tabEl, "renaming");
+    };
     renameEl.onkeyup = (event) => {
       if (event.key === "Enter") {
-        void this.yasgui.getTab(this.tabId)?.renameTab(renameEl.value);
-        removeClass(this.tabEl, "renaming");
+        submitRename();
       }
     };
     renameEl.onblur = () => {
-      void this.yasgui.getTab(this.tabId)?.renameTab(renameEl.value);
-      removeClass(this.tabEl, "renaming");
+      submitRename();
     };
     // Prevent sortablejs from detecting drag events on the input field
     renameEl.addEventListener("mousedown", (e) => {

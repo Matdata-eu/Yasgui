@@ -319,8 +319,9 @@ export class GitlabProviderClient implements GitProviderClient {
     const { host } = parseGitRemote(config.remoteUrl);
     const apiBase = inferApiBase(config, host);
 
-    const { text } = await this.readFileAtRef(config, apiBase, queryId, versionId);
-    return { queryText: text, versionTag: versionId };
+    const { text, lastCommitId } = await this.readFileAtRef(config, apiBase, queryId, versionId);
+    // Use the provider's optimistic-concurrency tag for this file content.
+    return { queryText: text, versionTag: lastCommitId };
   }
 
   async deleteQuery(config: GitWorkspaceConfig, queryId: string): Promise<void> {
