@@ -20,13 +20,15 @@ This quickstart is for validating the feature once implemented.
 ## Manual validation checklist
 
 ### Workspace configuration
-1. Open YASGUI settings and add a workspace configuration:
-   - Git workspace: provide repo URL, branch, root folder, and a token.
-   - SPARQL workspace: choose an existing endpoint and a workspace IRI.
-2. Switch active workspace and ensure the query browser reflects the correct contents.
+1. Open YASGUI settings (per-tab Settings button) and go to the **Workspaces** tab.
+2. Add a workspace configuration:
+   - Git workspace: provide repo URL and a token (optional fields are under **Advanced**).
+   - SPARQL workspace: provide endpoint URL and a workspace IRI.
+3. Select a default workspace from the **Default workspace** dropdown.
+4. (Optional) Use **Validate access** to confirm the backend can be reached.
 
 ### Browse and open
-1. Open query browser (hamburger).
+1. Open the Query Browser (button in the per-tab control bar).
 2. Navigate folders.
 3. Open a managed query and verify:
    - a new tab is created
@@ -42,6 +44,48 @@ This quickstart is for validating the feature once implemented.
 ### Conflict and auth errors
 - Git workspace: force a remote change and verify save fails with a clear conflict message.
 - SPARQL workspace: configure invalid auth and verify failures are actionable.
+
+## Validation notes (2025-12-28)
+
+- The Workspaces UI stores credentials locally and never re-displays tokens after entry.
+- Git workspace validation and conflict testing requires a real provider token + a repo with an API-accessible history.
+- SPARQL workspace browsing/saving requires an endpoint that supports SPARQL Protocol over POST and returns JSON results for SELECT.
+
+## Manual QA note: SPARQL endpoint requirements
+
+For SPARQL workspaces to work end-to-end (browse + save + version history), the configured endpoint must support:
+
+- **SPARQL 1.1 Query + Update** over HTTP POST:
+   - `POST` with form body `query=...` (SELECT)
+   - `POST` with form body `update=...` (INSERT DATA for saves)
+- **SPARQL JSON results** for SELECT (e.g., `application/sparql-results+json`).
+- **Write permissions** in the configured graph:
+   - If you use a named graph, set **Default graph** in the workspace configuration (sent as `default-graph-uri`).
+
+Data model (what YASGUI reads/writes) uses these terms:
+
+- Types under `https://matdata.eu/ns/yasgui#`:
+   - `yasgui:Workspace`, `yasgui:WorkspaceFolder`, `yasgui:ManagedQuery`, `yasgui:ManagedQueryVersion`
+- Folder hierarchy:
+   - `skos:inScheme <workspaceIri>`
+   - `skos:broader` for parent folder links
+- Query placement + versioning:
+   - `dcterms:isPartOf` (folder → query membership)
+   - `dcterms:isVersionOf` (version → managed query)
+   - `dcterms:created` (version timestamp)
+   - `spin:text` (SPARQL query text)
+- Optional associated endpoint on a version:
+   - `prov:used` → `sd:endpoint`
+
+IRI conventions used by the implementation:
+
+- Managed query IRI: `<workspaceIri>_mq_<uuid>`
+- Folder IRI: `<workspaceIri>/folder/<url-encoded folderPath>`
+- Version IRI: `<workspaceIri>_mq_v_<uuid>`
+
+Rationale:
+- Managed query identities must remain immutable even if the user renames the query or moves it between folders.
+- The `.sparql` file extension is a Git workspace detail and is not part of the SPARQL-managed query identity.
 
 ## Test data for SPARQL backend
 The repo contains example RDF and shapes:
