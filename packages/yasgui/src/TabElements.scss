@@ -8,6 +8,33 @@ $minTabHeight: 35px;
     display: flex;
     flex-wrap: wrap;
 
+    .queryBrowserToggle {
+      cursor: pointer;
+      min-height: $minTabHeight;
+      padding: 0 10px;
+      background: transparent;
+      border: none;
+      color: var(--yasgui-button-text, #505050);
+      fill: var(--yasgui-button-text, #505050);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 2px solid transparent;
+      box-sizing: border-box;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--yasgui-button-hover, #000);
+        fill: var(--yasgui-button-hover, #000);
+        background: var(--yasgui-bg-secondary, #f7f7f7);
+      }
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     .sortable-placeholder {
       min-width: 100px;
       min-height: $minTabHeight;
@@ -76,6 +103,18 @@ $minTabHeight: 35px;
       position: relative;
       $activeColor: #337ab7;
       $hoverColor: color.adjust($activeColor, $lightness: 30%);
+
+      // Distinguish managed-query tabs from legacy tabs via background.
+      // Legacy tabs keep their current styling.
+      &.managed a {
+        background: var(--yasgui-tab-managed, #a4cbed);
+      }
+
+      // Unsaved changes indicator for managed queries.
+      // The dot indicates the user still needs to save.
+      &.managedDirty a span::before {
+        content: "• ";
+      }
 
       .loader {
         display: none;

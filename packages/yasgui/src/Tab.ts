@@ -10,6 +10,13 @@ import EndpointSelect from "./endpointSelect";
 import "./tab.scss";
 import { getRandomId, default as Yasgui, YasguiRequestConfig } from "./";
 import * as OAuth2Utils from "./OAuth2Utils";
+import type { ManagedTabMetadata } from "./queryManagement/types";
+import { hashQueryText } from "./queryManagement/textHash";
+import SaveManagedQueryModal from "./queryManagement/SaveManagedQueryModal";
+import { saveManagedQuery } from "./queryManagement/saveManagedQuery";
+import { getWorkspaceBackend } from "./queryManagement/backends/getWorkspaceBackend";
+import { asWorkspaceBackendError } from "./queryManagement/backends/errors";
+import { normalizeQueryFilename } from "./queryManagement/normalizeQueryFilename";
 
 // Layout orientation toggle icons
 const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24">
@@ -46,6 +53,7 @@ export interface PersistedJson {
   };
   requestConfig: YasguiRequestConfig;
   orientation?: "vertical" | "horizontal";
+  managedQuery?: ManagedTabMetadata;
 }
 
 export interface Tab {
@@ -110,6 +118,206 @@ export class Tab extends EventEmitter {
 
   public getId() {
     return this.persistentJson.id;
+  }
+
+  public getManagedQueryMetadata(): ManagedTabMetadata | undefined {
+    return this.persistentJson.managedQuery;
+  }
+
+  public setManagedQueryMetadata(metadata: ManagedTabMetadata | undefined) {
+    if (metadata) {
+      this.persistentJson.managedQuery = metadata;
+    } else {
+      delete this.persistentJson.managedQuery;
+    }
+    this.emit("change", this, this.persistentJson);
+  }
+
+  public isManagedQueryTab(): boolean {
+    return !!this.persistentJson.managedQuery;
+  }
+
+  public hasUnsavedManagedChanges(): boolean {
+    const meta = this.getManagedQueryMetadata();
+    if (!meta) return false;
+    if (!meta.lastSavedTextHash) return false;
+
+    try {
+      const current = this.yasqe ? this.yasqe.getValue() : this.persistentJson.yasqe.value;
+      const currentHash = hashQueryText(current);
+      return currentHash !== meta.lastSavedTextHash;
+    } catch {
+      return false;
+    }
+  }
+
+  private getDefaultSaveModalValues(): { workspaceId?: string; folderPath?: string; filename?: string; name?: string } {
+    const meta = this.getManagedQueryMetadata();
+    if (!meta) return { name: this.name() };
+    if (meta.backendType !== "git") return { workspaceId: meta.workspaceId };
+    const path = (meta.queryRef as any)?.path as string | undefined;
+    if (!path) return { workspaceId: meta.workspaceId };
+
+    const parts = path.split("/");
+    const filename = parts.pop();
+    const folderPath = parts.join("/");
+
+    return {
+      workspaceId: meta.workspaceId,
+      folderPath,
+      filename,
+      name: this.name(),
+    };
+  }
+
+  private getManagedQueryIdFromMetadata(meta: ManagedTabMetadata): string | undefined {
+    if (meta.backendType === "git") return (meta.queryRef as any)?.path as string | undefined;
+    return (meta.queryRef as any)?.managedQueryIri as string | undefined;
+  }
+
+  private versionRefFromVersionTag(backendType: "git" | "sparql", versionTag: string | undefined) {
+    if (!versionTag) return undefined;
+    if (backendType === "git") return { commitSha: versionTag };
+    return { managedQueryVersionIri: versionTag };
+  }
+
+  private getQueryTextForSave(): string {
+    // Saving can be triggered while the tab exists but the editor isn't initialized yet.
+    // In that case fall back to the persisted tab value.
+    try {
+      if (this.yasqe) return this.yasqe.getValue();
+    } catch {
+      // ignore
+    }
+    return this.persistentJson.yasqe.value;
+  }
+
+  public async saveManagedQueryOrSaveAsManagedQuery(): Promise<void> {
+    const meta = this.getManagedQueryMetadata();
+    if (!meta) {
+      await this.saveAsManagedQuery();
+      return;
+    }
+
+    const queryId = this.getManagedQueryIdFromMetadata(meta);
+    if (!queryId) {
+      await this.saveAsManagedQuery();
+      return;
+    }
+
+    const workspace = this.yasgui.persistentConfig.getWorkspace(meta.workspaceId);
+    if (!workspace) {
+      window.alert("Selected workspace no longer exists");
+      return;
+    }
+
+    const backend = getWorkspaceBackend(workspace, { persistentConfig: this.yasgui.persistentConfig });
+
+    const expectedVersionTag = (() => {
+      if (!meta?.lastSavedVersionRef) return undefined;
+      if (meta.backendType === "git") return (meta.lastSavedVersionRef as any)?.commitSha;
+      return (meta.lastSavedVersionRef as any)?.managedQueryVersionIri;
+    })();
+
+    try {
+      await backend.writeQuery(queryId, this.getQueryTextForSave(), { expectedVersionTag });
+    } catch (e) {
+      const err = asWorkspaceBackendError(e);
+      if (err.code === "CONFLICT") {
+        const extra =
+          meta.backendType === "git"
+            ? " Resolve the conflict externally (e.g., pull/rebase/merge) and then try saving again."
+            : " Refresh the query and try again.";
+        window.alert(`Save conflict.${extra}`);
+        return;
+      }
+      window.alert(err.message);
+      return;
+    }
+
+    const read = await backend.readQuery(queryId);
+    const lastSavedTextHash = hashQueryText(read.queryText);
+    const lastSavedVersionRef = this.versionRefFromVersionTag(meta.backendType, read.versionTag);
+    this.setManagedQueryMetadata({
+      ...meta,
+      lastSavedTextHash,
+      lastSavedVersionRef,
+    });
+
+    // Ensure Query Browser reflects the updated version/metadata.
+    this.yasgui.queryBrowser.invalidateAndRefresh(meta.workspaceId);
+  }
+
+  public async saveAsManagedQuery(): Promise<void> {
+    const modal = new SaveManagedQueryModal(this.yasgui);
+
+    const defaults = this.getDefaultSaveModalValues();
+    let result:
+      | {
+          workspaceId: string;
+          folderPath: string;
+          name: string;
+          filename: string;
+          message?: string;
+        }
+      | undefined;
+
+    try {
+      const modalDefaults: any = {
+        workspaceId: defaults.workspaceId,
+        folderPath: defaults.folderPath || "",
+        name: defaults.name || this.name(),
+      };
+      // Only provide a filename default when we have one.
+      // Otherwise the modal will derive a suggested filename from the provided name.
+      if (defaults.filename) modalDefaults.filename = defaults.filename;
+
+      result = await modal.show(modalDefaults);
+    } catch {
+      return;
+    }
+
+    const workspace = this.yasgui.persistentConfig.getWorkspace(result.workspaceId);
+    if (!workspace) {
+      window.alert("Selected workspace no longer exists");
+      return;
+    }
+
+    const backend = getWorkspaceBackend(workspace, { persistentConfig: this.yasgui.persistentConfig });
+    const meta = this.getManagedQueryMetadata();
+
+    const expectedVersionTag = (() => {
+      if (!meta?.lastSavedVersionRef) return undefined;
+      if (meta.backendType === "git") return (meta.lastSavedVersionRef as any)?.commitSha;
+      return (meta.lastSavedVersionRef as any)?.managedQueryVersionIri;
+    })();
+
+    try {
+      const { managedMetadata } = await saveManagedQuery({
+        backend,
+        backendType: workspace.type,
+        workspaceId: workspace.id,
+        workspaceIri: workspace.type === "sparql" ? workspace.workspaceIri : undefined,
+        folderPath: result.folderPath,
+        name: result.name,
+        filename: result.filename,
+        queryText: this.getQueryTextForSave(),
+        associatedEndpoint: workspace.type === "sparql" ? this.getEndpoint() : undefined,
+        message: result.message,
+        expectedVersionTag,
+      });
+
+      this.setManagedQueryMetadata(managedMetadata);
+      if (result.name && result.name.trim()) {
+        this.setName(result.name.trim());
+      }
+
+      // Ensure the saved query shows up immediately in the Query Browser.
+      this.yasgui.queryBrowser.invalidateAndRefresh(workspace.id);
+    } catch (e) {
+      const err = asWorkspaceBackendError(e);
+      window.alert(err.message);
+    }
   }
 
   private draw() {
@@ -179,6 +387,19 @@ export class Tab extends EventEmitter {
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
+    if (event.defaultPrevented) return;
+
+    const saveModalOpen = !!document.querySelector(".saveManagedQueryModalOverlay.open");
+    if (!saveModalOpen) {
+      const isSaveShortcut =
+        (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "s";
+      if (isSaveShortcut) {
+        event.preventDefault();
+        void this.saveManagedQueryOrSaveAsManagedQuery();
+        return;
+      }
+    }
+
     // F11 - Toggle Yasqe fullscreen
     if (event.key === "F11") {
       event.preventDefault();
@@ -236,6 +457,26 @@ export class Tab extends EventEmitter {
   }
 
   public close() {
+    if (this.isManagedQueryTab() && this.hasUnsavedManagedChanges()) {
+      const wantsSave = window.confirm("This managed query has unsaved changes. Save before closing?");
+      if (wantsSave) {
+        void this.saveManagedQueryOrSaveAsManagedQuery().then(() => {
+          // Only close if we actually saved (metadata updated so no longer dirty)
+          if (!this.hasUnsavedManagedChanges()) {
+            this.closeNow();
+          }
+        });
+        return;
+      }
+
+      const discard = window.confirm("Discard changes and close the tab?");
+      if (!discard) return;
+    }
+
+    this.closeNow();
+  }
+
+  private closeNow() {
     this.detachKeyboardListeners();
     if (this.yasqe) this.yasqe.abortQuery();
     if (this.yasgui.getTab() === this) {
@@ -693,6 +934,112 @@ export class Tab extends EventEmitter {
     return this;
   }
 
+  private suggestManagedFilenameFromName(name: string): string {
+    const trimmed = name.trim();
+    const safe = trimmed.replace(/[\\/]/g, "-");
+    return normalizeQueryFilename(safe);
+  }
+
+  /**
+   * User-triggered tab rename.
+   * For managed queries, also renames the managed query entry in the Query Browser.
+   */
+  public async renameTab(newName: string): Promise<void> {
+    const nextName = newName.trim();
+    if (!nextName) return;
+    if (nextName === this.name()) return;
+
+    const meta = this.getManagedQueryMetadata();
+    if (!meta) {
+      this.setName(nextName);
+      return;
+    }
+
+    const workspace = this.yasgui.persistentConfig.getWorkspace(meta.workspaceId);
+    if (!workspace) {
+      window.alert("Selected workspace no longer exists");
+      return;
+    }
+
+    const backend = getWorkspaceBackend(workspace, { persistentConfig: this.yasgui.persistentConfig });
+
+    if (meta.backendType === "sparql") {
+      const queryId = this.getManagedQueryIdFromMetadata(meta);
+      if (!queryId) return;
+      if (!backend.renameQuery) {
+        window.alert("This workspace does not support renaming queries");
+        return;
+      }
+
+      try {
+        await backend.renameQuery(queryId, nextName);
+        this.setName(nextName);
+        this.yasgui.queryBrowser.invalidateAndRefresh(meta.workspaceId);
+      } catch (e) {
+        const err = asWorkspaceBackendError(e);
+        window.alert(err.message);
+      }
+
+      return;
+    }
+
+    // Git: rename underlying file path so the Query Browser label changes.
+    const oldPath = (meta.queryRef as any)?.path as string | undefined;
+    if (!oldPath) {
+      this.setName(nextName);
+      return;
+    }
+
+    const parts = oldPath.split("/").filter(Boolean);
+    const oldFilename = parts.pop() || oldPath;
+    const folderPrefix = parts.join("/");
+
+    const newFilename = this.suggestManagedFilenameFromName(nextName);
+    const newPath = folderPrefix ? `${folderPrefix}/${newFilename}` : newFilename;
+
+    if (newPath === oldPath) {
+      // Nothing to rename on the backend; still allow tab label change.
+      this.setName(nextName);
+      return;
+    }
+
+    const expectedVersionTag = (() => {
+      if (!meta?.lastSavedVersionRef) return undefined;
+      if (meta.backendType === "git") return (meta.lastSavedVersionRef as any)?.commitSha;
+      return undefined;
+    })();
+
+    try {
+      await backend.writeQuery(newPath, this.getQueryTextForSave(), {
+        expectedVersionTag,
+        message: `Rename ${oldFilename} to ${newFilename}`,
+      });
+
+      if (!backend.deleteQuery) {
+        window.alert("This workspace does not support deleting queries, so the old file could not be removed.");
+      } else {
+        await backend.deleteQuery(oldPath);
+      }
+
+      const read = await backend.readQuery(newPath);
+      const lastSavedTextHash = hashQueryText(read.queryText);
+      const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
+
+      this.setManagedQueryMetadata({
+        ...meta,
+        queryRef: { ...(meta.queryRef as any), path: newPath },
+        lastSavedTextHash,
+        lastSavedVersionRef,
+      });
+
+      this.setName(nextName);
+      this.yasgui.queryBrowser.invalidateAndRefresh(meta.workspaceId);
+    } catch (e) {
+      const err = asWorkspaceBackendError(e);
+      window.alert(err.message);
+    }
+  }
+
   public hasResults() {
     return !!this.yasr?.results;
   }
@@ -917,6 +1264,20 @@ export class Tab extends EventEmitter {
         return processedReqConfig as PlainRequestConfig;
       },
     };
+
+    // Override editor-level save shortcut.
+    // Yasqe binds Ctrl+S to `yasqe.saveQuery()` (local storage) by default, which can prevent our document-level handler.
+    const existingExtraKeys = (yasqeConf as any).extraKeys;
+    const mergedExtraKeys: Record<string, any> =
+      existingExtraKeys && typeof existingExtraKeys === "object" ? { ...existingExtraKeys } : {};
+    mergedExtraKeys["Ctrl-S"] = () => {
+      const saveModalOpen = !!document.querySelector(".saveManagedQueryModalOverlay.open");
+      if (saveModalOpen) return;
+      void this.saveManagedQueryOrSaveAsManagedQuery();
+    };
+    mergedExtraKeys["Cmd-S"] = mergedExtraKeys["Ctrl-S"];
+    (yasqeConf as any).extraKeys = mergedExtraKeys;
+
     if (!yasqeConf.hintConfig) {
       yasqeConf.hintConfig = {};
     }
@@ -927,6 +1288,8 @@ export class Tab extends EventEmitter {
       throw new Error("Expected a wrapper element before instantiating yasqe");
     }
     this.yasqe = new Yasqe(this.yasqeWrapperEl, yasqeConf);
+
+    this.initSaveManagedQueryIcon();
 
     this.yasqe.on("blur", this.handleYasqeBlur);
     this.yasqe.on("query", this.handleYasqeQuery);
@@ -941,6 +1304,38 @@ export class Tab extends EventEmitter {
 
     // Add Ctrl+Click handler for URIs
     this.attachYasqeMouseHandler();
+  }
+
+  private initSaveManagedQueryIcon() {
+    if (!this.yasqe) return;
+
+    const wrapper = this.yasqe.getWrapperElement();
+    const buttons = wrapper?.querySelector(".yasqe_buttons");
+    if (!buttons) return;
+
+    // Avoid duplicates if Yasqe ever re-renders
+    if (buttons.querySelector(".yasqe_saveManagedQueryButton")) return;
+
+    const queryBtn = buttons.querySelector(".yasqe_queryButton");
+    if (!queryBtn) return;
+
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "yasqe_saveManagedQueryButton";
+    saveBtn.title = "Save managed query";
+    saveBtn.setAttribute("aria-label", "Save managed query");
+    saveBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-1 2l3 3h-3V5zM7 5h7v4H7V5zm5 16H7v-6h5v6zm2 0v-6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6H5V5h1v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V5h1v5h4v11h-6z"/>' +
+      "</svg>";
+
+    saveBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void this.saveManagedQueryOrSaveAsManagedQuery();
+    });
+
+    buttons.insertBefore(saveBtn, queryBtn);
   }
 
   private destroyYasqe() {

@@ -1,0 +1,271 @@
+.yasgui {
+  .yasgui-query-browser {
+    &__tooltip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: none;
+      z-index: 1000;
+
+      max-width: 520px;
+      max-height: 280px;
+      overflow: hidden;
+
+      white-space: pre-wrap;
+      word-break: break-word;
+
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--yasgui-border-color, #e0e0e0);
+      background: var(--yasgui-bg-primary, white);
+      color: var(--yasgui-text-primary, #000);
+      pointer-events: none;
+    }
+
+    &__tooltip.open {
+      display: block;
+    }
+
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--yasgui-overlay-bg, rgba(0, 0, 0, 0.5));
+    z-index: 10000;
+
+    &.open {
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-end;
+    }
+
+    &__drawer {
+      width: 420px;
+      max-width: 90vw;
+      height: 100%;
+      background: var(--yasgui-bg-primary, white);
+      border-left: 1px solid var(--yasgui-border-color, #e0e0e0);
+      display: flex;
+      flex-direction: column;
+    }
+
+    &__header {
+      border-bottom: 1px solid var(--yasgui-border-color, #e0e0e0);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    &__close {
+      background: none;
+      border: none;
+      padding: 6px 8px;
+      color: var(--yasgui-text-secondary, #666);
+      cursor: pointer;
+      border-radius: 4px;
+
+      &:hover {
+        color: var(--yasgui-text-primary, #000);
+      }
+    }
+
+    &__title {
+      font-weight: 600;
+      color: var(--yasgui-text-primary, #000);
+    }
+
+    &__header-controls {
+      display: flex;
+      gap: 8px;
+
+      select,
+      input {
+        flex: 1;
+        padding: 6px 8px;
+        border: 1px solid var(--yasgui-border-color, #e0e0e0);
+        border-radius: 4px;
+        background: var(--yasgui-bg-primary, white);
+        color: var(--yasgui-text-primary, #000);
+      }
+    }
+
+    &__body {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__back {
+      display: none;
+    }
+
+    &__status {
+      color: var(--yasgui-text-secondary, #666);
+      font-size: 13px;
+    }
+
+    &__list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    &__row {
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      border: 1px solid var(--yasgui-border-color, #e0e0e0);
+      border-radius: 4px;
+      background: var(--yasgui-bg-primary, white);
+      color: var(--yasgui-text-primary, #000);
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.85;
+      }
+      .yasgui-query-browser__actions {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      &:hover .yasgui-query-browser__actions,
+      &:focus-within .yasgui-query-browser__actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .yasgui-query-browser__action {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        padding: 2px 6px;
+        cursor: pointer;
+        font: inherit;
+        color: inherit;
+        opacity: 0.85;
+      }
+
+      .yasgui-query-browser__action:hover,
+      .yasgui-query-browser__action:focus-visible {
+        opacity: 1;
+        text-decoration: underline;
+        outline: none;
+      }
+
+      .yasgui-query-browser__action--danger {
+        font-weight: 600;
+      }
+    }
+
+    &__footer {
+      border-top: 1px solid var(--yasgui-border-color, #e0e0e0);
+      padding: 12px;
+    }
+
+    &__tree-row {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--yasgui-text-primary, #000);
+      cursor: pointer;
+
+      &:hover {
+        background: var(--yasgui-bg-secondary, #f7f7f7);
+        border-color: var(--yasgui-border-color, #e0e0e0);
+      }
+
+      .yasgui-query-browser__actions {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      &:hover .yasgui-query-browser__actions,
+      &:focus-within .yasgui-query-browser__actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .yasgui-query-browser__action {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        padding: 2px 6px;
+        cursor: pointer;
+        font: inherit;
+        color: inherit;
+        opacity: 0.85;
+      }
+
+      .yasgui-query-browser__action:hover,
+      .yasgui-query-browser__action:focus-visible {
+        opacity: 1;
+        text-decoration: underline;
+        outline: none;
+      }
+
+      .yasgui-query-browser__action--danger {
+        font-weight: 600;
+      }
+    }
+
+    &__tree-caret {
+      width: 16px;
+      color: var(--yasgui-text-secondary, #666);
+      flex: 0 0 auto;
+    }
+
+    &__tree-caret--placeholder {
+      visibility: hidden;
+    }
+
+    &__tree-icon {
+      width: 16px;
+      color: var(--yasgui-text-secondary, #666);
+      flex: 0 0 auto;
+    }
+
+    &__tree-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__tree-meta {
+      padding: 4px 8px;
+      font-size: 13px;
+      color: var(--yasgui-text-secondary, #666);
+    }
+
+    &__tree-meta--error {
+      color: var(--yasgui-text-secondary, #666);
+    }
+  }
+}

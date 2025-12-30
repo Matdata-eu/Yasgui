@@ -1,6 +1,7 @@
 import { Storage as YStorage } from "@matdata/yasgui-utils";
 import Yasgui, { EndpointButton, EndpointConfig } from "./";
 import * as Tab from "./Tab";
+import type { WorkspaceConfig } from "./queryManagement/types";
 export var storageNamespace = "triply";
 export interface PersistedJson {
   endpointHistory: string[];
@@ -12,6 +13,8 @@ export interface PersistedJson {
   autoCaptureEnabled?: boolean;
   customEndpointButtons?: EndpointButton[]; // Legacy, kept for backwards compatibility
   endpointConfigs?: EndpointConfig[]; // New endpoint-based storage with auth
+  workspaces?: WorkspaceConfig[];
+  activeWorkspaceId?: string;
   theme?: "light" | "dark";
   orientation?: "vertical" | "horizontal";
   showSnippetsBar?: boolean;
@@ -28,6 +31,8 @@ function getDefaults(): PersistedJson {
     autoCaptureEnabled: true,
     customEndpointButtons: [],
     endpointConfigs: [],
+    workspaces: [],
+    activeWorkspaceId: undefined,
   };
 }
 
@@ -215,6 +220,62 @@ export default class PersistentConfig {
     const configs = this.getEndpointConfigs();
     const filtered = configs.filter((c) => c.endpoint !== endpoint);
     this.setEndpointConfigs(filtered);
+  }
+
+  public getWorkspaces(): WorkspaceConfig[] {
+    return this.persistedJson.workspaces || [];
+  }
+
+  public getWorkspace(workspaceId: string): WorkspaceConfig | undefined {
+    return this.getWorkspaces().find((w) => w.id === workspaceId);
+  }
+
+  public setWorkspaces(workspaces: WorkspaceConfig[]) {
+    this.persistedJson.workspaces = workspaces;
+    this.toStorage();
+  }
+
+  public addOrUpdateWorkspace(workspace: WorkspaceConfig) {
+    const workspaces = this.getWorkspaces();
+    const existingIndex = workspaces.findIndex((w) => w.id === workspace.id);
+    const now = new Date().toISOString();
+
+    if (existingIndex >= 0) {
+      const existing = workspaces[existingIndex];
+      workspaces[existingIndex] = {
+        ...existing,
+        ...workspace,
+        createdAt: existing.createdAt || workspace.createdAt || now,
+        updatedAt: now,
+      };
+    } else {
+      workspaces.push({
+        ...workspace,
+        createdAt: workspace.createdAt || now,
+        updatedAt: now,
+      });
+    }
+
+    this.setWorkspaces(workspaces);
+  }
+
+  public deleteWorkspace(workspaceId: string) {
+    const workspaces = this.getWorkspaces();
+    const filtered = workspaces.filter((w) => w.id !== workspaceId);
+    this.setWorkspaces(filtered);
+
+    if (this.getActiveWorkspaceId() === workspaceId) {
+      this.setActiveWorkspaceId(undefined);
+    }
+  }
+
+  public getActiveWorkspaceId(): string | undefined {
+    return this.persistedJson.activeWorkspaceId;
+  }
+
+  public setActiveWorkspaceId(workspaceId: string | undefined) {
+    this.persistedJson.activeWorkspaceId = workspaceId;
+    this.toStorage();
   }
   public static clear() {
     const storage = new YStorage(storageNamespace);
