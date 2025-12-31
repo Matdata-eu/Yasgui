@@ -255,10 +255,12 @@ export class GithubProviderClient extends BaseGitProviderClient {
     qs.set("path", filePath);
     qs.set("per_page", "30");
 
-    const { json } = await this.request<GithubCommit[]>(
+    const { status, json } = await this.request<GithubCommit[]>(
       config,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?${qs.toString()}`,
     );
+
+    this.ensureOk(status, "Failed to list query versions.");
 
     const commits = Array.isArray(json) ? json : [];
     return commits
