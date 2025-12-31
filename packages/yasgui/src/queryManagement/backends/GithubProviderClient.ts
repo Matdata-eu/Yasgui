@@ -255,7 +255,7 @@ export class GithubProviderClient extends BaseGitProviderClient {
     qs.set("path", filePath);
     qs.set("per_page", "30");
 
-    const { status, json } = await this.request<GithubCommit[]>(
+    const { json } = await this.request<GithubCommit[]>(
       config,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?${qs.toString()}`,
     );
