@@ -140,12 +140,35 @@ export default class QueryBrowser {
     addClass(titleEl, "yasgui-query-browser__title");
     titleEl.textContent = "Query Browser";
 
+    const headerButtons = document.createElement("div");
+    addClass(headerButtons, "yasgui-query-browser__header-buttons");
+
+    const helpButton = document.createElement("button");
+    helpButton.type = "button";
+    addClass(helpButton, "yasgui-query-browser__help");
+    helpButton.setAttribute("aria-label", "Open documentation");
+    helpButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+    </svg>`;
+    helpButton.addEventListener("click", () => {
+      window.open(
+        "https://yasgui-doc.matdata.eu/docs/user-guide#managed-queries-and-workspaces",
+        "_blank",
+        "noopener,noreferrer",
+      );
+    });
+
     const closeButton = document.createElement("button");
     closeButton.type = "button";
-    closeButton.textContent = "Close";
     addClass(closeButton, "yasgui-query-browser__close");
     closeButton.setAttribute("aria-label", "Close query browser");
+    closeButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    </svg>`;
     closeButton.addEventListener("click", () => this.close());
+
+    headerButtons.appendChild(helpButton);
+    headerButtons.appendChild(closeButton);
 
     const headerControls = document.createElement("div");
     addClass(headerControls, "yasgui-query-browser__header-controls");
@@ -155,7 +178,7 @@ export default class QueryBrowser {
     const headerTop = document.createElement("div");
     addClass(headerTop, "yasgui-query-browser__header-top");
     headerTop.appendChild(titleEl);
-    headerTop.appendChild(closeButton);
+    headerTop.appendChild(headerButtons);
 
     this.headerEl.appendChild(headerTop);
     this.headerEl.appendChild(headerControls);
@@ -319,6 +342,64 @@ export default class QueryBrowser {
 
   private clearList() {
     this.listEl.innerHTML = "";
+  }
+
+  private renderEmptyWorkspaceState() {
+    const emptyState = document.createElement("div");
+    addClass(emptyState, "yasgui-query-browser__empty-state");
+
+    const icon = document.createElement("div");
+    addClass(icon, "yasgui-query-browser__empty-icon");
+    icon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+    </svg>`;
+
+    const title = document.createElement("h3");
+    addClass(title, "yasgui-query-browser__empty-title");
+    title.textContent = "No Workspaces Configured";
+
+    const description = document.createElement("p");
+    addClass(description, "yasgui-query-browser__empty-description");
+    description.innerHTML = `Workspaces allow you to save and manage SPARQL queries in a shared, versioned store. 
+      You can use SPARQL endpoints (recommended) or Git repositories (GitHub, GitLab, Bitbucket, Gitea) to store your queries.`;
+
+    const actionsContainer = document.createElement("div");
+    addClass(actionsContainer, "yasgui-query-browser__empty-actions");
+
+    const addWorkspaceBtn = document.createElement("button");
+    addClass(addWorkspaceBtn, "yasgui-query-browser__empty-button");
+    addClass(addWorkspaceBtn, "yasgui-query-browser__empty-button--primary");
+    addWorkspaceBtn.textContent = "Add Workspace";
+    addWorkspaceBtn.addEventListener("click", () => {
+      this.close();
+      const tab = this.yasgui.getTab();
+      if (tab && (tab as any).settingsModal) {
+        const modal = (tab as any).settingsModal;
+        modal.open();
+        // Switch to workspaces tab after a short delay to ensure modal is rendered
+        setTimeout(() => {
+          const workspacesButton = modal.modalContent?.querySelector(".modalNavButton:nth-child(3)") as HTMLElement;
+          if (workspacesButton) workspacesButton.click();
+        }, 50);
+      }
+    });
+
+    const learnMoreLink = document.createElement("a");
+    addClass(learnMoreLink, "yasgui-query-browser__empty-link");
+    learnMoreLink.href = "https://yasgui-doc.matdata.eu/docs/user-guide#managed-queries-and-workspaces";
+    learnMoreLink.target = "_blank";
+    learnMoreLink.rel = "noopener noreferrer";
+    learnMoreLink.textContent = "Learn more about workspaces";
+
+    actionsContainer.appendChild(addWorkspaceBtn);
+    actionsContainer.appendChild(learnMoreLink);
+
+    emptyState.appendChild(icon);
+    emptyState.appendChild(title);
+    emptyState.appendChild(description);
+    emptyState.appendChild(actionsContainer);
+
+    this.listEl.appendChild(emptyState);
   }
 
   private formatQueryPreview(queryText: string, description?: string): string {
@@ -917,8 +998,9 @@ export default class QueryBrowser {
     const workspaces = this.getWorkspaces();
     if (!this.selectedWorkspaceId || workspaces.length === 0) {
       this.backButtonEl.disabled = true;
-      this.setStatus("No workspaces configured. Add one in settings.");
+      this.setStatus("");
       this.clearList();
+      this.renderEmptyWorkspaceState();
       return;
     }
 
@@ -988,7 +1070,7 @@ export default class QueryBrowser {
         `folders:${foldersPart}`,
       ].join(";");
 
-      this.setStatus(rootEntries.length ? "" : "No queries");
+      this.setStatus(rootEntries.length ? "" : "No queries, add one by saving a tab to this workspace.");
       if (signature !== this.lastRenderedSignature) {
         this.lastRenderedSignature = signature;
         this.renderTree(backend);
