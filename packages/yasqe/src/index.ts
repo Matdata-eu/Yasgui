@@ -246,7 +246,48 @@ export class Yasqe extends CodeMirror {
     }
 
     /**
-     * draw share link button
+     * Draw query btn (FIRST)
+     */
+    if (this.config.showQueryButton) {
+      this.queryBtn = document.createElement("button");
+      addClass(this.queryBtn, "yasqe_queryButton");
+
+      /**
+       * Add text label
+       */
+      const queryTextLabel = document.createElement("span");
+      queryTextLabel.className = "yasqe_queryButton_text";
+      queryTextLabel.textContent = "Run query";
+      this.queryBtn.appendChild(queryTextLabel);
+
+      /**
+       * Add busy/valid/error btns
+       */
+      const queryEl = drawSvgStringAsElement(imgs.query);
+      addClass(queryEl, "queryIcon");
+      this.queryBtn.appendChild(queryEl);
+
+      const warningIcon = drawSvgStringAsElement(imgs.warning);
+      addClass(warningIcon, "warningIcon");
+      this.queryBtn.appendChild(warningIcon);
+
+      this.queryBtn.onclick = () => {
+        if (this.config.queryingDisabled) return; // Don't do anything
+        if (this.req) {
+          this.abortQuery();
+        } else {
+          this.query().catch(() => {}); //catch this to avoid unhandled rejection
+        }
+      };
+      this.queryBtn.title = "Run query (Ctrl+Enter)";
+      this.queryBtn.setAttribute("aria-label", "Run query");
+
+      buttons.appendChild(this.queryBtn);
+      this.updateQueryButton();
+    }
+
+    /**
+     * draw share link button (SECOND)
      */
     if (this.config.createShareableLink) {
       var svgShare = drawSvgStringAsElement(imgs.share);
@@ -481,41 +522,24 @@ export class Yasqe extends CodeMirror {
         }
       };
     }
+
     /**
-     * Draw query btn
+     * Draw save button (THIRD)
      */
-    if (this.config.showQueryButton) {
-      this.queryBtn = document.createElement("button");
-      addClass(this.queryBtn, "yasqe_queryButton");
-
-      /**
-       * Add busy/valid/error btns
-       */
-      const queryEl = drawSvgStringAsElement(imgs.query);
-      addClass(queryEl, "queryIcon");
-      this.queryBtn.appendChild(queryEl);
-
-      const warningIcon = drawSvgStringAsElement(imgs.warning);
-      addClass(warningIcon, "warningIcon");
-      this.queryBtn.appendChild(warningIcon);
-
-      this.queryBtn.onclick = () => {
-        if (this.config.queryingDisabled) return; // Don't do anything
-        if (this.req) {
-          this.abortQuery();
-        } else {
-          this.query().catch(() => {}); //catch this to avoid unhandled rejection
-        }
-      };
-      this.queryBtn.title = "Run query";
-      this.queryBtn.setAttribute("aria-label", "Run query");
-
-      buttons.appendChild(this.queryBtn);
-      this.updateQueryButton();
-    }
+    const saveBtn = document.createElement("button");
+    addClass(saveBtn, "yasqe_saveButton");
+    const saveIcon = drawSvgStringAsElement(imgs.save);
+    addClass(saveIcon, "saveIcon");
+    saveBtn.appendChild(saveIcon);
+    saveBtn.onclick = () => {
+      this.saveQuery();
+    };
+    saveBtn.title = "Save query (Ctrl+S)";
+    saveBtn.setAttribute("aria-label", "Save query");
+    buttons.appendChild(saveBtn);
 
     /**
-     * Draw format btn
+     * Draw format btn (FOURTH)
      */
     if (this.config.showFormatButton) {
       const formatBtn = document.createElement("button");
@@ -532,7 +556,7 @@ export class Yasqe extends CodeMirror {
     }
 
     /**
-     * Draw fullscreen btn
+     * Draw fullscreen btn (FIFTH)
      */
     this.fullscreenBtn = document.createElement("button");
     addClass(this.fullscreenBtn, "yasqe_fullscreenButton");
@@ -926,7 +950,7 @@ export class Yasqe extends CodeMirror {
       this.queryBtn.title = this.config.queryingDisabled;
     } else {
       removeClass(this.queryBtn, "query_disabled");
-      this.queryBtn.title = "Run query";
+      this.queryBtn.title = "Run query (Ctrl+Enter)";
       this.queryBtn.setAttribute("aria-label", "Run query");
     }
     if (!status) {

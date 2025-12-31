@@ -81,6 +81,12 @@
         height: 25px;
         width: 25px;
       }
+
+      &:hover {
+        svg {
+          fill: #337ab7;
+        }
+      }
     }
 
     button {
@@ -163,22 +169,46 @@
       }
     }
     .yasqe_queryButton {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       position: relative;
-      border: none;
-      background: none;
-      padding: 0;
+      border: 1px solid #337ab7;
+      background: #337ab7;
+      padding: 8px 16px;
       cursor: pointer;
-      width: $queryButtonWidth;
-      height: $queryButtonHeight;
+      border-radius: 4px;
+      color: white;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s ease;
+
+      .yasqe_queryButton_text {
+        display: inline-block;
+        line-height: 1;
+      }
 
       .queryIcon {
-        display: block;
+        display: inline-flex;
+        align-items: center;
         svg {
-          width: $queryButtonWidth;
-          height: $queryButtonHeight;
+          width: 16px;
+          height: 16px;
+          fill: white;
         }
       }
+
+      &:hover {
+        background: #2868a0;
+        border-color: #2868a0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      &:active {
+        background: #1f5180;
+        border-color: #1f5180;
+      }
+
       .svgImg {
         position: absolute;
         height: inherit;
@@ -186,6 +216,10 @@
       }
 
       &.busy {
+        background: #5a8fc2;
+        border-color: #5a8fc2;
+        cursor: wait;
+
         svg {
           #loadingIcon {
             stroke-dasharray: 100;
@@ -210,30 +244,34 @@
 
       .warningIcon {
         display: none;
+        position: absolute;
+        top: -4px;
+        right: -4px;
+
+        svg {
+          width: 18px;
+          height: 18px;
+          fill: #ffc107;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+        }
       }
 
       &.query_error {
         .warningIcon {
           display: block;
-          top: 5px;
-          right: 0px;
-
-          svg {
-            width: 15px;
-            height: 15px;
-
-            g {
-              fill: red;
-            }
-          }
         }
       }
 
       &.query_disabled {
         cursor: not-allowed;
-        .queryIcon {
-          opacity: 0.5;
-          filter: alpha(opacity=50);
+        opacity: 0.6;
+        background: #95b3d0;
+        border-color: #95b3d0;
+
+        &:hover {
+          background: #95b3d0;
+          border-color: #95b3d0;
+          box-shadow: none;
         }
       }
 
@@ -244,7 +282,7 @@
       }
     }
 
-    .yasqe_saveManagedQueryButton {
+    .yasqe_saveButton {
       display: inline-block;
       border: none;
       background: none;
@@ -255,6 +293,12 @@
       svg {
         height: 25px;
         width: 25px;
+      }
+
+      &:hover {
+        svg {
+          fill: #337ab7;
+        }
       }
     }
 
