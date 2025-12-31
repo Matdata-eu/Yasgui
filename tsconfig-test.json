@@ -11,5 +11,5 @@
     "noImplicitThis": false,
     "noUnusedLocals": false,
   },
-  "files": ["./packages/yasgui/typings-custom/main.d.ts", "./test/run.ts"]
+  "include": ["./packages/yasgui/typings-custom/main.d.ts", "./test/run.ts", "./test/unit/**/*.ts"]
 }

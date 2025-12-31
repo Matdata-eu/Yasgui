@@ -7,3 +7,8 @@
 /test
 /docs
 /dev
+
+# Common generated/local files
+.env*
+*.log*
+/coverage

@@ -165,6 +165,108 @@
   font-style: italic;
 }
 
+.settingsField {
+  margin-bottom: 10px;
+}
+
+.settingsFieldLabel {
+  font-size: 12px;
+  color: var(--yasgui-text-secondary, #666);
+  margin-bottom: 6px;
+}
+
+.settingsActionsRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.workspaceList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workspaceListRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--yasgui-border-color, #e0e0e0);
+  border-radius: 6px;
+  background: var(--yasgui-bg-secondary, white);
+}
+
+.workspaceListLabel {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--yasgui-text-primary, #000);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspaceListActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .dangerButton {
+    margin-top: 0;
+  }
+}
+
+.workspaceListStatus {
+  flex: 1;
+  font-size: 12px;
+  color: var(--yasgui-text-secondary, #666);
+  min-width: 0;
+}
+
+.workspaceConfigModalOverlay {
+  z-index: 10001;
+}
+
+.workspaceConfigModal {
+  background: var(--yasgui-bg-primary, white);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 700px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspaceConfigModalBody {
+  padding: 20px;
+  overflow: auto;
+}
+
+.workspaceConfigModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--yasgui-border-color, #e0e0e0);
+}
+
+.settingsActionsRow {
+  .dangerButton {
+    margin-top: 0;
+  }
+}
+
+.settingsStatus {
+  flex: 1;
+  font-size: 12px;
+  color: var(--yasgui-text-secondary, #666);
+}
+
 .settingsSelect {
   width: 100%;
   padding: 8px;

@@ -1,0 +1,245 @@
+.saveManagedQueryModalOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--yasgui-overlay-bg, rgba(0, 0, 0, 0.5));
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+
+  &.open {
+    display: flex;
+  }
+}
+
+.saveManagedQueryModal {
+  background: var(--yasgui-bg-primary, white);
+  border-radius: 8px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.saveManagedQueryModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--yasgui-border-color, #e0e0e0);
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--yasgui-text-primary, #000);
+  }
+
+  .closeButton {
+    background: none;
+    border: none;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--yasgui-text-secondary, #666);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+
+    &:hover {
+      color: var(--yasgui-text-primary, #333);
+    }
+  }
+}
+
+.saveManagedQueryModalBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.saveManagedQueryModalRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    color: var(--yasgui-text-secondary, #666);
+  }
+
+  input,
+  select {
+    padding: 8px 10px;
+    border: 1px solid var(--yasgui-input-border, rgba(0, 0, 0, 0.26));
+    border-radius: 4px;
+    background: var(--yasgui-bg-secondary, #f7f7f7);
+    color: var(--yasgui-text-primary, #000);
+
+    &:focus {
+      outline: none;
+      border-color: var(--yasgui-input-focus, #337ab7);
+    }
+
+    &::placeholder {
+      color: var(--yasgui-text-muted, #999);
+    }
+  }
+
+  .folderPathContainer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    input {
+      flex: 1;
+    }
+
+    .folderPickerToggle {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--yasgui-border-color, #e0e0e0);
+      background: var(--yasgui-bg-primary, white);
+      color: var(--yasgui-text-primary, #000);
+      cursor: pointer;
+    }
+  }
+}
+
+.folderPicker {
+  display: none;
+  border: 1px solid var(--yasgui-border-color, #e0e0e0);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--yasgui-bg-secondary, #f7f7f7);
+}
+
+.folderPicker.open {
+  display: block;
+}
+
+.folderPickerPath {
+  font-size: 13px;
+  color: var(--yasgui-text-secondary, #666);
+  margin-bottom: 8px;
+}
+
+.folderPickerActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  button {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--yasgui-border-color, #e0e0e0);
+    background: var(--yasgui-bg-primary, white);
+    color: var(--yasgui-text-primary, #000);
+    cursor: pointer;
+  }
+}
+
+.folderPickerError {
+  font-size: 13px;
+  color: var(--yasgui-text-secondary, #666);
+  margin-bottom: 8px;
+}
+
+.folderPickerList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.folderPickerItem {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--yasgui-border-color, #e0e0e0);
+  background: var(--yasgui-bg-primary, white);
+  color: var(--yasgui-text-primary, #000);
+  cursor: pointer;
+}
+
+.folderPickerEmpty {
+  font-size: 13px;
+  color: var(--yasgui-text-secondary, #666);
+}
+
+.newFolderRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  input {
+    flex: 1;
+  }
+
+  button {
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--yasgui-border-color, #e0e0e0);
+    background: var(--yasgui-bg-primary, white);
+    color: var(--yasgui-text-primary, #000);
+    cursor: pointer;
+  }
+}
+
+.saveManagedQueryModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--yasgui-border-color, #e0e0e0);
+
+  button {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--yasgui-border-color, #e0e0e0);
+    background: var(--yasgui-bg-primary, white);
+    color: var(--yasgui-text-primary, #000);
+    cursor: pointer;
+
+    &.primary {
+      font-weight: 600;
+    }
+
+    &.saving {
+      opacity: 0.6;
+      cursor: not-allowed;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: saveManagedQueryModalSpin 0.8s linear infinite;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@keyframes saveManagedQueryModalSpin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}

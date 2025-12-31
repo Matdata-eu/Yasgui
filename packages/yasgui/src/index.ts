@@ -16,6 +16,7 @@ import TablePlugin from "@matdata/yasgui-table-plugin";
 import "@matdata/yasgui-graph-plugin/dist/yasgui-graph-plugin.min.css";
 import "@matdata/yasgui-table-plugin/dist/yasgui-table-plugin.min.css";
 import { ThemeManager, Theme } from "./ThemeManager";
+import QueryBrowser from "./queryManagement/QueryBrowser";
 import "./index.scss";
 import "./themes.scss";
 import "../../yasr/src/scss/global.scss";
@@ -152,6 +153,7 @@ export class Yasgui extends EventEmitter {
   public config: Config;
   public persistentConfig: PersistentConfig;
   public themeManager: ThemeManager;
+  public queryBrowser: QueryBrowser;
   public static Tab = Tab;
   constructor(parent: HTMLElement, config: PartialConfig) {
     super();
@@ -178,8 +180,11 @@ export class Yasgui extends EventEmitter {
     this.tabElements = new TabElements(this);
     this.tabPanelsEl = document.createElement("div");
 
+    this.queryBrowser = new QueryBrowser(this);
+
     this.rootEl.appendChild(this.tabElements.drawTabsList());
     this.rootEl.appendChild(this.tabPanelsEl);
+    this.rootEl.appendChild(this.queryBrowser.getElement());
     let executeIdAfterInit: string | undefined;
     let optionsFromUrl: PersistedTabJson | undefined;
     if (this.config.populateFromUrl) {
@@ -455,6 +460,8 @@ export class Yasgui extends EventEmitter {
 export function getRandomId() {
   return Math.random().toString(36).substring(7);
 }
+
+export * from "./queryManagement";
 
 export type { Theme } from "./ThemeManager";
 export default Yasgui;

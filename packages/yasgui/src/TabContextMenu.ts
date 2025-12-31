@@ -15,6 +15,7 @@ export default class TabContextMenu {
   private newTabEl!: HTMLElement;
   private renameTabEl!: HTMLElement;
   private copyTabEl!: HTMLElement;
+  private saveManagedQueryEl!: HTMLElement;
   private closeTabEl!: HTMLElement;
   private closeOtherTabsEl!: HTMLElement;
   private reOpenOldTab!: HTMLElement;
@@ -49,6 +50,8 @@ export default class TabContextMenu {
 
     this.copyTabEl = this.getMenuItemEl("Copy Tab");
 
+    this.saveManagedQueryEl = this.getMenuItemEl("Save as managed query");
+
     this.closeTabEl = this.getMenuItemEl("Close Tab");
 
     this.closeOtherTabsEl = this.getMenuItemEl("Close other tabs");
@@ -59,6 +62,7 @@ export default class TabContextMenu {
     dropDownList.appendChild(this.newTabEl);
     dropDownList.appendChild(this.renameTabEl);
     dropDownList.appendChild(this.copyTabEl);
+    dropDownList.appendChild(this.saveManagedQueryEl);
     // Add divider
     dropDownList.appendChild(document.createElement("hr"));
     dropDownList.appendChild(this.closeTabEl);
@@ -103,6 +107,12 @@ export default class TabContextMenu {
       const config = cloneDeep(tab.getPersistedJson());
       config.id = getRandomId();
       this.yasgui.addTab(true, config);
+    };
+
+    this.saveManagedQueryEl.onclick = async () => {
+      if (!tab) return;
+      await tab.saveManagedQueryOrSaveAsManagedQuery();
+      this.closeConfigMenu();
     };
 
     // Close tab functionality

@@ -1,0 +1,207 @@
+
+@prefix yasgui:  <https://matdata.eu/ns/yasgui#> .
+@prefix ex:      <https://matdata.eu/id/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix spin:    <http://spinrdf.org/spin#> .
+@prefix sd:      <http://www.w3.org/ns/sparql-service-description#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+#############################
+# Endpoints (sd:Service)
+#############################
+
+ex:eraEndpoint
+  a sd:Service ;
+  rdfs:label "ERA SPARQL Endpoint" ;
+  sd:endpoint <https://data-interop.era.europa.eu/api/sparql> .
+
+ex:wikidataEndpoint
+  a sd:Service ;
+  rdfs:label "Wikidata SPARQL Endpoint" ;
+  sd:endpoint <https://query.wikidata.org/sparql> .
+
+#############################
+# Workspaces (ConceptSchemes)
+#############################
+
+ex:Workspace_RailwayOps
+  a yasgui:Workspace ;
+  rdfs:label "Railway Ops Workspace" .
+
+ex:Workspace_ERA_Examples
+  a yasgui:Workspace ;
+  rdfs:label "ERA Examples Workspace" .
+
+#############################
+# Folders (WorkspaceFolder) under Railway Ops
+#############################
+
+ex:railway
+  a yasgui:WorkspaceFolder ;
+  skos:inScheme ex:Workspace_RailwayOps ;
+  rdfs:label "railway" .
+
+ex:analytics
+  a yasgui:WorkspaceFolder ;
+  skos:inScheme ex:Workspace_RailwayOps ;
+  rdfs:label "analytics" .
+
+ex:safety
+  a yasgui:WorkspaceFolder ;
+  skos:inScheme ex:Workspace_RailwayOps ;
+  rdfs:label "safety" ;
+  skos:broader ex:railway .
+
+ex:infrastructure
+  a yasgui:WorkspaceFolder ;
+  skos:inScheme ex:Workspace_RailwayOps ;
+  rdfs:label "infrastructure" ;
+  skos:broader ex:railway .
+
+#############################
+# Agent (author)
+#############################
+
+ex:mathias
+  a prov:Person ;
+  rdfs:label "Mathias Vanden Auweele" .
+
+#############################
+# Managed Queries in Railway Ops
+#############################
+
+# Query A: placed inside 'railway' folder; latest version uses ERA
+ex:RailwayAssetsQuery
+  a yasgui:ManagedQuery ;
+  rdfs:label "Railway assets listing" ;
+  dcterms:description "Lists railway asset identifiers via ERA data." ;
+  dcterms:isPartOf ex:railway .
+
+# Query B: placed at the workspace root; latest version uses Wikidata
+ex:OperatorLookupQuery
+  a yasgui:ManagedQuery ;
+  rdfs:label "Operator lookup" ;
+  dcterms:description "Look up railway operators; uses an external reference source." ;
+  dcterms:isPartOf ex:Workspace_RailwayOps .
+
+#############################
+# Versions for Railway Ops
+#############################
+
+# --- RailwayAssetsQuery versions ---
+ex:RailwayAssets_v1
+  a yasgui:ManagedQueryVersion ;
+  dcterms:isVersionOf ex:RailwayAssetsQuery ;
+  dcterms:creator ex:mathias ;
+  dcterms:created "2025-10-20T09:30:00Z"^^xsd:dateTime ;
+  prov:used ex:eraEndpoint ;
+  spin:text """
+# ERA example: list some railway-related resources
+PREFIX era: <https://data-interop.era.europa.eu/ontology/>
+SELECT ?asset
+WHERE {
+  ?asset a era:RailwayAsset .
+}
+LIMIT 50
+""" .
+
+ex:RailwayAssets_v2
+  a yasgui:ManagedQueryVersion ;
+  dcterms:isVersionOf ex:RailwayAssetsQuery ;
+  dcterms:creator ex:mathias ;
+  dcterms:created "2025-12-21T09:45:00Z"^^xsd:dateTime ;
+  prov:used ex:eraEndpoint ;
+  spin:text """
+# ERA example: list railway assets with optional label
+PREFIX era:  <https://data-interop.era.europa.eu/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?asset ?label
+WHERE {
+  ?asset a era:RailwayAsset .
+  OPTIONAL { ?asset rdfs:label ?label }
+}
+LIMIT 100
+""" .
+
+# --- OperatorLookupQuery versions ---
+ex:OperatorLookup_v1
+  a yasgui:ManagedQueryVersion ;
+  dcterms:isVersionOf ex:OperatorLookupQuery ;
+  dcterms:creator ex:mathias ;
+  dcterms:created "2025-11-05T14:00:00Z"^^xsd:dateTime ;
+  prov:used ex:wikidataEndpoint ;
+  spin:text """
+# Wikidata example: railway operators (illustrative)
+PREFIX wd:  <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?operator ?label
+WHERE {
+  ?operator wdt:P31 wd:Q494423 .     # instance of railway company
+  ?operator rdfs:label ?label .
+  FILTER(LANG(?label) = "en")
+}
+LIMIT 50
+""" .
+
+#############################
+# ERA-only Workspace (ConceptScheme)
+#############################
+
+# Queries under ERA-only workspace (all versions use ERA)
+
+# Query C: placed in 'ERA Examples Workspace' root
+ex:EraRollingStockQuery
+  a yasgui:ManagedQuery ;
+  rdfs:label "ERA rolling stock listing" ;
+  dcterms:description "List rolling stock items from ERA data." ;
+  dcterms:isPartOf ex:Workspace_ERA_Examples .
+
+ex:EraRollingStock_v1
+  a yasgui:ManagedQueryVersion ;
+  dcterms:isVersionOf ex:EraRollingStockQuery ;
+  dcterms:creator ex:mathias ;
+  dcterms:created "2025-09-15T10:00:00Z"^^xsd:dateTime ;
+  prov:used ex:eraEndpoint ;
+  spin:text """
+# ERA example: list rolling stock
+PREFIX era:  <https://data-interop.era.europa.eu/ontology/>
+SELECT ?rs
+WHERE {
+  ?rs a era:RollingStock .
+}
+LIMIT 100
+""" .
+
+# Query D: placed inside an ERA-only folder
+ex:era_examples
+  a yasgui:WorkspaceFolder ;
+  skos:inScheme ex:Workspace_ERA_Examples ;
+  rdfs:label "examples" .
+
+ex:EraInfrastructureQuery
+  a yasgui:ManagedQuery ;
+  rdfs:label "ERA infrastructure overview" ;
+  dcterms:description "List infrastructure elements from ERA." ;
+  dcterms:isPartOf ex:era_examples .
+
+ex:EraInfrastructure_v1
+  a yasgui:ManagedQueryVersion ;
+  dcterms:isVersionOf ex:EraInfrastructureQuery ;
+  dcterms:creator ex:mathias ;
+  dcterms:created "2025-10-01T12:00:00Z"^^xsd:dateTime ;
+  prov:used ex:eraEndpoint ;
+  spin:text """
+# ERA example: infrastructure elements
+PREFIX era:  <https://data-interop.era.europa.eu/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?infra ?label
+WHERE {
+  ?infra a era:InfrastructureElement .
+  OPTIONAL { ?infra rdfs:label ?label }
+}
+LIMIT 100
+""" .

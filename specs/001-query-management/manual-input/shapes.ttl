@@ -1,0 +1,188 @@
+
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix yasgui:   <https://matdata.eu/ns/yasgui#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix prov:     <http://www.w3.org/ns/prov#> .
+@prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
+@prefix sd:       <http://www.w3.org/ns/sparql-service-description#> .
+@prefix spin:     <http://spinrdf.org/spin#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+#################################################################
+# Workspace (ConceptScheme)
+#################################################################
+
+yasgui:WorkspaceShape
+  a sh:NodeShape ;
+  sh:targetClass yasgui:Workspace ;
+  sh:closed false ;
+  sh:ignoredProperties ( rdf:type ) ;
+
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Workspace must have rdfs:label." ;
+  ] .
+
+#################################################################
+# WorkspaceFolder (skos:Concept)
+#################################################################
+
+yasgui:WorkspaceFolderShape
+  a sh:NodeShape ;
+  sh:targetClass yasgui:WorkspaceFolder ;
+  sh:closed false ;
+  sh:ignoredProperties ( rdf:type ) ;
+
+  sh:property [
+    sh:path skos:inScheme ;
+    sh:minCount 1 ;
+    sh:class yasgui:Workspace ;
+    sh:message "WorkspaceFolder must belong to a yasgui:Workspace (skos:ConceptScheme)." ;
+  ] ;
+
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "WorkspaceFolder must have rdfs:label." ;
+  ] ;
+
+  sh:property [
+    sh:path skos:broader ;
+    sh:minCount 0 ;
+    sh:class yasgui:WorkspaceFolder ;
+    sh:message "If present, skos:broader should point to another WorkspaceFolder." ;
+  ] ;
+
+  sh:sparql [
+    a sh:SPARQLConstraint ;
+    sh:message "Folder hierarchy must be acyclic (no folder broader+ itself)." ;
+    sh:select """
+      PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+      SELECT $this WHERE { $this (skos:broader)+ $this . }
+    """ ;
+  ] .
+
+#################################################################
+# ManagedQuery (logical artifact)
+#################################################################
+
+yasgui:ManagedQueryShape
+  a sh:NodeShape ;
+  sh:targetClass yasgui:ManagedQuery ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type ) ;
+
+  sh:property [
+    sh:path rdfs:label ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+    sh:message "ManagedQuery must have rdfs:label." ;
+  ] ;
+
+  sh:property [
+    sh:path dcterms:description ;
+    sh:datatype xsd:string ;
+    sh:minCount 0 ;
+    sh:message "Optional dcterms:description is a string." ;
+  ] ;
+
+  sh:property [
+    sh:path dcterms:isPartOf ;
+    sh:minCount 1 ;
+    sh:or (
+      [ sh:class yasgui:WorkspaceFolder ]
+      [ sh:class yasgui:Workspace ]
+    ) ;
+    sh:message "ManagedQuery must be placed in a WorkspaceFolder or directly in a Workspace (root document)." ;
+  ] .
+
+#################################################################
+# ManagedQueryVersion (immutable)
+#################################################################
+
+yasgui:ManagedQueryVersionShape
+  a sh:NodeShape ;
+  sh:targetClass yasgui:ManagedQueryVersion ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type ) ;
+
+  sh:property [
+    sh:path dcterms:isVersionOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class yasgui:ManagedQuery ;
+    sh:message "Version must declare which ManagedQuery it is a version of (dcterms:isVersionOf)." ;
+  ] ;
+
+  sh:property [
+    sh:path dcterms:creator ;
+    sh:minCount 1 ;
+    sh:node yasgui:AgentShape ;
+    sh:message "Each version must have a dcterms:creator (author)." ;
+  ] ;
+
+  sh:property [
+    sh:path dcterms:created ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:dateTime ;
+    sh:message "Each version must have dcterms:created (xsd:dateTime)." ;
+  ] ;
+
+  sh:property [
+    sh:path spin:text ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "Each version must carry the SPARQL query text in spin:text." ;
+  ] ;
+
+  sh:property [
+    sh:path prov:used ;
+    sh:minCount 1 ;
+    sh:node yasgui:SdServiceShape ;
+    sh:message "Each version must reference at least one sd:Service via prov:used." ;
+  ] ;
+.
+
+#################################################################
+# sd:Service (endpoint)
+#################################################################
+
+yasgui:SdServiceShape
+  a sh:NodeShape ;
+  sh:targetClass sd:Service ;
+
+  sh:property [
+    sh:path sd:endpoint ;
+    sh:minCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:message "sd:Service must have at least one sd:endpoint (IRI)." ;
+  ] .
+
+#################################################################
+# Agents (authors / attribution)
+#################################################################
+
+yasgui:AgentShape
+  a sh:NodeShape ;
+  sh:targetClass prov:Agent ;
+
+  sh:or (
+    [ sh:class prov:Person ]
+    [ sh:class prov:Organization ]
+    [ sh:hasValue prov:Agent ]
+  ) ;
+
+  sh:property [
+    sh:path rdfs:label ;
+    sh:minCount 0 ;
+    sh:datatype xsd:string ;
+    sh:message "Agents should have rdfs:label for display." ;
+    sh:severity sh:Info ;
+  ] .

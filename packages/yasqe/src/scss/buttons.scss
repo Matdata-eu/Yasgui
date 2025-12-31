@@ -244,6 +244,20 @@
       }
     }
 
+    .yasqe_saveManagedQueryButton {
+      display: inline-block;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 5px;
+
+      svg {
+        height: 25px;
+        width: 25px;
+      }
+    }
+
     .yasqe_formatButton {
       display: inline-block;
       border: none;

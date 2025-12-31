@@ -35,6 +35,7 @@
     - [Query Tabs](#query-tabs)
     - [Settings Modal](#settings-modal)
     - [SPARQL Endpoints Management](#sparql-endpoints-management)
+    - [Managed Queries and Workspaces](#managed-queries-and-workspaces)
     - [Query History and Persistence](#query-history-and-persistence)
     - [Share Queries](#share-queries)
   - [Plugins](#plugins)
@@ -257,6 +258,7 @@ This eliminates browser permission prompts since both YASGUI and your local endp
 ---
 
 ## Components Overview
+
 
 YASGUI consists of three main components working together:
 
@@ -774,8 +776,6 @@ YASGUI supports multiple authentication methods for endpoints that require crede
 - **Process**: Click "Save & Authenticate" to open OAuth login window
 - **⚠️ Important**: The redirect URI must be registered with your OAuth provider by the OAuth administrator before authentication will work
 
-**Security Considerations:**
-
 ⚠️ **Important Security Notes:**
 
 - **Credentials are stored in browser localStorage**: Your authentication credentials are stored locally in your browser
@@ -842,6 +842,111 @@ Before using OAuth 2.0, the OAuth administrator must register the redirect URI (
 - Scope: `openid profile` (adjust based on client configuration)
 - Note: Client should have "Standard Flow" enabled and "Access Type" set to "public"
 - **Redirect URI Registration**: Add your YASGUI URL to "Valid Redirect URIs" in Keycloak client configuration
+
+### Managed Queries and Workspaces
+
+YASGUI can be configured with **managed-queries and workspaces**, which provide a shared, versioned store for SPARQL queries (for example in Git or in an RDF store). A managed query is the name of a query that is saved in a workspace. A workspace can be linked to a git or sparql backand, is setup by the user and is required before queries can be saved.
+
+#### Workspaces
+
+**Configure workspaces:**
+
+1. Open **Settings** (⚙) for a tab
+2. Go to the **Workspaces** tab
+3. Add one or more workspaces (Git or SPARQL) and choose a **Default workspace**
+4. (Optional) Click **Validate access** to test the configuration
+
+Note: the recommended type of workspace is SPARQL. It is more feature rich (allows to save endpoints and descriptions) and is much faster. The Git based workspace uses HTTP calls to the Git provider API, several calls are required to read/write queries, which makes it slower.
+
+##### SPARQL workspaces
+
+**Configuration fields:**
+
+- **SPARQL endpoint**: which endpoint to use for reading/writing the workspace data. This is selected from your configured endpoints (including any auth headers you set up for that endpoint).
+- **Workspace IRI**: the IRI that identifies the workspace in the RDF store (the `yasgui:Workspace` / SKOS concept scheme).
+  - You can **reuse an existing** workspace IRI to point to already-stored managed queries.
+  - Or choose a **new** workspace IRI to start a fresh workspace.
+- **Default graph (optional)**: the named graph to read/write workspace data in (sent as `default-graph-uri`). Leave empty to use the store’s default dataset behavior.
+
+**URI minting strategy:**
+
+In SPARQL-based workspaces, YASGUI assigns **immutable identifiers** (URIs) to managed queries and their versions.
+This is important because users can rename queries (and query names can change over time), but the **identity** of a managed query should remain stable.
+
+- Managed query URI: `<workspaceIri>_mq_<uuid>`
+- Managed query version URI: `<workspaceIri>_mq_v_<uuid>`
+
+Notes:
+
+- The base is always the workspace URI (`workspaceIri`), followed by `_mq_` or `_mq_v_`, then a UUID.
+- The URI does **not** include the query name
+- Renaming a query changes its `rdfs:label`, not its URI.
+- Versions are immutable snapshots linked via `dcterms:isVersionOf`.
+
+**Tip: local Apache Jena/Fuseki endpoint (Docker)**
+
+If you want a quick local SPARQL endpoint to test with, you can run a Fuseki server with GeoSPARQL support:
+
+```sh
+docker run -p 3030:3030 mathiasvda/apache-jena-fuseki-geosparql
+```
+
+Then configure YASGUI to use the endpoint URL:
+
+`http://localhost:3030/ds/`
+
+**Limitations / notes:**
+
+- If the SPARQL endpoint is blocked by browser **CORS** policies, the workspace may not work without a proxy.
+
+##### Git based workspaces
+
+**Supported providers:**
+
+- **GitHub** (including GitHub Enterprise)
+- **GitLab** (GitLab.com and self-hosted)
+- **Bitbucket Cloud** 
+- **Gitea** (self-hosted)
+
+Currently GitHub and GitLab have been thoroughly tested; Bitbucket Cloud and Gitea support covers the same as GitHub/GitLab but have not been extensively tested.
+
+Git workspaces are implemented via the providers' **HTTPS REST APIs**.
+
+- The `remoteUrl` can be `https://...`, `ssh://...`, or SCP-style (e.g. `git@host:org/repo.git`).
+- **Important:** SSH/SCP-like remotes are **only parsed** to identify `host` + `owner/repo`. YASGUI does **not** implement Git-over-SSH; all reads/writes still happen through the provider's HTTPS API.
+
+**Configuration fields:**
+
+- **Remote URL**: repository URL (see formats above)
+- **Token**: stored locally and never re-displayed after entry
+- **Advanced (optional)**:
+  - **Provider**: force a specific provider client (otherwise auto-detect)
+  - **API base URL**: for enterprise/self-hosted instances (e.g., GitHub Enterprise `.../api/v3`, GitLab `.../api/v4`, Gitea `.../api/v1`)
+  - **Branch**: optional; if left empty, the provider default branch is used when possible
+  - **Root path**: optional subfolder within the repo
+  - **Username**: optional; required by Bitbucket Cloud when using an app password
+
+**Limitations / notes:**
+
+- If the provider API is blocked by browser **CORS** policies, a Git workspace may not work without a proxy.
+- Git workspaces store only query text files (`.sparql`); they do not store endpoint associations, so opening a Git-managed query will not auto-switch endpoints.
+
+#### Managed queries
+
+**Browse and open managed queries:**
+
+- Open the **Query Browser** from the per-tab control bar
+- Navigate folders and select a query to open it in a new tab
+- SPARQL based workspace only: the endpoint is automatically switched to the one saved with the managed query
+
+**Save as managed query:**
+
+- Use the tab context menu action **Save as managed query**
+- Saving the same query text does not create a new version; changing text creates a new version
+
+**Credentials:**
+
+- Tokens are stored locally, not saved together with the managed query and are not re-displayed after entry
 
 ### Query History and Persistence
 

@@ -20,6 +20,7 @@ export class TabListEl {
   private renameEl?: HTMLInputElement;
   private nameEl?: HTMLSpanElement;
   public tabEl?: HTMLDivElement;
+  private renameSubmitted = false;
   constructor(yasgui: Yasgui, tabList: TabList, tabId: string) {
     this.tabList = tabList;
     this.yasgui = yasgui;
@@ -35,6 +36,7 @@ export class TabListEl {
     if (this.renameEl) {
       const tab = this.yasgui.getTab(this.tabId);
       if (tab) {
+        this.renameSubmitted = false;
         this.renameEl.value = tab.name();
         addClass(this.tabEl, "renaming");
         this.renameEl.focus();
@@ -67,6 +69,15 @@ export class TabListEl {
       removeClass(this.tabEl, "querying");
     }
   }
+  public setAsRenaming(renaming: boolean) {
+    if (renaming) {
+      addClass(this.tabEl, "renamingInProgress");
+      if (this.renameEl) this.renameEl.disabled = true;
+    } else {
+      removeClass(this.tabEl, "renamingInProgress");
+      if (this.renameEl) this.renameEl.disabled = false;
+    }
+  }
   public draw(name: string) {
     this.tabEl = document.createElement("div");
     this.tabEl.setAttribute("role", "presentation");
@@ -74,8 +85,21 @@ export class TabListEl {
       this.startRename();
     };
     addClass(this.tabEl, "tab");
+
+    const tabConf = this.yasgui.persistentConfig.getTab(this.tabId) as any;
+    if (tabConf?.managedQuery) {
+      addClass(this.tabEl, "managed");
+    }
+
+    // Set initial dirty state for managed queries (e.g., after reload).
+    const initialTab = this.yasgui.getTab(this.tabId);
+    if (initialTab?.hasUnsavedManagedChanges?.()) {
+      addClass(this.tabEl, "managedDirty");
+    }
+
     this.tabEl.addEventListener("keydown", (e: KeyboardEvent) => {
       // Don't handle Delete key if we're renaming the tab (input field is active)
+      if (!this.tabEl) return;
       if (e.code === "Delete" && !this.tabEl.classList.contains("renaming")) {
         handleDeleteTab();
       }
@@ -103,9 +127,10 @@ export class TabListEl {
     tabLinkEl.addEventListener("focus", () => {
       if (!this.tabEl) return;
       if (this.tabEl.classList.contains("active")) {
-        const allTabs = Object.keys(this.tabList._tabs);
-        const currentTabIndex = allTabs.indexOf(this.tabId);
-        this.tabList.tabEntryIndex = currentTabIndex;
+        // Keep arrow-key navigation in sync with actual DOM order
+        const listEl = this.tabList._tabsListEl;
+        if (!listEl) return;
+        this.tabList.tabEntryIndex = Array.prototype.indexOf.call(listEl.children, this.tabEl);
       }
     });
     // if (this.yasgui.persistentConfig.tabIsActive(this.tabId)) {
@@ -134,15 +159,19 @@ export class TabListEl {
     const renameEl = (this.renameEl = document.createElement("input"));
     renameEl.type = "text";
     renameEl.value = name;
+    const submitRename = () => {
+      if (this.renameSubmitted) return;
+      this.renameSubmitted = true;
+      void this.yasgui.getTab(this.tabId)?.renameTab(renameEl.value);
+      removeClass(this.tabEl, "renaming");
+    };
     renameEl.onkeyup = (event) => {
       if (event.key === "Enter") {
-        this.yasgui.getTab(this.tabId)?.setName(renameEl.value);
-        removeClass(this.tabEl, "renaming");
+        submitRename();
       }
     };
     renameEl.onblur = () => {
-      this.yasgui.getTab(this.tabId)?.setName(renameEl.value);
-      removeClass(this.tabEl, "renaming");
+      submitRename();
     };
     // Prevent sortablejs from detecting drag events on the input field
     renameEl.addEventListener("mousedown", (e) => {
@@ -185,6 +214,7 @@ export class TabList {
   public _tabsListEl?: HTMLDivElement;
   public tabContextMenu?: TabContextMenu;
   public tabEntryIndex: number | undefined;
+  private _queryBrowserToggleEl?: HTMLDivElement;
 
   constructor(yasgui: Yasgui) {
     this.yasgui = yasgui;
@@ -214,6 +244,24 @@ export class TabList {
         this._tabs[id].setAsQuerying(false);
       }
     });
+
+    this.yasgui.on("tabChange", (_yasgui, tab) => {
+      const id = tab.getId();
+      const tabEl = this._tabs[id]?.tabEl;
+      if (!tabEl) return;
+
+      if (tab.isManagedQueryTab()) {
+        addClass(tabEl, "managed");
+      } else {
+        removeClass(tabEl, "managed");
+      }
+
+      if (tab.hasUnsavedManagedChanges()) {
+        addClass(tabEl, "managedDirty");
+      } else {
+        removeClass(tabEl, "managedDirty");
+      }
+    });
   }
   private getActiveIndex() {
     if (!this._selectedTab) return;
@@ -228,26 +276,37 @@ export class TabList {
       if (!this._tabsListEl) return;
       const numOfChildren = this._tabsListEl.childElementCount;
       if (typeof this.tabEntryIndex !== "number") return;
+
+      const isQueryBrowserToggleEntry = (el: Element) => !!(el as HTMLElement).querySelector?.(".queryBrowserToggle");
+      const advance = (direction: -1 | 1) => {
+        let nextIndex = this.tabEntryIndex as number;
+        for (let i = 0; i < numOfChildren; i++) {
+          nextIndex += direction;
+          if (nextIndex < 0) nextIndex = numOfChildren - 1;
+          if (nextIndex >= numOfChildren) nextIndex = 0;
+
+          const candidate = this._tabsListEl!.children[nextIndex];
+          if (isQueryBrowserToggleEntry(candidate)) continue;
+          if (!candidate.children[0]) continue;
+          return nextIndex;
+        }
+        return this.tabEntryIndex as number;
+      };
+
       const tabEntryDiv = this._tabsListEl.children[this.tabEntryIndex];
       // If the current tab does not have active set its tabindex to -1
       if (!tabEntryDiv.classList.contains("active")) {
-        tabEntryDiv.children[0].setAttribute("tabindex", "-1"); // cur tab removed from tab index
+        tabEntryDiv.children[0]?.setAttribute("tabindex", "-1"); // cur tab removed from tab index
       }
       if (e.code === "ArrowLeft") {
-        this.tabEntryIndex--;
-        if (this.tabEntryIndex < 0) {
-          this.tabEntryIndex = numOfChildren - 1;
-        }
+        this.tabEntryIndex = advance(-1);
       }
       if (e.code === "ArrowRight") {
-        this.tabEntryIndex++;
-        if (this.tabEntryIndex >= numOfChildren) {
-          this.tabEntryIndex = 0;
-        }
+        this.tabEntryIndex = advance(1);
       }
       const newTabEntryDiv = this._tabsListEl.children[this.tabEntryIndex];
-      newTabEntryDiv.children[0].setAttribute("tabindex", "0");
-      (newTabEntryDiv.children[0] as HTMLElement).focus(); // focus on the a tag inside the div for click event
+      newTabEntryDiv.children[0]?.setAttribute("tabindex", "0");
+      (newTabEntryDiv.children[0] as HTMLElement | undefined)?.focus(); // focus on the a tag inside the div for click event
     }
   };
   drawTabsList() {
@@ -255,6 +314,22 @@ export class TabList {
     addClass(this._tabsListEl, "tabsList");
     this._tabsListEl.setAttribute("role", "tablist");
     this._tabsListEl.addEventListener("keydown", this.handleKeydownArrowKeys);
+
+    this._queryBrowserToggleEl = document.createElement("div");
+    this._queryBrowserToggleEl.setAttribute("role", "presentation");
+
+    const queryBrowserButton = document.createElement("button");
+    queryBrowserButton.type = "button";
+    queryBrowserButton.className = "queryBrowserToggle";
+    queryBrowserButton.setAttribute("aria-label", "Open query browser");
+    queryBrowserButton.title = "Open query browser";
+    queryBrowserButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>`;
+    queryBrowserButton.addEventListener("click", () => {
+      this.yasgui.queryBrowser.toggle(queryBrowserButton);
+    });
+
+    this._queryBrowserToggleEl.appendChild(queryBrowserButton);
+    this._tabsListEl.appendChild(this._queryBrowserToggleEl);
 
     sortablejs.create(this._tabsListEl, {
       group: "tabList",
@@ -264,7 +339,7 @@ export class TabList {
         this.yasgui.emit("tabOrderChanged", this.yasgui, tabs);
         this.yasgui.persistentConfig.setTabOrder(tabs);
       },
-      filter: ".addTab, input, .renaming",
+      filter: ".queryBrowserToggle, .addTab, input, .renaming",
       preventOnFilter: false,
       onMove: (ev: any, _origEv: any) => {
         return hasClass(ev.related, "tab");
@@ -353,6 +428,7 @@ export class TabList {
     this.tabContextMenu?.destroy();
     this._tabsListEl?.remove();
     this._tabsListEl = undefined;
+    this._queryBrowserToggleEl = undefined;
   }
 }
 

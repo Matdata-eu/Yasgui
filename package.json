@@ -16,8 +16,8 @@
     "test:dev": "cross-env TEST_ON_DEV_BUILD=1 npm run test",
     "test": "npm run puppeteer-test && npm run unit-test",
     "test-live": "cross-env TEST_ON_DEV_BUILD=1 npm run test",
-    "unit-test": "tsc -p ./tsconfig-test.json && mocha \"build/test/**/*-test.js\" --require source-map-support/register || exit 0",
-    "puppeteer-test": "tsc -p ./tsconfig-test.json && mocha --timeout 30000 ./build/test/test/run.js --require source-map-support/register",
+    "unit-test": "tsc -p ./tsconfig-test.json && node ./test/fix-esm-imports.mjs && node ./node_modules/mocha/bin/mocha.js \"build/test/**/*-test.js\" --require source-map-support/register || exit 0",
+    "puppeteer-test": "tsc -p ./tsconfig-test.json && node ./test/fix-esm-imports.mjs && node ./node_modules/mocha/bin/mocha.js --timeout 30000 ./build/test/test/run.js --require source-map-support/register",
     "prerelease": "npm run build",
     "release": "changeset publish"
   },

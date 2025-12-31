@@ -5,6 +5,7 @@ import * as ConfigExportImport from "./ConfigExportImport";
 import { VERSION } from "./version";
 import * as OAuth2Utils from "./OAuth2Utils";
 import PersistentConfig from "./PersistentConfig";
+import { WorkspaceSettingsForm } from "./queryManagement/WorkspaceSettingsForm";
 
 // Theme toggle icons
 const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
@@ -48,6 +49,12 @@ export default class TabSettingsModal {
   private prefixButton!: HTMLButtonElement;
   private prefixTextarea!: HTMLTextAreaElement;
   private autoCaptureCheckbox!: HTMLInputElement;
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== "Escape") return;
+    if (!this.modalOverlay.classList.contains("open")) return;
+    e.preventDefault();
+    this.close();
+  };
 
   constructor(tab: Tab, controlBarEl: HTMLElement) {
     this.tab = tab;
@@ -137,6 +144,11 @@ export default class TabSettingsModal {
     addClass(endpointsTab, "modalNavButton");
     endpointsTab.onclick = () => this.switchTab("endpoints");
 
+    const workspacesTab = document.createElement("button");
+    workspacesTab.textContent = "Workspaces";
+    addClass(workspacesTab, "modalNavButton");
+    workspacesTab.onclick = () => this.switchTab("workspaces");
+
     const prefixTab = document.createElement("button");
     prefixTab.textContent = "Prefixes";
     addClass(prefixTab, "modalNavButton");
@@ -164,6 +176,7 @@ export default class TabSettingsModal {
 
     sidebar.appendChild(requestTab);
     sidebar.appendChild(endpointsTab);
+    sidebar.appendChild(workspacesTab);
     sidebar.appendChild(prefixTab);
     sidebar.appendChild(editorTab);
     sidebar.appendChild(importExportTab);
@@ -187,6 +200,11 @@ export default class TabSettingsModal {
     addClass(endpointsContent, "modalTabContent");
     endpointsContent.id = "endpoints-content";
     this.drawEndpointsSettings(endpointsContent);
+
+    const workspacesContent = document.createElement("div");
+    addClass(workspacesContent, "modalTabContent");
+    workspacesContent.id = "workspaces-content";
+    this.drawWorkspacesSettings(workspacesContent);
 
     const prefixContent = document.createElement("div");
     addClass(prefixContent, "modalTabContent");
@@ -215,6 +233,7 @@ export default class TabSettingsModal {
 
     contentArea.appendChild(requestContent);
     contentArea.appendChild(endpointsContent);
+    contentArea.appendChild(workspacesContent);
     contentArea.appendChild(prefixContent);
     contentArea.appendChild(editorContent);
     contentArea.appendChild(importExportContent);
@@ -254,11 +273,12 @@ export default class TabSettingsModal {
       if (
         (tabName === "request" && index === 0) ||
         (tabName === "endpoints" && index === 1) ||
-        (tabName === "prefix" && index === 2) ||
-        (tabName === "editor" && index === 3) ||
-        (tabName === "importexport" && index === 4) ||
-        (tabName === "shortcuts" && index === 5) ||
-        (tabName === "about" && index === 6)
+        (tabName === "workspaces" && index === 2) ||
+        (tabName === "prefix" && index === 3) ||
+        (tabName === "editor" && index === 4) ||
+        (tabName === "importexport" && index === 5) ||
+        (tabName === "shortcuts" && index === 6) ||
+        (tabName === "about" && index === 7)
       ) {
         addClass(btn as HTMLElement, "active");
       } else {
@@ -285,6 +305,22 @@ export default class TabSettingsModal {
         removeClass(content as HTMLElement, "active");
       }
     });
+  }
+
+  private drawWorkspacesSettings(container: HTMLElement) {
+    const form = new WorkspaceSettingsForm(container, {
+      persistentConfig: this.tab.yasgui.persistentConfig,
+      onDeleteRequested: (workspaceId) => {
+        const w = this.tab.yasgui.persistentConfig.getWorkspace(workspaceId);
+        const name = w?.label || workspaceId;
+        if (confirm(`Delete workspace "${name}"? This only removes the local configuration.`)) {
+          this.tab.yasgui.persistentConfig.deleteWorkspace(workspaceId);
+          form.render();
+        }
+      },
+    });
+
+    form.render();
   }
 
   private drawPrefixSettings(container: HTMLElement) {
@@ -1298,10 +1334,12 @@ export default class TabSettingsModal {
       }
     }
     addClass(this.modalOverlay, "open");
+    document.addEventListener("keydown", this.handleKeyDown);
   }
 
   public close() {
     removeClass(this.modalOverlay, "open");
+    document.removeEventListener("keydown", this.handleKeyDown);
   }
 
   private loadSettings() {

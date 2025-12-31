@@ -1,0 +1,31 @@
+
+@prefix yasgui:  <https://matdata.eu/ns/yasgui#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix spin:    <http://spinrdf.org/spin#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+
+yasgui:Workspace
+  a rdfs:Class ;
+  rdfs:label "YASGUI Workspace" ;
+  rdfs:comment "A SKOS ConceptScheme representing a YASGUI workspace. May contain folders (yasgui:WorkspaceFolder) and/or managed queries directly." ;
+  rdfs:subClassOf skos:ConceptScheme .
+
+yasgui:WorkspaceFolder
+  a rdfs:Class ;
+  rdfs:label "YASGUI Workspace Folder" ;
+  rdfs:comment "A SKOS Concept that belongs to a workspace scheme and organizes managed queries hierarchically." ;
+  rdfs:subClassOf skos:Concept .
+
+yasgui:ManagedQuery
+  a rdfs:Class ;
+  rdfs:label "Managed Query" ;
+  rdfs:comment "A logical SPARQL query artifact. It is placed either in a workspace (root) or a workspace folder. Versions are separate entities." ;
+  rdfs:subClassOf prov:Entity .
+
+yasgui:ManagedQueryVersion
+  a rdfs:Class ;
+  rdfs:label "Managed Query Version" ;
+  rdfs:comment "An immutable version of a SPARQL query, with author, timestamp, endpoints, and textual representation." ;
+  rdfs:subClassOf prov:Entity , spin:Query .

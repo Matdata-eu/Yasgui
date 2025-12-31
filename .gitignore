@@ -1,9 +1,19 @@
 node_modules
 build
+dist
+coverage
+*.log
+.env*
 yarn.lock
 .vscode
+.idea
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
 build.old
 # Docusaurus
 website/node_modules
 website/build
 website/.docusaurus
+
