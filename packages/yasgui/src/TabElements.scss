@@ -157,6 +157,15 @@ $minTabHeight: 35px;
         display: block;
       }
 
+      &.renamingInProgress .loader {
+        display: block;
+      }
+
+      &.renamingInProgress input {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
       &.active a {
         border-bottom-color: $activeColor;
         color: var(--yasgui-text-primary, #555);

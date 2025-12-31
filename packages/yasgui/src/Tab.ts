@@ -312,6 +312,7 @@ export class Tab extends EventEmitter {
     })();
 
     try {
+      modal.notifySaveInProgress();
       const { managedMetadata } = await saveManagedQuery({
         backend,
         backendType: workspace.type,
@@ -326,6 +327,7 @@ export class Tab extends EventEmitter {
         expectedVersionTag,
       });
 
+      modal.notifySaveComplete();
       this.setManagedQueryMetadata(managedMetadata);
       if (result.name && result.name.trim()) {
         this.setName(result.name.trim());
@@ -334,6 +336,7 @@ export class Tab extends EventEmitter {
       // Ensure the saved query shows up immediately in the Query Browser.
       this.yasgui.queryBrowser.invalidateAndRefresh(workspace.id);
     } catch (e) {
+      modal.notifySaveComplete();
       const err = asWorkspaceBackendError(e);
       window.alert(err.message);
     }
@@ -991,12 +994,15 @@ export class Tab extends EventEmitter {
       }
 
       try {
+        this.getTabListEl().setAsRenaming(true);
         await backend.renameQuery(queryId, nextName);
         this.setName(nextName);
         this.yasgui.queryBrowser.invalidateAndRefresh(meta.workspaceId);
       } catch (e) {
         const err = asWorkspaceBackendError(e);
         window.alert(err.message);
+      } finally {
+        this.getTabListEl().setAsRenaming(false);
       }
 
       return;
@@ -1023,6 +1029,7 @@ export class Tab extends EventEmitter {
     }
 
     try {
+      this.getTabListEl().setAsRenaming(true);
       await backend.writeQuery(newPath, this.getQueryTextForSave(), {
         message: `Rename ${oldFilename} to ${newFilename}`,
       });
@@ -1049,6 +1056,8 @@ export class Tab extends EventEmitter {
     } catch (e) {
       const err = asWorkspaceBackendError(e);
       window.alert(err.message);
+    } finally {
+      this.getTabListEl().setAsRenaming(false);
     }
   }
 

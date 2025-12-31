@@ -1,51 +1,7 @@
 import type { GitWorkspaceConfig, FolderEntry, ReadResult, VersionInfo, WriteQueryOptions } from "../types";
-import type { GitProviderClient } from "./GitWorkspaceBackend";
+import { BaseGitProviderClient } from "./BaseGitProviderClient";
 import { WorkspaceBackendError } from "./errors";
 import { parseGitRemote } from "./gitRemote";
-
-function joinPath(...parts: Array<string | undefined>): string {
-  const cleaned = parts
-    .filter((p): p is string => !!p)
-    .map((p) => p.replace(/^\/+|\/+$/g, ""))
-    .filter((p) => p.length > 0);
-  return cleaned.join("/");
-}
-
-function encodePath(path: string): string {
-  return path
-    .split("/")
-    .filter((p) => p.length > 0)
-    .map((p) => encodeURIComponent(p))
-    .join("/");
-}
-
-function base64DecodeUtf8(value: string): string {
-  const cleaned = value.replace(/\s+/g, "");
-
-  if (typeof (globalThis as any).atob === "function") {
-    const binary = (globalThis as any).atob(cleaned);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
-  }
-
-  const buf = (globalThis as any).Buffer;
-  if (buf && typeof buf.from === "function") return buf.from(cleaned, "base64").toString("utf8");
-  throw new Error("Base64 decoding not available in this environment");
-}
-
-function base64EncodeUtf8(value: string): string {
-  if (typeof (globalThis as any).btoa === "function") {
-    const bytes = new TextEncoder().encode(value);
-    let binary = "";
-    for (const b of bytes) binary += String.fromCharCode(b);
-    return (globalThis as any).btoa(binary);
-  }
-
-  const buf = (globalThis as any).Buffer;
-  if (buf && typeof buf.from === "function") return buf.from(value, "utf8").toString("base64");
-  throw new Error("Base64 encoding not available in this environment");
-}
 
 type GiteaContentItem = {
   type: "file" | "dir";
@@ -82,7 +38,7 @@ function parseOwnerRepo(remoteUrl: string): { owner: string; repo: string; host:
   return { owner, repo, host };
 }
 
-export class GiteaProviderClient implements GitProviderClient {
+export class GiteaProviderClient extends BaseGitProviderClient {
   public static canHandle(config: GitWorkspaceConfig): boolean {
     const provider = (config as any).provider as string | undefined;
     if (provider && provider !== "auto") return provider === "gitea";
@@ -110,6 +66,8 @@ export class GiteaProviderClient implements GitProviderClient {
 
     const res = await fetch(`${apiBase}${path}`, {
       ...init,
+      // Avoid stale results after create/delete/rename.
+      cache: "no-store",
       headers: {
         ...headers,
         ...(init?.headers as any),
@@ -120,22 +78,21 @@ export class GiteaProviderClient implements GitProviderClient {
     const contentType = res.headers.get("content-type") || "";
 
     if (contentType.includes("application/json")) {
-      const json = (await res.json()) as T;
-      return { status, json };
+      const text = await res.text();
+      if (text.trim()) {
+        try {
+          const json = JSON.parse(text) as T;
+          return { status, json };
+        } catch {
+          // Invalid JSON, return status only
+          return { status };
+        }
+      }
+      return { status };
     }
 
     const text = await res.text();
     return { status, text };
-  }
-
-  private ensureOk(status: number, message: string): void {
-    if (status >= 200 && status < 300) return;
-    if (status === 401) throw new WorkspaceBackendError("AUTH_FAILED", message);
-    if (status === 403) throw new WorkspaceBackendError("FORBIDDEN", message);
-    if (status === 404) throw new WorkspaceBackendError("NOT_FOUND", message);
-    if (status === 409) throw new WorkspaceBackendError("CONFLICT", message);
-    if (status === 429) throw new WorkspaceBackendError("RATE_LIMITED", message);
-    throw new WorkspaceBackendError("UNKNOWN", message);
   }
 
   async validateAccess(config: GitWorkspaceConfig): Promise<void> {
@@ -155,9 +112,9 @@ export class GiteaProviderClient implements GitProviderClient {
     const apiBase = inferApiBase(config, host);
 
     const relPath = folderId?.trim() || "";
-    const fullPath = joinPath(config.rootPath, relPath);
+    const fullPath = this.joinPath(config.rootPath, relPath);
 
-    const pathPart = fullPath ? `/${encodePath(fullPath)}` : "";
+    const pathPart = fullPath ? `/${this.encodePath(fullPath)}` : "";
     const ref = config.branch?.trim() ? `?ref=${encodeURIComponent(config.branch.trim())}` : "";
 
     const { status, json } = await this.request<GiteaContentItem[] | GiteaContentItem>(
@@ -174,14 +131,14 @@ export class GiteaProviderClient implements GitProviderClient {
     const entries: FolderEntry[] = [];
     for (const item of items) {
       if (item.type === "dir") {
-        const id = relPath ? joinPath(relPath, item.name) : item.name;
+        const id = relPath ? this.joinPath(relPath, item.name) : item.name;
         entries.push({ kind: "folder", id, label: item.name, parentId: relPath || undefined });
         continue;
       }
 
       if (item.type === "file") {
         if (!/\.sparql$/i.test(item.name)) continue;
-        const id = relPath ? joinPath(relPath, item.name) : item.name;
+        const id = relPath ? this.joinPath(relPath, item.name) : item.name;
         const label = item.name.replace(/\.sparql$/i, "");
         entries.push({ kind: "query", id, label, parentId: relPath || undefined });
       }
@@ -203,7 +160,7 @@ export class GiteaProviderClient implements GitProviderClient {
     queryId: string,
     ref?: string,
   ): Promise<{ text: string; sha?: string }> {
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const refQ = ref
       ? `?ref=${encodeURIComponent(ref)}`
       : config.branch?.trim()
@@ -213,13 +170,13 @@ export class GiteaProviderClient implements GitProviderClient {
     const { status, json } = await this.request<GiteaContentItem>(
       apiBase,
       config,
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePath(filePath)}${refQ}`,
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${this.encodePath(filePath)}${refQ}`,
     );
 
     this.ensureOk(status, "Failed to read query.");
 
     const content = json?.content || "";
-    const text = json?.encoding === "base64" ? base64DecodeUtf8(content) : content;
+    const text = json?.encoding === "base64" ? this.base64DecodeUtf8(content) : content;
     return { text, sha: json?.sha };
   }
 
@@ -240,7 +197,7 @@ export class GiteaProviderClient implements GitProviderClient {
     const { owner, repo, host } = parseOwnerRepo(config.remoteUrl);
     const apiBase = inferApiBase(config, host);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     let currentSha: string | undefined;
     try {
@@ -258,10 +215,10 @@ export class GiteaProviderClient implements GitProviderClient {
       );
     }
 
-    const message = (options?.message || `Update ${queryId}`).trim();
+    const message = this.getCommitMessage(queryId, options, !currentSha);
     const body: any = {
       message,
-      content: base64EncodeUtf8(queryText),
+      content: this.base64EncodeUtf8(queryText),
     };
     if (config.branch?.trim()) body.branch = config.branch.trim();
     if (currentSha) body.sha = currentSha;
@@ -269,7 +226,7 @@ export class GiteaProviderClient implements GitProviderClient {
     const { status } = await this.request(
       apiBase,
       config,
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePath(filePath)}`,
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${this.encodePath(filePath)}`,
       {
         method: "PUT",
         body: JSON.stringify(body),
@@ -284,7 +241,7 @@ export class GiteaProviderClient implements GitProviderClient {
     const { owner, repo, host } = parseOwnerRepo(config.remoteUrl);
     const apiBase = inferApiBase(config, host);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     const qs = new URLSearchParams();
     if (config.branch?.trim()) qs.set("sha", config.branch.trim());
@@ -322,7 +279,7 @@ export class GiteaProviderClient implements GitProviderClient {
     const { owner, repo, host } = parseOwnerRepo(config.remoteUrl);
     const apiBase = inferApiBase(config, host);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     let currentSha: string | undefined;
     try {
@@ -337,7 +294,7 @@ export class GiteaProviderClient implements GitProviderClient {
     if (!currentSha) return;
 
     const body: any = {
-      message: `Delete ${queryId}`,
+      message: this.getDeleteMessage(queryId),
       sha: currentSha,
     };
     if (config.branch?.trim()) body.branch = config.branch.trim();
@@ -345,7 +302,7 @@ export class GiteaProviderClient implements GitProviderClient {
     const { status } = await this.request(
       apiBase,
       config,
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePath(filePath)}`,
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${this.encodePath(filePath)}`,
       {
         method: "DELETE",
         body: JSON.stringify(body),

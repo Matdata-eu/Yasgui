@@ -20,6 +20,7 @@ export class TabListEl {
   private renameEl?: HTMLInputElement;
   private nameEl?: HTMLSpanElement;
   public tabEl?: HTMLDivElement;
+  private renameSubmitted = false;
   constructor(yasgui: Yasgui, tabList: TabList, tabId: string) {
     this.tabList = tabList;
     this.yasgui = yasgui;
@@ -35,6 +36,7 @@ export class TabListEl {
     if (this.renameEl) {
       const tab = this.yasgui.getTab(this.tabId);
       if (tab) {
+        this.renameSubmitted = false;
         this.renameEl.value = tab.name();
         addClass(this.tabEl, "renaming");
         this.renameEl.focus();
@@ -65,6 +67,15 @@ export class TabListEl {
       addClass(this.tabEl, "querying");
     } else {
       removeClass(this.tabEl, "querying");
+    }
+  }
+  public setAsRenaming(renaming: boolean) {
+    if (renaming) {
+      addClass(this.tabEl, "renamingInProgress");
+      if (this.renameEl) this.renameEl.disabled = true;
+    } else {
+      removeClass(this.tabEl, "renamingInProgress");
+      if (this.renameEl) this.renameEl.disabled = false;
     }
   }
   public draw(name: string) {
@@ -148,10 +159,9 @@ export class TabListEl {
     const renameEl = (this.renameEl = document.createElement("input"));
     renameEl.type = "text";
     renameEl.value = name;
-    let renameSubmitted = false;
     const submitRename = () => {
-      if (renameSubmitted) return;
-      renameSubmitted = true;
+      if (this.renameSubmitted) return;
+      this.renameSubmitted = true;
       void this.yasgui.getTab(this.tabId)?.renameTab(renameEl.value);
       removeClass(this.tabEl, "renaming");
     };

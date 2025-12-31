@@ -38,6 +38,10 @@ export default class SaveManagedQueryModal {
   private messageRowEl: HTMLDivElement;
   private messageLabelEl: HTMLLabelElement;
 
+  private saveBtn!: HTMLButtonElement;
+  private cancelBtn!: HTMLButtonElement;
+  private saveBtnOriginalText = "Save";
+
   private filenameTouched = false;
   private folderPickerOpen = false;
   private folderBrowsePath = "";
@@ -220,19 +224,20 @@ export default class SaveManagedQueryModal {
     const footerEl = document.createElement("div");
     addClass(footerEl, "saveManagedQueryModalFooter");
 
-    const cancelBtn = document.createElement("button");
-    cancelBtn.type = "button";
-    cancelBtn.textContent = "Cancel";
-    cancelBtn.addEventListener("click", () => this.cancel());
+    this.cancelBtn = document.createElement("button");
+    this.cancelBtn.type = "button";
+    this.cancelBtn.textContent = "Cancel";
+    this.cancelBtn.addEventListener("click", () => this.cancel());
 
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "submit";
-    saveBtn.textContent = "Save";
-    addClass(saveBtn, "primary");
+    this.saveBtn = document.createElement("button");
+    this.saveBtn.type = "submit";
+    this.saveBtn.textContent = "Save";
+    this.saveBtnOriginalText = "Save";
+    addClass(this.saveBtn, "primary");
     // handled by form submit
 
-    footerEl.appendChild(cancelBtn);
-    footerEl.appendChild(saveBtn);
+    footerEl.appendChild(this.cancelBtn);
+    footerEl.appendChild(this.saveBtn);
 
     this.formEl.appendChild(bodyEl);
     this.formEl.appendChild(footerEl);
@@ -324,6 +329,28 @@ export default class SaveManagedQueryModal {
     this.reject?.(new Error("cancelled"));
     this.resolve = undefined;
     this.reject = undefined;
+  }
+
+  private setLoading(isLoading: boolean) {
+    if (isLoading) {
+      this.saveBtn.disabled = true;
+      this.cancelBtn.disabled = true;
+      this.saveBtn.textContent = "Saving…";
+      addClass(this.saveBtn, "saving");
+    } else {
+      this.saveBtn.disabled = false;
+      this.cancelBtn.disabled = false;
+      this.saveBtn.textContent = this.saveBtnOriginalText;
+      removeClass(this.saveBtn, "saving");
+    }
+  }
+
+  public notifySaveInProgress() {
+    this.setLoading(true);
+  }
+
+  public notifySaveComplete() {
+    this.setLoading(false);
   }
 
   private submit() {

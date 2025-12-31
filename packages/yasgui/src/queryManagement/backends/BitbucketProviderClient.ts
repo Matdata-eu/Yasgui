@@ -1,30 +1,7 @@
 import type { GitWorkspaceConfig, FolderEntry, ReadResult, VersionInfo, WriteQueryOptions } from "../types";
-import type { GitProviderClient } from "./GitWorkspaceBackend";
+import { BaseGitProviderClient } from "./BaseGitProviderClient";
 import { WorkspaceBackendError } from "./errors";
 import { parseGitRemote } from "./gitRemote";
-
-function joinPath(...parts: Array<string | undefined>): string {
-  const cleaned = parts
-    .filter((p): p is string => !!p)
-    .map((p) => p.replace(/^\/+|\/+$/g, ""))
-    .filter((p) => p.length > 0);
-  return cleaned.join("/");
-}
-
-function encodePath(path: string): string {
-  return path
-    .split("/")
-    .filter((p) => p.length > 0)
-    .map((p) => encodeURIComponent(p))
-    .join("/");
-}
-
-function base64Encode(value: string): string {
-  if (typeof (globalThis as any).btoa === "function") return (globalThis as any).btoa(value);
-  const buf = (globalThis as any).Buffer;
-  if (buf && typeof buf.from === "function") return buf.from(value, "utf8").toString("base64");
-  throw new Error("Base64 encoding not available in this environment");
-}
 
 type BitbucketMetaEntry = {
   type: "commit_directory" | "commit_file";
@@ -69,7 +46,7 @@ function parseWorkspaceRepo(remoteUrl: string): { host: string; workspace: strin
   return { host, workspace, repo };
 }
 
-export class BitbucketProviderClient implements GitProviderClient {
+export class BitbucketProviderClient extends BaseGitProviderClient {
   public static canHandle(config: GitWorkspaceConfig): boolean {
     const provider = (config as any).provider as string | undefined;
     if (provider && provider !== "auto") return provider === "bitbucket";
@@ -95,11 +72,13 @@ export class BitbucketProviderClient implements GitProviderClient {
     // Bitbucket Cloud uses basic auth: username + app password.
     const username = config.auth.username?.trim();
     const token = config.auth.token?.trim();
-    if (username && token) headers.Authorization = `Basic ${base64Encode(`${username}:${token}`)}`;
+    if (username && token) headers.Authorization = `Basic ${this.base64Encode(`${username}:${token}`)}`;
 
     const url = path.startsWith("http") ? path : `${apiBase}${path}`;
     const res = await fetch(url, {
       ...init,
+      // Avoid stale results after create/delete/rename.
+      cache: "no-store",
       headers: {
         ...headers,
         ...(init?.headers as any),
@@ -109,8 +88,16 @@ export class BitbucketProviderClient implements GitProviderClient {
     const status = res.status;
     const contentType = res.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const json = (await res.json()) as T;
-      return { status, json };
+      const text = await res.text();
+      if (text.trim()) {
+        try {
+          const json = JSON.parse(text) as T;
+          return { status, json };
+        } catch {
+          // Invalid JSON, return status only
+          return { status };
+        }
+      }
     }
 
     return { status };
@@ -128,10 +115,12 @@ export class BitbucketProviderClient implements GitProviderClient {
 
     const username = config.auth.username?.trim();
     const token = config.auth.token?.trim();
-    if (username && token) headers.Authorization = `Basic ${base64Encode(`${username}:${token}`)}`;
+    if (username && token) headers.Authorization = `Basic ${this.base64Encode(`${username}:${token}`)}`;
 
     const res = await fetch(url.startsWith("http") ? url : `${apiBase}${url}`, {
       ...init,
+      // Avoid stale results after create/delete/rename.
+      cache: "no-store",
       headers: {
         ...headers,
         ...(init?.headers as any),
@@ -139,16 +128,6 @@ export class BitbucketProviderClient implements GitProviderClient {
     });
 
     return { status: res.status, text: await res.text() };
-  }
-
-  private ensureOk(status: number, message: string): void {
-    if (status >= 200 && status < 300) return;
-    if (status === 401) throw new WorkspaceBackendError("AUTH_FAILED", message);
-    if (status === 403) throw new WorkspaceBackendError("FORBIDDEN", message);
-    if (status === 404) throw new WorkspaceBackendError("NOT_FOUND", message);
-    if (status === 409) throw new WorkspaceBackendError("CONFLICT", message);
-    if (status === 429) throw new WorkspaceBackendError("RATE_LIMITED", message);
-    throw new WorkspaceBackendError("UNKNOWN", message);
   }
 
   async validateAccess(config: GitWorkspaceConfig): Promise<void> {
@@ -207,13 +186,13 @@ export class BitbucketProviderClient implements GitProviderClient {
     const apiBase = inferApiBase(config);
 
     const relPath = folderId?.trim() || "";
-    const fullPath = joinPath(config.rootPath, relPath);
+    const fullPath = this.joinPath(config.rootPath, relPath);
     const ref = await this.resolveBranch(apiBase, config, workspace, repo);
 
     // Use the /src endpoint in meta mode to list directory.
     const basePath =
       `/repositories/${encodeURIComponent(workspace)}/${encodeURIComponent(repo)}/src/${encodeURIComponent(ref)}` +
-      (fullPath ? `/${encodePath(fullPath)}` : "");
+      (fullPath ? `/${this.encodePath(fullPath)}` : "");
 
     const entries: FolderEntry[] = [];
     let nextUrl: string | undefined = `${apiBase}${basePath}?format=meta&pagelen=100`;
@@ -233,13 +212,13 @@ export class BitbucketProviderClient implements GitProviderClient {
       for (const v of values) {
         const name = v.path.split("/").filter(Boolean).pop() || v.path;
         if (v.type === "commit_directory") {
-          const id = relPath ? joinPath(relPath, name) : name;
+          const id = relPath ? this.joinPath(relPath, name) : name;
           entries.push({ kind: "folder", id, label: name, parentId: relPath || undefined });
         }
 
         if (v.type === "commit_file") {
           if (!/\.sparql$/i.test(name)) continue;
-          const id = relPath ? joinPath(relPath, name) : name;
+          const id = relPath ? this.joinPath(relPath, name) : name;
           const label = name.replace(/\.sparql$/i, "");
           entries.push({ kind: "query", id, label, parentId: relPath || undefined });
         }
@@ -286,13 +265,13 @@ export class BitbucketProviderClient implements GitProviderClient {
     if (host !== "bitbucket.org") throw new WorkspaceBackendError("NOT_FOUND", "Unsupported Bitbucket host");
 
     const apiBase = inferApiBase(config);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const ref = await this.resolveBranch(apiBase, config, workspace, repo);
 
     const { status, text } = await this.requestText(
       apiBase,
       config,
-      `/repositories/${encodeURIComponent(workspace)}/${encodeURIComponent(repo)}/src/${encodeURIComponent(ref)}/${encodePath(filePath)}`,
+      `/repositories/${encodeURIComponent(workspace)}/${encodeURIComponent(repo)}/src/${encodeURIComponent(ref)}/${this.encodePath(filePath)}`,
     );
 
     this.ensureOk(status, "Failed to read query.");
@@ -312,7 +291,7 @@ export class BitbucketProviderClient implements GitProviderClient {
 
     const apiBase = inferApiBase(config);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const current = await this.getLatestCommitHash(apiBase, config, workspace, repo, filePath);
 
     if (options?.expectedVersionTag && current && options.expectedVersionTag !== current) {
@@ -322,7 +301,7 @@ export class BitbucketProviderClient implements GitProviderClient {
       );
     }
 
-    const message = (options?.message || `Update ${queryId}`).trim();
+    const message = this.getCommitMessage(queryId, options, !current);
 
     const form = new FormData();
     form.append("message", message);
@@ -351,7 +330,7 @@ export class BitbucketProviderClient implements GitProviderClient {
 
     const apiBase = inferApiBase(config);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const ref = await this.resolveBranch(apiBase, config, workspace, repo);
 
     const qs = new URLSearchParams();
@@ -382,12 +361,12 @@ export class BitbucketProviderClient implements GitProviderClient {
 
     const apiBase = inferApiBase(config);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     const { status, text } = await this.requestText(
       apiBase,
       config,
-      `/repositories/${encodeURIComponent(workspace)}/${encodeURIComponent(repo)}/src/${encodeURIComponent(versionId)}/${encodePath(filePath)}`,
+      `/repositories/${encodeURIComponent(workspace)}/${encodeURIComponent(repo)}/src/${encodeURIComponent(versionId)}/${this.encodePath(filePath)}`,
     );
 
     this.ensureOk(status, "Failed to read query version.");
@@ -401,11 +380,11 @@ export class BitbucketProviderClient implements GitProviderClient {
 
     const apiBase = inferApiBase(config);
 
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const ref = await this.resolveBranch(apiBase, config, workspace, repo);
 
     const form = new FormData();
-    form.append("message", `Delete ${queryId}`);
+    form.append("message", this.getDeleteMessage(queryId));
     if (ref) form.append("branch", ref);
     // Bitbucket deletes files by sending one or more `files` fields.
     form.append("files", filePath);

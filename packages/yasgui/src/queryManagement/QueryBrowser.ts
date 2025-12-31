@@ -569,6 +569,12 @@ export default class QueryBrowser {
           return { oldPath: entry.id, newPath };
         })();
 
+        // Show loading state
+        const originalText = renameBtn.textContent;
+        renameBtn.disabled = true;
+        renameBtn.textContent = "Renaming…";
+        addClass(renameBtn, "loading");
+
         try {
           await backend.renameQuery!(entry.id, trimmed);
 
@@ -604,6 +610,10 @@ export default class QueryBrowser {
           this.invalidateRenderCache();
           await this.refresh();
         } catch (err) {
+          // Restore button state on error
+          renameBtn.disabled = false;
+          renameBtn.textContent = originalText || "Rename";
+          removeClass(renameBtn, "loading");
           window.alert(asWorkspaceBackendError(err).message);
         }
       });
@@ -623,6 +633,12 @@ export default class QueryBrowser {
         const ok = window.confirm(`Delete '${entry.label}'? This cannot be undone.`);
         if (!ok) return;
 
+        // Show loading state
+        const originalText = deleteBtn.textContent;
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = "Deleting…";
+        addClass(deleteBtn, "loading");
+
         try {
           await backend.deleteQuery!(entry.id);
           this.queryPreviewById.delete(entry.id);
@@ -630,6 +646,10 @@ export default class QueryBrowser {
           this.invalidateRenderCache();
           await this.refresh();
         } catch (err) {
+          // Restore button state on error
+          deleteBtn.disabled = false;
+          deleteBtn.textContent = originalText || "Delete";
+          removeClass(deleteBtn, "loading");
           window.alert(asWorkspaceBackendError(err).message);
         }
       });

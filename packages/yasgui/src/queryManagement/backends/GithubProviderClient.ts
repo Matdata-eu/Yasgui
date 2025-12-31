@@ -1,52 +1,7 @@
 import type { GitWorkspaceConfig, FolderEntry, ReadResult, VersionInfo, WriteQueryOptions } from "../types";
-import type { GitProviderClient } from "./GitWorkspaceBackend";
+import { BaseGitProviderClient } from "./BaseGitProviderClient";
 import { WorkspaceBackendError } from "./errors";
 import { parseGitRemote } from "./gitRemote";
-
-function joinPath(...parts: Array<string | undefined>): string {
-  const cleaned = parts
-    .filter((p): p is string => !!p)
-    .map((p) => p.replace(/^\/+|\/+$/g, ""))
-    .filter((p) => p.length > 0);
-  return cleaned.join("/");
-}
-
-function encodePath(path: string): string {
-  return path
-    .split("/")
-    .filter((p) => p.length > 0)
-    .map((p) => encodeURIComponent(p))
-    .join("/");
-}
-
-function base64EncodeUtf8(value: string): string {
-  if (typeof (globalThis as any).btoa === "function") {
-    // btoa is latin1-only; encode to bytes first.
-    const bytes = new TextEncoder().encode(value);
-    let binary = "";
-    for (const b of bytes) binary += String.fromCharCode(b);
-    return (globalThis as any).btoa(binary);
-  }
-
-  const buf = (globalThis as any).Buffer;
-  if (buf && typeof buf.from === "function") return buf.from(value, "utf8").toString("base64");
-  throw new Error("Base64 encoding not available in this environment");
-}
-
-function base64DecodeUtf8(value: string): string {
-  const cleaned = value.replace(/\s+/g, "");
-
-  if (typeof (globalThis as any).atob === "function") {
-    const binary = (globalThis as any).atob(cleaned);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
-  }
-
-  const buf = (globalThis as any).Buffer;
-  if (buf && typeof buf.from === "function") return buf.from(cleaned, "base64").toString("utf8");
-  throw new Error("Base64 decoding not available in this environment");
-}
 
 type GithubContentItem =
   | {
@@ -108,7 +63,7 @@ function parseOwnerRepo(remoteUrl: string): { owner: string; repo: string; host:
   return { owner, repo, host };
 }
 
-export class GithubProviderClient implements GitProviderClient {
+export class GithubProviderClient extends BaseGitProviderClient {
   public static canHandle(config: GitWorkspaceConfig): boolean {
     const provider = (config as any).provider as string | undefined;
     if (provider && provider !== "auto") return provider === "github";
@@ -143,35 +98,33 @@ export class GithubProviderClient implements GitProviderClient {
     const status = res.status;
     const contentType = res.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const json = (await res.json()) as T;
-      return { status, json };
+      const text = await res.text();
+      if (text.trim()) {
+        try {
+          const json = JSON.parse(text) as T;
+          return { status, json };
+        } catch {
+          // Invalid JSON, return status only
+          return { status };
+        }
+      }
     }
 
     return { status };
   }
 
-  private async ensureOk(status: number, message: string): Promise<void> {
-    if (status >= 200 && status < 300) return;
-    if (status === 401) throw new WorkspaceBackendError("AUTH_FAILED", message);
-    if (status === 403) throw new WorkspaceBackendError("FORBIDDEN", message);
-    if (status === 404) throw new WorkspaceBackendError("NOT_FOUND", message);
-    if (status === 409) throw new WorkspaceBackendError("CONFLICT", message);
-    if (status === 429) throw new WorkspaceBackendError("RATE_LIMITED", message);
-    throw new WorkspaceBackendError("UNKNOWN", message);
-  }
-
   async validateAccess(config: GitWorkspaceConfig): Promise<void> {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
     const { status } = await this.request(config, `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
-    await this.ensureOk(status, "Could not access repository with the provided token.");
+    this.ensureOk(status, "Could not access repository with the provided token.");
   }
 
   async listFolder(config: GitWorkspaceConfig, folderId?: string): Promise<FolderEntry[]> {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
     const relPath = folderId?.trim() || "";
-    const fullPath = joinPath(config.rootPath, relPath);
+    const fullPath = this.joinPath(config.rootPath, relPath);
 
-    const pathPart = fullPath ? `/${encodePath(fullPath)}` : "";
+    const pathPart = fullPath ? `/${this.encodePath(fullPath)}` : "";
     const ref = config.branch?.trim() ? `?ref=${encodeURIComponent(config.branch.trim())}` : "";
 
     const { status, json } = await this.request<GithubContentResponse>(
@@ -180,21 +133,25 @@ export class GithubProviderClient implements GitProviderClient {
     );
 
     if (status === 404) return [];
-    await this.ensureOk(status, "Failed to list folder contents.");
+    this.ensureOk(status, "Failed to list folder contents.");
 
     if (!Array.isArray(json)) return [];
 
     const entries: FolderEntry[] = [];
     for (const item of json) {
       if (item.type === "dir") {
-        const id = config.rootPath ? item.path.slice(joinPath(config.rootPath).length).replace(/^\//, "") : item.path;
+        const id = config.rootPath
+          ? item.path.slice(this.joinPath(config.rootPath).length).replace(/^\//, "")
+          : item.path;
         entries.push({ kind: "folder", id, label: item.name, parentId: relPath || undefined });
         continue;
       }
 
       if (item.type === "file") {
         if (!/\.sparql$/i.test(item.name)) continue;
-        const id = config.rootPath ? item.path.slice(joinPath(config.rootPath).length).replace(/^\//, "") : item.path;
+        const id = config.rootPath
+          ? item.path.slice(this.joinPath(config.rootPath).length).replace(/^\//, "")
+          : item.path;
         const label = item.name.replace(/\.sparql$/i, "");
         entries.push({ kind: "query", id, label, parentId: relPath || undefined });
       }
@@ -215,28 +172,28 @@ export class GithubProviderClient implements GitProviderClient {
     ref?: string,
   ): Promise<{ text: string; sha: string }> {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     const refQ = ref
       ? `?ref=${encodeURIComponent(ref)}`
       : config.branch?.trim()
         ? `?ref=${encodeURIComponent(config.branch.trim())}`
         : "";
-    const pathPart = `/${encodePath(filePath)}`;
+    const pathPart = `/${this.encodePath(filePath)}`;
 
     const { status, json } = await this.request<GithubContentResponse>(
       config,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents${pathPart}${refQ}`,
     );
 
-    await this.ensureOk(status, "Failed to read query.");
+    this.ensureOk(status, "Failed to read query.");
 
     if (!json || Array.isArray(json) || (json as any).type !== "file") {
       throw new WorkspaceBackendError("NOT_FOUND", "Query not found");
     }
 
     const file = json as Extract<GithubContentResponse, { type: "file" }>;
-    const text = base64DecodeUtf8(file.content || "");
+    const text = this.base64DecodeUtf8(file.content || "");
     return { text, sha: file.sha };
   }
 
@@ -252,7 +209,7 @@ export class GithubProviderClient implements GitProviderClient {
     options?: WriteQueryOptions,
   ): Promise<void> {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     // If the caller provides an expected version tag, treat it as the current file sha.
     // This avoids an extra GET (and avoids noisy 404s when the file was moved/renamed).
@@ -268,16 +225,15 @@ export class GithubProviderClient implements GitProviderClient {
       }
     }
 
-    const defaultMessage = currentSha ? `Update ${queryId}` : `Add ${queryId}`;
-    const message = (options?.message || defaultMessage).trim();
+    const message = this.getCommitMessage(queryId, options, !currentSha);
     const body: any = {
       message,
-      content: base64EncodeUtf8(queryText),
+      content: this.base64EncodeUtf8(queryText),
     };
     if (config.branch?.trim()) body.branch = config.branch.trim();
     if (currentSha) body.sha = currentSha;
 
-    const pathPart = `/${encodePath(filePath)}`;
+    const pathPart = `/${this.encodePath(filePath)}`;
     const { status } = await this.request(
       config,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents${pathPart}`,
@@ -287,12 +243,12 @@ export class GithubProviderClient implements GitProviderClient {
       },
     );
 
-    await this.ensureOk(status, "Failed to save query to git workspace.");
+    this.ensureOk(status, "Failed to save query to git workspace.");
   }
 
   async listVersions(config: GitWorkspaceConfig, queryId: string): Promise<VersionInfo[]> {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     const qs = new URLSearchParams();
     if (config.branch?.trim()) qs.set("sha", config.branch.trim());
@@ -303,8 +259,6 @@ export class GithubProviderClient implements GitProviderClient {
       config,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?${qs.toString()}`,
     );
-
-    await this.ensureOk(status, "Failed to list query versions.");
 
     const commits = Array.isArray(json) ? json : [];
     return commits
@@ -326,7 +280,7 @@ export class GithubProviderClient implements GitProviderClient {
 
   async deleteQuery(config: GitWorkspaceConfig, queryId: string): Promise<void> {
     const { owner, repo } = parseOwnerRepo(config.remoteUrl);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     let sha: string | undefined;
     try {
@@ -341,12 +295,12 @@ export class GithubProviderClient implements GitProviderClient {
     if (!sha) return;
 
     const body: any = {
-      message: `Delete ${queryId}`,
+      message: this.getDeleteMessage(queryId),
       sha,
     };
     if (config.branch?.trim()) body.branch = config.branch.trim();
 
-    const pathPart = `/${encodePath(filePath)}`;
+    const pathPart = `/${this.encodePath(filePath)}`;
     const { status } = await this.request(
       config,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents${pathPart}`,
@@ -358,6 +312,6 @@ export class GithubProviderClient implements GitProviderClient {
     );
 
     if (status === 404) return;
-    await this.ensureOk(status, "Failed to delete query.");
+    this.ensureOk(status, "Failed to delete query.");
   }
 }

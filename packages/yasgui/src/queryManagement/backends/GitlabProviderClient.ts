@@ -1,30 +1,7 @@
 import type { GitWorkspaceConfig, FolderEntry, ReadResult, VersionInfo, WriteQueryOptions } from "../types";
-import type { GitProviderClient } from "./GitWorkspaceBackend";
+import { BaseGitProviderClient } from "./BaseGitProviderClient";
 import { WorkspaceBackendError } from "./errors";
 import { parseGitRemote } from "./gitRemote";
-
-function joinPath(...parts: Array<string | undefined>): string {
-  const cleaned = parts
-    .filter((p): p is string => !!p)
-    .map((p) => p.replace(/^\/+|\/+$/g, ""))
-    .filter((p) => p.length > 0);
-  return cleaned.join("/");
-}
-
-function base64DecodeUtf8(value: string): string {
-  const cleaned = value.replace(/\s+/g, "");
-
-  if (typeof (globalThis as any).atob === "function") {
-    const binary = (globalThis as any).atob(cleaned);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
-  }
-
-  const buf = (globalThis as any).Buffer;
-  if (buf && typeof buf.from === "function") return buf.from(cleaned, "base64").toString("utf8");
-  throw new Error("Base64 decoding not available in this environment");
-}
 
 type GitlabProject = {
   default_branch?: string;
@@ -56,7 +33,7 @@ function inferApiBase(config: GitWorkspaceConfig, host: string): string {
   return `https://${host}/api/v4`;
 }
 
-export class GitlabProviderClient implements GitProviderClient {
+export class GitlabProviderClient extends BaseGitProviderClient {
   public static canHandle(config: GitWorkspaceConfig): boolean {
     const provider = (config as any).provider as string | undefined;
     if (provider && provider !== "auto") return provider === "gitlab";
@@ -85,6 +62,8 @@ export class GitlabProviderClient implements GitProviderClient {
 
     const res = await fetch(`${apiBase}${path}`, {
       ...init,
+      // Avoid stale results after create/delete/rename.
+      cache: "no-store",
       headers: {
         ...headers,
         ...(init?.headers as any),
@@ -94,21 +73,19 @@ export class GitlabProviderClient implements GitProviderClient {
     const status = res.status;
     const contentType = res.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const json = (await res.json()) as T;
-      return { status, json };
+      const text = await res.text();
+      if (text.trim()) {
+        try {
+          const json = JSON.parse(text) as T;
+          return { status, json };
+        } catch {
+          // Invalid JSON, return status only
+          return { status };
+        }
+      }
     }
 
     return { status };
-  }
-
-  private ensureOk(status: number, message: string): void {
-    if (status >= 200 && status < 300) return;
-    if (status === 401) throw new WorkspaceBackendError("AUTH_FAILED", message);
-    if (status === 403) throw new WorkspaceBackendError("FORBIDDEN", message);
-    if (status === 404) throw new WorkspaceBackendError("NOT_FOUND", message);
-    if (status === 409) throw new WorkspaceBackendError("CONFLICT", message);
-    if (status === 429) throw new WorkspaceBackendError("RATE_LIMITED", message);
-    throw new WorkspaceBackendError("UNKNOWN", message);
   }
 
   private getProjectId(config: GitWorkspaceConfig): string {
@@ -144,7 +121,7 @@ export class GitlabProviderClient implements GitProviderClient {
     const apiBase = inferApiBase(config, host);
 
     const relPath = folderId?.trim() || "";
-    const fullPath = joinPath(config.rootPath, relPath);
+    const fullPath = this.joinPath(config.rootPath, relPath);
 
     const projectId = this.getProjectId(config);
     const branch = await this.getBranch(config, apiBase);
@@ -177,14 +154,14 @@ export class GitlabProviderClient implements GitProviderClient {
     const entries: FolderEntry[] = [];
     for (const item of items) {
       if (item.type === "tree") {
-        const id = relPath ? joinPath(relPath, item.name) : item.name;
+        const id = relPath ? this.joinPath(relPath, item.name) : item.name;
         entries.push({ kind: "folder", id, label: item.name, parentId: relPath || undefined });
         continue;
       }
 
       if (item.type === "blob") {
         if (!/\.sparql$/i.test(item.name)) continue;
-        const id = relPath ? joinPath(relPath, item.name) : item.name;
+        const id = relPath ? this.joinPath(relPath, item.name) : item.name;
         const label = item.name.replace(/\.sparql$/i, "");
         entries.push({ kind: "query", id, label, parentId: relPath || undefined });
       }
@@ -205,7 +182,7 @@ export class GitlabProviderClient implements GitProviderClient {
     ref?: string,
   ): Promise<{ text: string; lastCommitId?: string }> {
     const projectId = this.getProjectId(config);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
 
     const branch = ref || (await this.getBranch(config, apiBase));
 
@@ -213,7 +190,6 @@ export class GitlabProviderClient implements GitProviderClient {
       apiBase,
       config,
       `/projects/${projectId}/repository/files/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branch)}`,
-      { method: "GET", headers: { "Content-Type": undefined as any } },
     );
 
     this.ensureOk(status, "Failed to read query.");
@@ -221,7 +197,7 @@ export class GitlabProviderClient implements GitProviderClient {
     const content = json?.content;
     if (!content) throw new WorkspaceBackendError("NOT_FOUND", "Query not found");
 
-    const text = json?.encoding === "base64" ? base64DecodeUtf8(content) : content;
+    const text = json?.encoding === "base64" ? this.base64DecodeUtf8(content) : content;
     return { text, lastCommitId: json?.last_commit_id };
   }
 
@@ -242,7 +218,7 @@ export class GitlabProviderClient implements GitProviderClient {
     const apiBase = inferApiBase(config, host);
 
     const projectId = this.getProjectId(config);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const branch = await this.getBranch(config, apiBase);
 
     // Check existence + optimistic concurrency.
@@ -264,10 +240,11 @@ export class GitlabProviderClient implements GitProviderClient {
       );
     }
 
-    const message = (options?.message || `Update ${queryId}`).trim();
+    const message = this.getCommitMessage(queryId, options, !exists);
     const body: any = {
       branch,
-      content: queryText,
+      content: this.base64EncodeUtf8(queryText),
+      encoding: "base64",
       commit_message: message,
     };
 
@@ -290,7 +267,7 @@ export class GitlabProviderClient implements GitProviderClient {
     const apiBase = inferApiBase(config, host);
 
     const projectId = this.getProjectId(config);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const branch = await this.getBranch(config, apiBase);
 
     const qs = new URLSearchParams();
@@ -329,12 +306,12 @@ export class GitlabProviderClient implements GitProviderClient {
     const apiBase = inferApiBase(config, host);
 
     const projectId = this.getProjectId(config);
-    const filePath = joinPath(config.rootPath, queryId);
+    const filePath = this.joinPath(config.rootPath, queryId);
     const branch = await this.getBranch(config, apiBase);
 
     const body: any = {
       branch,
-      commit_message: `Delete ${queryId}`,
+      commit_message: this.getDeleteMessage(queryId),
     };
 
     const { status } = await this.request(

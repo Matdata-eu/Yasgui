@@ -160,6 +160,32 @@
         font: inherit;
         color: inherit;
         opacity: 0.85;
+        position: relative;
+
+        &.loading {
+          opacity: 0.5;
+          cursor: not-allowed;
+          padding-right: 20px;
+
+          &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: queryBrowserActionSpin 0.8s linear infinite;
+          }
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
 
       .yasgui-query-browser__action:hover,
@@ -221,6 +247,32 @@
         font: inherit;
         color: inherit;
         opacity: 0.85;
+        position: relative;
+
+        &.loading {
+          opacity: 0.5;
+          cursor: not-allowed;
+          padding-right: 20px;
+
+          &::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: queryBrowserActionSpin 0.8s linear infinite;
+          }
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
 
       .yasgui-query-browser__action:hover,
@@ -267,5 +319,10 @@
     &__tree-meta--error {
       color: var(--yasgui-text-secondary, #666);
     }
+  }
+}
+@keyframes queryBrowserActionSpin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
   }
 }
