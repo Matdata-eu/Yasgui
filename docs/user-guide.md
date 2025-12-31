@@ -856,35 +856,7 @@ YASGUI can be configured with **managed-queries and workspaces**, which provide 
 3. Add one or more workspaces (Git or SPARQL) and choose a **Default workspace**
 4. (Optional) Click **Validate access** to test the configuration
 
-##### Git based workspaces
-
-**Supported providers:**
-
-- **GitHub** (including GitHub Enterprise)
-- **GitLab** (GitLab.com and self-hosted)
-- **Bitbucket Cloud**
-- **Gitea** (self-hosted)
-
-Git workspaces are implemented via the providers' **HTTPS REST APIs**.
-
-- The `remoteUrl` can be `https://...`, `ssh://...`, or SCP-style (e.g. `git@host:org/repo.git`).
-- **Important:** SSH/SCP-like remotes are **only parsed** to identify `host` + `owner/repo`. YASGUI does **not** implement Git-over-SSH; all reads/writes still happen through the provider's HTTPS API.
-
-**Configuration fields:**
-
-- **Remote URL**: repository URL (see formats above)
-- **Token**: stored locally and never re-displayed after entry
-- **Advanced (optional)**:
-  - **Provider**: force a specific provider client (otherwise auto-detect)
-  - **API base URL**: for enterprise/self-hosted instances (e.g., GitHub Enterprise `.../api/v3`, GitLab `.../api/v4`, Gitea `.../api/v1`)
-  - **Branch**: optional; if left empty, the provider default branch is used when possible
-  - **Root path**: optional subfolder within the repo
-  - **Username**: optional; required by Bitbucket Cloud when using an app password
-
-**Limitations / notes:**
-
-- If the provider API is blocked by browser **CORS** policies, a Git workspace may not work without a proxy.
-- Git workspaces store only query text files (`.sparql`); they do not store endpoint associations, so opening a Git-managed query will not auto-switch endpoints.
+Note: the recommended type of workspace is SPARQL. It is more feature rich (allows to save endpoints and descriptions) and is much faster. The Git based workspace uses HTTP calls to the Git provider API, several calls are required to read/write queries, which makes it slower.
 
 ##### SPARQL workspaces
 
@@ -926,6 +898,38 @@ Then configure YASGUI to use the endpoint URL:
 **Limitations / notes:**
 
 - If the SPARQL endpoint is blocked by browser **CORS** policies, the workspace may not work without a proxy.
+
+##### Git based workspaces
+
+**Supported providers:**
+
+- **GitHub** (including GitHub Enterprise)
+- **GitLab** (GitLab.com and self-hosted)
+- **Bitbucket Cloud** 
+- **Gitea** (self-hosted)
+
+Currently GitHub and GitLab have been thoroughly tested; Bitbucket Cloud and Gitea support covers the same as GitHub/GitLab but have not been extensively tested.
+
+Git workspaces are implemented via the providers' **HTTPS REST APIs**.
+
+- The `remoteUrl` can be `https://...`, `ssh://...`, or SCP-style (e.g. `git@host:org/repo.git`).
+- **Important:** SSH/SCP-like remotes are **only parsed** to identify `host` + `owner/repo`. YASGUI does **not** implement Git-over-SSH; all reads/writes still happen through the provider's HTTPS API.
+
+**Configuration fields:**
+
+- **Remote URL**: repository URL (see formats above)
+- **Token**: stored locally and never re-displayed after entry
+- **Advanced (optional)**:
+  - **Provider**: force a specific provider client (otherwise auto-detect)
+  - **API base URL**: for enterprise/self-hosted instances (e.g., GitHub Enterprise `.../api/v3`, GitLab `.../api/v4`, Gitea `.../api/v1`)
+  - **Branch**: optional; if left empty, the provider default branch is used when possible
+  - **Root path**: optional subfolder within the repo
+  - **Username**: optional; required by Bitbucket Cloud when using an app password
+
+**Limitations / notes:**
+
+- If the provider API is blocked by browser **CORS** policies, a Git workspace may not work without a proxy.
+- Git workspaces store only query text files (`.sparql`); they do not store endpoint associations, so opening a Git-managed query will not auto-switch endpoints.
 
 #### Managed queries
 
