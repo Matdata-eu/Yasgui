@@ -260,6 +260,8 @@ export class GithubProviderClient extends BaseGitProviderClient {
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?${qs.toString()}`,
     );
 
+    this.ensureOk(status, "Failed to list query versions.");
+
     const commits = Array.isArray(json) ? json : [];
     return commits
       .map((c) => {

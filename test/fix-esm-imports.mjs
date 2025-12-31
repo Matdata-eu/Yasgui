@@ -36,7 +36,6 @@ function rewriteSource(source, filePath) {
     /(\bfrom\s+["'])(\.\.?\/.+?)(["'])/g,
     (match, prefix, spec, suffix) => {
       if (!shouldRewrite(spec)) return match;
-      const candidate = path.join(path.dirname(filePath), spec + ".js");
       return prefix + spec + ".js" + suffix;
     },
   );
