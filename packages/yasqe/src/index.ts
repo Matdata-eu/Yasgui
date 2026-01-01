@@ -261,6 +261,7 @@ export class Yasqe extends CodeMirror {
       addClass(queryEl, "fa-play");
       addClass(queryEl, "queryIcon");
       addClass(queryEl, "queryIcon--play");
+      queryEl.setAttribute("aria-hidden", "true");
       this.queryBtn.appendChild(queryEl);
 
       const warningEl = document.createElement("i");
@@ -268,6 +269,7 @@ export class Yasqe extends CodeMirror {
       addClass(warningEl, "fa-exclamation-triangle");
       addClass(warningEl, "queryIcon");
       addClass(warningEl, "queryIcon--warning");
+      warningEl.setAttribute("aria-hidden", "true");
       this.queryBtn.appendChild(warningEl);
 
       const loadingEl = document.createElement("i");
@@ -276,6 +278,7 @@ export class Yasqe extends CodeMirror {
       addClass(loadingEl, "fa-pulse");
       addClass(loadingEl, "queryIcon");
       addClass(loadingEl, "queryIcon--loading");
+      loadingEl.setAttribute("aria-hidden", "true");
       this.queryBtn.appendChild(loadingEl);
 
       /**
@@ -308,6 +311,7 @@ export class Yasqe extends CodeMirror {
       const shareIcon = document.createElement("i");
       addClass(shareIcon, "fas");
       addClass(shareIcon, "fa-share-nodes");
+      shareIcon.setAttribute("aria-hidden", "true");
       const shareLinkWrapper = document.createElement("button");
       shareLinkWrapper.className = "yasqe_share";
       shareLinkWrapper.title = "Share query";
@@ -551,6 +555,7 @@ export class Yasqe extends CodeMirror {
     const saveIcon = document.createElement("i");
     addClass(saveIcon, "fas");
     addClass(saveIcon, "fa-save");
+    saveIcon.setAttribute("aria-hidden", "true");
     saveBtn.appendChild(saveIcon);
     saveBtn.onclick = () => {
       // Call the managed query save function if available
@@ -590,11 +595,13 @@ export class Yasqe extends CodeMirror {
     addClass(fullscreenIcon, "fas");
     addClass(fullscreenIcon, "fa-expand");
     addClass(fullscreenIcon, "fullscreenIcon");
+    fullscreenIcon.setAttribute("aria-hidden", "true");
     this.fullscreenBtn.appendChild(fullscreenIcon);
     const fullscreenExitIcon = document.createElement("i");
     addClass(fullscreenExitIcon, "fas");
     addClass(fullscreenExitIcon, "fa-compress");
     addClass(fullscreenExitIcon, "fullscreenExitIcon");
+    fullscreenExitIcon.setAttribute("aria-hidden", "true");
     this.fullscreenBtn.appendChild(fullscreenExitIcon);
     this.fullscreenBtn.onclick = () => {
       this.toggleFullscreen();
