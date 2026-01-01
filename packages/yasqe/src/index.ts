@@ -355,6 +355,7 @@ export class Yasqe extends CodeMirror {
             const icon = document.createElement("i");
             addClass(icon, "fas");
             addClass(icon, "fa-exclamation-triangle");
+            icon.setAttribute("aria-hidden", "true");
             iconWrapper.appendChild(icon);
             toastElement.appendChild(iconWrapper);
           }
