@@ -3,36 +3,6 @@ export { default as Storage } from "./Storage";
 
 const { sanitize } = DOMPurify;
 
-export function drawSvgStringAsElement(svgString: string) {
-  if (svgString && svgString.trim().indexOf("<svg") == 0) {
-    //no style passed via config. guess own styles
-    var parser = new DOMParser();
-    var dom = parser.parseFromString(svgString, "text/xml");
-    var svg = dom.documentElement;
-    svg.setAttribute("aria-hidden", "true");
-
-    var svgContainer = document.createElement("div");
-    svgContainer.className = "svgImg";
-    svgContainer.appendChild(svg);
-    return svgContainer;
-  }
-  throw new Error("No svg string given. Cannot draw");
-}
-export interface FaIcon {
-  width: number;
-  height: number;
-  svgPathData: string;
-}
-
-/**
- * Draws font fontawesome icon as svg. This is a lot more lightweight then the option that is offered by fontawesome
- * @param faIcon
- * @returns
- */
-export function drawFontAwesomeIconAsSvg(faIcon: FaIcon) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${faIcon.width} ${faIcon.height}" aria-hidden="true"><path fill="currentColor" d="${faIcon.svgPathData}"></path></svg>`;
-}
-
 export function hasClass(el: Element | undefined, className: string) {
   if (!el) return;
   if (el.classList) return el.classList.contains(className);

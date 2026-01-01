@@ -201,14 +201,11 @@ YASGUI is built as a monorepo with four main packages, each serving a specific p
 - DOM manipulation utilities
 - Local storage abstraction
 - Common helper functions
-- SVG icon rendering
 - DOMPurify integration for XSS protection
 
 **Exports:**
 - `Storage`: localStorage abstraction with namespacing
 - `addClass`, `removeClass`, `hasClass`: DOM class utilities
-- `drawSvgStringAsElement`: SVG helper
-- `drawFontAwesomeIconAsSvg`: Icon rendering
 
 #### @matdata/yasqe (SPARQL Query Editor)
 

@@ -7,7 +7,7 @@ import * as sparql11Mode from "../grammar/tokenizer";
 import { Storage as YStorage } from "@matdata/yasgui-utils";
 import * as queryString from "query-string";
 import tooltip from "./tooltip";
-import { drawSvgStringAsElement, addClass, removeClass } from "@matdata/yasgui-utils";
+import { addClass, removeClass } from "@matdata/yasgui-utils";
 import * as Sparql from "./sparql";
 
 import * as Autocompleter from "./autocompleters";
