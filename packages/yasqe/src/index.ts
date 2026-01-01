@@ -1430,7 +1430,7 @@ export class Yasqe extends CodeMirror {
             warningEl.className = "fas fa-exclamation-triangle constructVariableWarning";
             tooltip(
               this,
-              warningEl as HTMLDivElement,
+              warningEl as HTMLElement,
               escape(`Variable ${undefinedVar} is used in CONSTRUCT but not defined in WHERE clause`),
             );
             this.setGutterMarker(l, "gutterConstructWarning", warningEl);
