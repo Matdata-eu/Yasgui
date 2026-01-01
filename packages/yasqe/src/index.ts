@@ -689,6 +689,7 @@ export class Yasqe extends CodeMirror {
       addClass(chevron, "fas");
       addClass(chevron, "fa-chevron-down");
       addClass(chevron, "chevronIcon");
+      chevron.setAttribute("aria-hidden", "true");
       dropdownBtn.appendChild(chevron);
       dropdownBtn.setAttribute("aria-label", `${groupName} snippets`);
       dropdownBtn.setAttribute("aria-expanded", "false");
