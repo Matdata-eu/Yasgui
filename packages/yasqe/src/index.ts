@@ -571,6 +571,7 @@ export class Yasqe extends CodeMirror {
       const formatIcon = document.createElement("i");
       addClass(formatIcon, "fas");
       addClass(formatIcon, "fa-align-left");
+      formatIcon.setAttribute("aria-hidden", "true");
       formatBtn.appendChild(formatIcon);
       formatBtn.onclick = () => {
         this.format();
