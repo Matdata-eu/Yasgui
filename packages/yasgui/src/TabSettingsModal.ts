@@ -1511,8 +1511,8 @@ export default class TabSettingsModal {
 
   private getThemeToggleIcon(): string {
     const currentTheme = this.tab.yasgui.getTheme();
-    // In dark mode, show moon icon (clicking will switch to light)
-    // In light mode, show sun icon (clicking will switch to dark)
+    // In dark mode, show lightbulb icon (clicking will switch to light)
+    // In light mode, show moon icon (clicking will switch to dark)
     return currentTheme === "dark" ? '<i class="fas fa-lightbulb"></i>' : '<i class="fas fa-moon"></i>';
   }
 
