@@ -7,19 +7,6 @@ import * as OAuth2Utils from "./OAuth2Utils";
 import PersistentConfig from "./PersistentConfig";
 import { WorkspaceSettingsForm } from "./queryManagement/WorkspaceSettingsForm";
 
-// Theme toggle icons
-const MOON_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
-  <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
-</svg>`;
-
-const SUN_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
-  <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
-</svg>`;
-
-const SETTINGS_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
-  <path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.09-.16-.26-.25-.44-.25-.06 0-.12.01-.17.03l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.06-.02-.12-.03-.18-.03-.17 0-.34.09-.43.25l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.09.16.26.25.44.25.06 0 .12-.01.17-.03l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.06.02.12.03.18.03.17 0 .34-.09.43-.25l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zm-7.43 2.52c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
-</svg>`;
-
 const AcceptOptionsMap: { key: string; value: string }[] = [
   { key: "JSON", value: "application/sparql-results+json" },
   { key: "XML", value: "application/sparql-results+xml" },
@@ -67,7 +54,7 @@ export default class TabSettingsModal {
     addClass(this.settingsButton, "tabContextButton");
     this.settingsButton.setAttribute("aria-label", "Settings");
     this.settingsButton.title = "Settings";
-    this.settingsButton.innerHTML = SETTINGS_ICON;
+    this.settingsButton.innerHTML = '<i class="fas fa-cog"></i>';
     this.settingsButton.onclick = () => this.open();
     controlBarEl.appendChild(this.settingsButton);
 
@@ -89,9 +76,7 @@ export default class TabSettingsModal {
     this.prefixButton = document.createElement("button");
     this.prefixButton.setAttribute("aria-label", "Insert Prefixes");
     this.prefixButton.title = "Insert saved prefixes into query";
-    this.prefixButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M9 5v2h6.59L4 18.59 5.41 20 17 8.41V15h2V5z"/>
-    </svg>`;
+    this.prefixButton.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i>';
     addClass(this.prefixButton, "tabContextButton", "prefixButton");
     controlBarEl.appendChild(this.prefixButton);
     this.prefixButton.onclick = () => this.insertPrefixesIntoQuery();
@@ -1528,7 +1513,7 @@ export default class TabSettingsModal {
     const currentTheme = this.tab.yasgui.getTheme();
     // In dark mode, show moon icon (clicking will switch to light)
     // In light mode, show sun icon (clicking will switch to dark)
-    return currentTheme === "dark" ? MOON_ICON : SUN_ICON;
+    return currentTheme === "dark" ? '<i class="fas fa-lightbulb"></i>' : '<i class="fas fa-moon"></i>';
   }
 
   private drawImportExportSettings(container: HTMLElement) {

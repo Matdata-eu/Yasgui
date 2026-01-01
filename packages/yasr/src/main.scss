@@ -1,4 +1,6 @@
 @use "scss/variables.scss";
+@import "@fortawesome/fontawesome-free/css/fontawesome.css";
+@import "@fortawesome/fontawesome-free/css/solid.css";
 
 .yasr {
   display: flex;
@@ -14,17 +16,12 @@
   .yasr_btn {
     border: none;
     background: inherit;
-  }
-
-  .svgImg {
     display: flex;
-    flex-direction: row;
-    svg {
-      max-width: 100%;
-      max-height: 100%;
-      width: 15px;
-      height: 15px;
-      align-self: center;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 16px;
     }
   }
 
@@ -35,10 +32,6 @@
     &:focus {
       color: inherit;
       text-decoration-color: inherit;
-    }
-    .svgImg svg {
-      width: 18px;
-      height: 18px;
     }
   }
 
@@ -174,14 +167,14 @@
   .yasr_fullscreenButton {
     border: none;
     background: none;
-
-    svg {
-      height: 20px;
-      width: 20px;
-    }
+    color: var(--yasgui-button-text, #505050);
 
     .fullscreenExitIcon {
       display: none;
+    }
+
+    &:hover {
+      color: var(--yasgui-button-hover, #337ab7);
     }
   }
 

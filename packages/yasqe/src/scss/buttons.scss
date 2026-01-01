@@ -64,11 +64,6 @@
     position: absolute;
     top: 10px;
     right: 20px;
-
-    svg {
-      fill: #505050;
-    }
-
     z-index: 5;
 
     .yasqe_share {
@@ -82,17 +77,14 @@
       margin-left: 8px;
       height: 36px;
       width: 36px;
+      color: #505050;
 
-      svg {
-        height: 24px;
-        width: 24px;
-        display: block;
+      i {
+        font-size: 20px;
       }
 
       &:hover {
-        svg {
-          fill: #337ab7;
-        }
+        color: #337ab7;
       }
     }
 
@@ -193,22 +185,44 @@
       height: 36px;
 
       .yasqe_queryButton_text {
-        display: inline-block;
         line-height: 1.4;
         white-space: nowrap;
         flex-shrink: 0;
       }
 
       .queryIcon {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        svg {
-          width: 14px;
-          height: 14px;
-          fill: white;
-          display: block;
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+
+      // Hide all icons by default
+      .queryIcon--warning,
+      .queryIcon--loading {
+        display: none;
+      }
+
+      // Show warning icon when in error state
+      &.state-error {
+        .queryIcon--play {
+          display: none;
+        }
+        .queryIcon--warning {
+          display: flex;
+        }
+      }
+
+      // Show loading icon when busy
+      &.state-loading {
+        .queryIcon--play {
+          display: none;
+        }
+        .queryIcon--loading {
+          display: flex;
         }
       }
 
@@ -223,25 +237,25 @@
         border-color: #1f5180;
       }
 
-      .svgImg {
-        position: absolute;
-        height: inherit;
-        top: 0;
+      &.query_error {
+        background: #dc3545;
+        border-color: #dc3545;
+
+        &:hover {
+          background: #c82333;
+          border-color: #c82333;
+        }
+
+        &:active {
+          background: #bd2130;
+          border-color: #bd2130;
+        }
       }
 
       &.busy {
         background: #5a8fc2;
         border-color: #5a8fc2;
         cursor: wait;
-
-        svg {
-          #loadingIcon {
-            stroke-dasharray: 100;
-            animation: dash 1.5s linear infinite;
-            stroke-width: 8px;
-            stroke: white;
-          }
-        }
       }
 
       @keyframes dash {
@@ -253,26 +267,6 @@
       @keyframes rotate {
         100% {
           transform: rotate(360deg);
-        }
-      }
-
-      .warningIcon {
-        display: none;
-        position: absolute;
-        top: -4px;
-        right: -4px;
-
-        svg {
-          width: 18px;
-          height: 18px;
-          fill: #ffc107;
-          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-        }
-      }
-
-      &.query_error {
-        .warningIcon {
-          display: block;
         }
       }
 
@@ -307,17 +301,14 @@
       margin-left: 8px;
       height: 36px;
       width: 36px;
+      color: #505050;
 
-      svg {
-        height: 24px;
-        width: 24px;
-        display: block;
+      i {
+        font-size: 20px;
       }
 
       &:hover {
-        svg {
-          fill: #337ab7;
-        }
+        color: #337ab7;
       }
     }
 
@@ -332,17 +323,14 @@
       margin-left: 8px;
       height: 36px;
       width: 36px;
+      color: #505050;
 
-      svg {
-        height: 24px;
-        width: 24px;
-        display: block;
+      i {
+        font-size: 20px;
       }
 
       &:hover {
-        svg {
-          fill: #337ab7;
-        }
+        color: #337ab7;
       }
     }
 
@@ -357,11 +345,10 @@
       margin-left: 8px;
       height: 36px;
       width: 36px;
+      color: #505050;
 
-      svg {
-        height: 26px;
-        width: 26px;
-        display: block;
+      i {
+        font-size: 20px;
       }
 
       .fullscreenExitIcon {
@@ -369,9 +356,7 @@
       }
 
       &:hover {
-        svg {
-          fill: #337ab7;
-        }
+        color: #337ab7;
       }
     }
   }
@@ -478,10 +463,8 @@
         .chevronIcon {
           width: 16px;
           height: 16px;
-          svg {
-            width: 16px;
-            height: 16px;
-            fill: var(--yasgui-text-secondary, #505050);
+          i {
+            font-size: 12px;
           }
         }
 
@@ -591,10 +574,8 @@
       align-items: center;
       flex-shrink: 0;
 
-      svg {
-        width: 24px;
-        height: 24px;
-        fill: #000;
+      i {
+        font-size: 24px;
       }
     }
   }

@@ -9,7 +9,7 @@ import * as queryString from "query-string";
 import tooltip from "./tooltip";
 import { drawSvgStringAsElement, addClass, removeClass } from "@matdata/yasgui-utils";
 import * as Sparql from "./sparql";
-import * as imgs from "./imgs";
+
 import * as Autocompleter from "./autocompleters";
 import { merge, mergeWith, escape } from "lodash-es";
 
@@ -59,6 +59,7 @@ export class Yasqe extends CodeMirror {
   private abortController: AbortController | undefined;
   private queryStatus: "valid" | "error" | undefined;
   private queryBtn: HTMLButtonElement | undefined;
+  private saveBtn: HTMLButtonElement | undefined;
   private fullscreenBtn: HTMLButtonElement | undefined;
   private isFullscreen: boolean = false;
   private horizontalResizeWrapper?: HTMLDivElement;
@@ -253,23 +254,37 @@ export class Yasqe extends CodeMirror {
       addClass(this.queryBtn, "yasqe_queryButton");
 
       /**
+       * Add all icon states: play (default), warning (error), loading (busy)
+       */
+      const queryEl = document.createElement("i");
+      addClass(queryEl, "fas");
+      addClass(queryEl, "fa-play");
+      addClass(queryEl, "queryIcon");
+      addClass(queryEl, "queryIcon--play");
+      this.queryBtn.appendChild(queryEl);
+
+      const warningEl = document.createElement("i");
+      addClass(warningEl, "fas");
+      addClass(warningEl, "fa-exclamation-triangle");
+      addClass(warningEl, "queryIcon");
+      addClass(warningEl, "queryIcon--warning");
+      this.queryBtn.appendChild(warningEl);
+
+      const loadingEl = document.createElement("i");
+      addClass(loadingEl, "fas");
+      addClass(loadingEl, "fa-spinner");
+      addClass(loadingEl, "fa-pulse");
+      addClass(loadingEl, "queryIcon");
+      addClass(loadingEl, "queryIcon--loading");
+      this.queryBtn.appendChild(loadingEl);
+
+      /**
        * Add text label
        */
       const queryTextLabel = document.createElement("span");
       queryTextLabel.className = "yasqe_queryButton_text";
-      queryTextLabel.textContent = "Run query";
+      queryTextLabel.textContent = "Run";
       this.queryBtn.appendChild(queryTextLabel);
-
-      /**
-       * Add busy/valid/error btns
-       */
-      const queryEl = drawSvgStringAsElement(imgs.query);
-      addClass(queryEl, "queryIcon");
-      this.queryBtn.appendChild(queryEl);
-
-      const warningIcon = drawSvgStringAsElement(imgs.warning);
-      addClass(warningIcon, "warningIcon");
-      this.queryBtn.appendChild(warningIcon);
 
       this.queryBtn.onclick = () => {
         if (this.config.queryingDisabled) return; // Don't do anything
@@ -290,12 +305,14 @@ export class Yasqe extends CodeMirror {
      * draw share link button (SECOND)
      */
     if (this.config.createShareableLink) {
-      var svgShare = drawSvgStringAsElement(imgs.share);
+      const shareIcon = document.createElement("i");
+      addClass(shareIcon, "fas");
+      addClass(shareIcon, "fa-share-nodes");
       const shareLinkWrapper = document.createElement("button");
       shareLinkWrapper.className = "yasqe_share";
       shareLinkWrapper.title = "Share query";
       shareLinkWrapper.setAttribute("aria-label", "Share query");
-      shareLinkWrapper.appendChild(svgShare);
+      shareLinkWrapper.appendChild(shareIcon);
       buttons.appendChild(shareLinkWrapper);
       shareLinkWrapper.addEventListener("click", (event: MouseEvent) => showSharePopup(event));
       shareLinkWrapper.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -335,7 +352,9 @@ export class Yasqe extends CodeMirror {
           if (type === "warning") {
             const iconWrapper = document.createElement("span");
             iconWrapper.className = "yasqe_toast-icon";
-            const icon = drawSvgStringAsElement(imgs.warning);
+            const icon = document.createElement("i");
+            addClass(icon, "fas");
+            addClass(icon, "fa-exclamation-triangle");
             iconWrapper.appendChild(icon);
             toastElement.appendChild(iconWrapper);
           }
@@ -509,9 +528,9 @@ export class Yasqe extends CodeMirror {
         // Position popup after layout is complete
         const positionPopup = () => {
           if (!popup) return;
-          const svgPos = svgShare.getBoundingClientRect();
-          popup.style.top = svgShare.offsetTop + svgPos.height + "px";
-          popup.style.left = svgShare.offsetLeft + svgShare.clientWidth - popup.clientWidth + "px";
+          const sharePos = shareLinkWrapper.getBoundingClientRect();
+          popup.style.top = shareLinkWrapper.offsetTop + sharePos.height + "px";
+          popup.style.left = shareLinkWrapper.offsetLeft + shareLinkWrapper.clientWidth - popup.clientWidth + "px";
         };
 
         if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
@@ -528,14 +547,18 @@ export class Yasqe extends CodeMirror {
      */
     const saveBtn = document.createElement("button");
     addClass(saveBtn, "yasqe_saveButton");
-    const saveIcon = drawSvgStringAsElement(imgs.save);
-    addClass(saveIcon, "saveIcon");
+    const saveIcon = document.createElement("i");
+    addClass(saveIcon, "fas");
+    addClass(saveIcon, "fa-save");
     saveBtn.appendChild(saveIcon);
     saveBtn.onclick = () => {
-      this.saveQuery();
+      // Call the managed query save function if available
+      this.emit("saveManagedQuery");
     };
-    saveBtn.title = "Save query (Ctrl+S)";
-    saveBtn.setAttribute("aria-label", "Save query");
+    saveBtn.title = "Save managed query (Ctrl+S)";
+    saveBtn.setAttribute("aria-label", "Save managed query");
+    saveBtn.style.display = "none"; // Hidden by default, shown when workspace is configured
+    this.saveBtn = saveBtn;
     buttons.appendChild(saveBtn);
 
     /**
@@ -544,8 +567,9 @@ export class Yasqe extends CodeMirror {
     if (this.config.showFormatButton) {
       const formatBtn = document.createElement("button");
       addClass(formatBtn, "yasqe_formatButton");
-      const formatIcon = drawSvgStringAsElement(imgs.format);
-      addClass(formatIcon, "formatIcon");
+      const formatIcon = document.createElement("i");
+      addClass(formatIcon, "fas");
+      addClass(formatIcon, "fa-align-left");
       formatBtn.appendChild(formatIcon);
       formatBtn.onclick = () => {
         this.format();
@@ -560,10 +584,14 @@ export class Yasqe extends CodeMirror {
      */
     this.fullscreenBtn = document.createElement("button");
     addClass(this.fullscreenBtn, "yasqe_fullscreenButton");
-    const fullscreenIcon = drawSvgStringAsElement(imgs.fullscreen);
+    const fullscreenIcon = document.createElement("i");
+    addClass(fullscreenIcon, "fas");
+    addClass(fullscreenIcon, "fa-expand");
     addClass(fullscreenIcon, "fullscreenIcon");
     this.fullscreenBtn.appendChild(fullscreenIcon);
-    const fullscreenExitIcon = drawSvgStringAsElement(imgs.fullscreenExit);
+    const fullscreenExitIcon = document.createElement("i");
+    addClass(fullscreenExitIcon, "fas");
+    addClass(fullscreenExitIcon, "fa-compress");
     addClass(fullscreenExitIcon, "fullscreenExitIcon");
     this.fullscreenBtn.appendChild(fullscreenExitIcon);
     this.fullscreenBtn.onclick = () => {
@@ -657,7 +685,9 @@ export class Yasqe extends CodeMirror {
       const dropdownBtn = document.createElement("button");
       addClass(dropdownBtn, "yasqe_snippetDropdownButton");
       dropdownBtn.textContent = groupName + " ";
-      const chevron = drawSvgStringAsElement(imgs.chevronDown);
+      const chevron = document.createElement("i");
+      addClass(chevron, "fas");
+      addClass(chevron, "fa-chevron-down");
       addClass(chevron, "chevronIcon");
       dropdownBtn.appendChild(chevron);
       dropdownBtn.setAttribute("aria-label", `${groupName} snippets`);
@@ -727,7 +757,9 @@ export class Yasqe extends CodeMirror {
     const showMoreBtn = document.createElement("button");
     addClass(showMoreBtn, "yasqe_snippetDropdownButton", "yasqe_showMoreButton");
     showMoreBtn.textContent = "More ";
-    const chevron = drawSvgStringAsElement(imgs.chevronDown);
+    const chevron = document.createElement("i");
+    addClass(chevron, "fas");
+    addClass(chevron, "fa-chevron-down");
     addClass(chevron, "chevronIcon");
     showMoreBtn.appendChild(chevron);
     showMoreBtn.setAttribute("aria-label", "Show more snippets");
@@ -964,13 +996,31 @@ export class Yasqe extends CodeMirror {
     }
 
     /**
-     * Set/remove spinner if needed
+     * Set/remove spinner if needed and manage icon visibility
      */
-    if (this.req && this.queryBtn.className.indexOf("busy") < 0) {
+    const isBusy = !!this.req;
+    const hasError = status === "error";
+
+    if (isBusy && this.queryBtn.className.indexOf("busy") < 0) {
       this.queryBtn.className = this.queryBtn.className += " busy";
     }
-    if (!this.req && this.queryBtn.className.indexOf("busy") >= 0) {
+    if (!isBusy && this.queryBtn.className.indexOf("busy") >= 0) {
       this.queryBtn.className = this.queryBtn.className.replace("busy", "");
+    }
+
+    // Update button state classes for icon switching
+    if (isBusy) {
+      addClass(this.queryBtn, "state-loading");
+      removeClass(this.queryBtn, "state-error");
+      removeClass(this.queryBtn, "state-normal");
+    } else if (hasError) {
+      removeClass(this.queryBtn, "state-loading");
+      addClass(this.queryBtn, "state-error");
+      removeClass(this.queryBtn, "state-normal");
+    } else {
+      removeClass(this.queryBtn, "state-loading");
+      removeClass(this.queryBtn, "state-error");
+      addClass(this.queryBtn, "state-normal");
     }
   }
   public handleLocalStorageQuotaFull(_e: any) {
@@ -1297,23 +1347,20 @@ export class Yasqe extends CodeMirror {
           //we don't want the gutter error, so return
           return;
         }
-        const warningEl = drawSvgStringAsElement(imgs.warning);
-        if (state.errorMsg) {
-          tooltip(this, warningEl, escape(token.state.errorMsg));
-        } else if (state.possibleCurrent && state.possibleCurrent.length > 0) {
-          var expectedEncoded: string[] = [];
-          state.possibleCurrent.forEach(function (expected) {
-            expectedEncoded.push("<strong style='text-decoration:underline'>" + escape(expected) + "</strong>");
-          });
-          tooltip(this, warningEl, "This line is invalid. Expected: " + expectedEncoded.join(", "));
+        // Instead of showing gutter icon, change run button to red
+        if (this.queryBtn) {
+          addClass(this.queryBtn, "query_error");
+          this.queryBtn.title = "Query has syntax errors";
         }
-        // warningEl.style.marginTop = "2px";
-        // warningEl.style.marginLeft = "2px";
-        warningEl.className = "parseErrorIcon";
-        this.setGutterMarker(l, "gutterErrorBar", warningEl);
 
         this.queryValid = false;
         break;
+      }
+    }
+    if (this.queryValid) {
+      if (this.queryBtn) {
+        removeClass(this.queryBtn, "query_error");
+        this.queryBtn.title = "Run query (Ctrl+Enter)";
       }
     }
   }
@@ -1325,6 +1372,12 @@ export class Yasqe extends CodeMirror {
       this.clearGutter("gutterConstructWarning");
     } else {
       this.checkConstructVariables();
+    }
+  }
+
+  public setSaveButtonVisible(visible: boolean) {
+    if (this.saveBtn) {
+      this.saveBtn.style.display = visible ? "inline-flex" : "none";
     }
   }
 
@@ -1373,11 +1426,11 @@ export class Yasqe extends CodeMirror {
           const escapedVar = undefinedVar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           const varRegex = new RegExp(`${escapedVar}(?![a-zA-Z0-9_])`);
           if (varRegex.test(line)) {
-            const warningEl = drawSvgStringAsElement(imgs.warning);
-            warningEl.className = "constructVariableWarning";
+            const warningEl = document.createElement("i");
+            warningEl.className = "fas fa-exclamation-triangle constructVariableWarning";
             tooltip(
               this,
-              warningEl,
+              warningEl as HTMLDivElement,
               escape(`Variable ${undefinedVar} is used in CONSTRUCT but not defined in WHERE clause`),
             );
             this.setGutterMarker(l, "gutterConstructWarning", warningEl);

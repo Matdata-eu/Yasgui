@@ -2,20 +2,11 @@ import { EventEmitter } from "events";
 import { merge, filter, mapValues, uniqueId } from "lodash-es";
 import getDefaults from "./defaults";
 import type { Plugin } from "./plugins";
-import {
-  Storage as YStorage,
-  drawFontAwesomeIconAsSvg,
-  drawSvgStringAsElement,
-  removeClass,
-  addClass,
-  hasClass,
-} from "@matdata/yasgui-utils";
+import { Storage as YStorage, removeClass, addClass, hasClass } from "@matdata/yasgui-utils";
 import Parser from "./parsers";
 export { default as Parser } from "./parsers";
 import { addScript, addCss, sanitize } from "./helpers";
-import * as faDownload from "@fortawesome/free-solid-svg-icons/faDownload";
-import * as faQuestionCircle from "@fortawesome/free-solid-svg-icons/faQuestionCircle";
-import * as imgs from "./imgs";
+
 import "./main.scss";
 
 export interface PersistentConfig {
@@ -374,7 +365,8 @@ export class Yasr extends EventEmitter {
     this.downloadBtn.setAttribute("aria-label", "Download Results");
     this.downloadBtn.setAttribute("tabindex", "0"); // anchor elements with no href are not automatically included in the tabindex
     this.downloadBtn.setAttribute("role", "button");
-    const iconEl = drawSvgStringAsElement(drawFontAwesomeIconAsSvg(faDownload));
+    const iconEl = document.createElement("i");
+    addClass(iconEl, "fas", "fa-download");
     iconEl.setAttribute("aria-hidden", "true");
     this.downloadBtn.appendChild(iconEl);
     this.downloadBtn.addEventListener("click", () => {
@@ -455,12 +447,16 @@ export class Yasr extends EventEmitter {
     this.fullscreenBtn.setAttribute("tabindex", "0");
     this.fullscreenBtn.setAttribute("role", "button");
 
-    const fullscreenIcon = drawSvgStringAsElement(imgs.fullscreen);
+    const fullscreenIcon = document.createElement("i");
+    addClass(fullscreenIcon, "fas");
+    addClass(fullscreenIcon, "fa-expand");
     addClass(fullscreenIcon, "fullscreenIcon");
     fullscreenIcon.setAttribute("aria-hidden", "true");
     this.fullscreenBtn.appendChild(fullscreenIcon);
 
-    const fullscreenExitIcon = drawSvgStringAsElement(imgs.fullscreenExit);
+    const fullscreenExitIcon = document.createElement("i");
+    addClass(fullscreenExitIcon, "fas");
+    addClass(fullscreenExitIcon, "fa-compress");
     addClass(fullscreenExitIcon, "fullscreenExitIcon");
     fullscreenExitIcon.setAttribute("aria-hidden", "true");
     this.fullscreenBtn.appendChild(fullscreenExitIcon);
@@ -520,7 +516,9 @@ export class Yasr extends EventEmitter {
   private drawDocumentationButton() {
     this.documentationLink = document.createElement("a");
     addClass(this.documentationLink, "yasr_btn", "yasr_external_ref_btn");
-    this.documentationLink.appendChild(drawSvgStringAsElement(drawFontAwesomeIconAsSvg(faQuestionCircle)));
+    const icon = document.createElement("i");
+    addClass(icon, "fas", "fa-circle-question");
+    this.documentationLink.appendChild(icon);
     this.documentationLink.href = "https://docs.triply.cc/yasgui/";
     this.documentationLink.target = "_blank";
     this.documentationLink.rel = "noopener noreferrer";

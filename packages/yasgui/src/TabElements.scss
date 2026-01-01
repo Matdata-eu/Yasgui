@@ -25,13 +25,11 @@ $minTabHeight: 35px;
       &:hover,
       &:focus-visible {
         color: var(--yasgui-button-hover, #000);
-        fill: var(--yasgui-button-hover, #000);
         background: var(--yasgui-bg-secondary, #f7f7f7);
       }
 
-      svg {
-        width: 20px;
-        height: 20px;
+      i {
+        font-size: 20px;
       }
     }
 
@@ -60,7 +58,6 @@ $minTabHeight: 35px;
       background: transparent;
       border: none;
       color: var(--yasgui-button-text, #505050);
-      fill: var(--yasgui-button-text, #505050);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -68,13 +65,7 @@ $minTabHeight: 35px;
 
       &:hover {
         color: var(--yasgui-button-hover, #000);
-        fill: var(--yasgui-button-hover, #000);
         background: var(--yasgui-bg-secondary, #f7f7f7);
-      }
-
-      svg {
-        width: 20px;
-        height: 20px;
       }
     }
 

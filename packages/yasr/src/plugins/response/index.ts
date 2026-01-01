@@ -16,10 +16,8 @@ import "codemirror/mode/xml/xml.js";
 import "codemirror/mode/javascript/javascript.js";
 import "codemirror/lib/codemirror.css";
 import "codemirror/theme/material-palenight.css";
-import { drawSvgStringAsElement, addClass, removeClass, drawFontAwesomeIconAsSvg } from "@matdata/yasgui-utils";
-import * as faAlignIcon from "@fortawesome/free-solid-svg-icons/faAlignLeft";
+import { addClass, removeClass } from "@matdata/yasgui-utils";
 import { DeepReadonly } from "ts-essentials";
-import * as imgs from "../../imgs";
 
 export interface PluginConfig {
   maxLines: number;
@@ -51,7 +49,9 @@ export default class Response implements Plugin<PluginConfig> {
     return true;
   }
   public getIcon() {
-    return drawSvgStringAsElement(drawFontAwesomeIconAsSvg(faAlignIcon));
+    const icon = document.createElement("i");
+    icon.className = "fas fa-align-left";
+    return icon;
   }
   download(filename?: string) {
     if (!this.yasr.results) return;
@@ -146,7 +146,10 @@ export default class Response implements Plugin<PluginConfig> {
     const text = document.createElement("span");
     text.innerText = "Download result";
     downloadButton.appendChild(text);
-    downloadButton.appendChild(drawSvgStringAsElement(imgs.download));
+    const downloadIcon = document.createElement("i");
+    addClass(downloadIcon, "fas");
+    addClass(downloadIcon, "fa-download");
+    downloadButton.appendChild(downloadIcon);
     downloadButton.addEventListener("click", () => this.yasr.download());
     downloadButton.addEventListener("keydown", (event) => {
       if (event.code === "Space" || event.code === "Enter") this.yasr.download();

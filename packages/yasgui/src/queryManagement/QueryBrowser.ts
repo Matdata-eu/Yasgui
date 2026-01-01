@@ -147,9 +147,7 @@ export default class QueryBrowser {
     helpButton.type = "button";
     addClass(helpButton, "yasgui-query-browser__help");
     helpButton.setAttribute("aria-label", "Open documentation");
-    helpButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-    </svg>`;
+    helpButton.innerHTML = '<i class="fas fa-circle-question"></i>';
     helpButton.addEventListener("click", () => {
       window.open(
         "https://yasgui-doc.matdata.eu/docs/user-guide#managed-queries-and-workspaces",
@@ -162,9 +160,7 @@ export default class QueryBrowser {
     closeButton.type = "button";
     addClass(closeButton, "yasgui-query-browser__close");
     closeButton.setAttribute("aria-label", "Close query browser");
-    closeButton.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-    </svg>`;
+    closeButton.innerHTML = '<i class="fas fa-xmark"></i>';
     closeButton.addEventListener("click", () => this.close());
 
     headerButtons.appendChild(helpButton);
@@ -350,9 +346,7 @@ export default class QueryBrowser {
 
     const icon = document.createElement("div");
     addClass(icon, "yasgui-query-browser__empty-icon");
-    icon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-    </svg>`;
+    icon.innerHTML = '<i class="fas fa-file-lines"></i>';
 
     const title = document.createElement("h3");
     addClass(title, "yasgui-query-browser__empty-title");

@@ -140,35 +140,25 @@
     padding: 6px;
     cursor: pointer;
     color: var(--yasgui-button-text, #505050);
-    fill: var(--yasgui-button-text, #505050);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 
-    .svgImg {
-      width: 15px;
-      height: 15px;
-      font-family: initial;
-    }
-
-    svg {
-      width: 20px;
-      height: 20px;
+    i {
+      font-size: 16px;
     }
 
     &:hover {
       color: var(--yasgui-button-hover, black);
-      fill: var(--yasgui-button-hover, black);
     }
 
     // Responsive spacing - reduce padding on smaller screens
     @media (max-width: 768px) {
       padding: 2px;
 
-      svg {
-        width: 18px;
-        height: 18px;
+      i {
+        font-size: 18px;
       }
     }
   }

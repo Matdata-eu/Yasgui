@@ -1,3 +1,6 @@
+@import "@fortawesome/fontawesome-free/css/fontawesome.css";
+@import "@fortawesome/fontawesome-free/css/solid.css";
+
 .yasqe {
   display: flex;
   flex-direction: column;
@@ -7,10 +10,6 @@
   .CodeMirror {
     min-height: 60px;
     // Height is set via inline style by the resize handler
-  }
-
-  .svgImg {
-    display: inline-block;
   }
 
   span.shortlinkErr {
@@ -49,24 +48,13 @@
     }
   }
 
-  .parseErrorIcon {
-    width: 13px;
-    height: 13px;
-    margin-top: 2px;
-    margin-left: 2px;
-    svg g {
-      fill: red;
-    }
-  }
-
   .constructVariableWarning {
     width: 13px;
     height: 13px;
     margin-top: 2px;
     margin-left: 2px;
-    svg g {
-      fill: orange;
-    }
+    font-size: 13px;
+    color: orange;
   }
 
   .yasqe_tooltip {

@@ -183,13 +183,7 @@
 
     &:hover {
       color: var(--yasgui-button-hover);
-      fill: var(--yasgui-button-hover);
       background: var(--yasgui-bg-secondary);
-    }
-
-    svg {
-      width: 20px;
-      height: 20px;
     }
   }
 
@@ -283,19 +277,19 @@
 
   // Yasqe buttons theming (share, query, fullscreen)
   .yasqe_buttons {
-    svg {
-      fill: var(--yasgui-button-text) !important;
+    i {
+      color: var(--yasgui-button-text) !important;
     }
 
     .yasqe_share {
-      &:hover svg {
-        fill: var(--yasgui-button-hover) !important;
+      &:hover i {
+        color: var(--yasgui-button-hover) !important;
       }
     }
 
     .yasqe_fullscreenButton {
-      &:hover svg {
-        fill: var(--yasgui-accent-color) !important;
+      &:hover i {
+        color: var(--yasgui-accent-color) !important;
       }
     }
 
@@ -491,19 +485,16 @@ li.CodeMirror-hint-active {
       color: var(--yasgui-accent-color) !important;
       border-color: var(--yasgui-accent-color) !important;
 
-      svg {
-        fill: var(--yasgui-accent-color) !important;
+      i {
         color: var(--yasgui-accent-color) !important;
       }
 
       &:hover {
         color: var(--yasgui-link-hover) !important;
         border-color: var(--yasgui-accent-color) !important;
-        fill: var(--yasgui-link-hover) !important;
 
-        svg {
+        i {
           color: var(--yasgui-link-hover) !important;
-          fill: var(--yasgui-link-hover) !important;
         }
       }
     }

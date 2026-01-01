@@ -44,19 +44,12 @@
       color: #337ab7;
       padding: 10px;
       margin: 10px;
-      svg {
+      i {
         margin-left: 0.5rem;
-        fill: #337ab7;
-        color: #337ab7;
       }
       &:hover {
         color: #255681;
         border-color: #337ab7;
-        fill: #255681;
-        svg {
-          color: #255681;
-          fill: #255681;
-        }
       }
     }
   }
