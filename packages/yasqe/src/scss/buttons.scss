@@ -178,24 +178,25 @@
     .yasqe_queryButton {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       position: relative;
       border: 1px solid #337ab7;
       background: #337ab7;
-      padding: 6px 14px;
+      padding: 7px 12px;
       cursor: pointer;
       border-radius: 4px;
       color: white;
       font-weight: 500;
       font-size: 14px;
       transition: all 0.2s ease;
-      line-height: 1.5;
+      line-height: 1.4;
       height: 36px;
 
       .yasqe_queryButton_text {
         display: inline-block;
-        line-height: 1.5;
+        line-height: 1.4;
         white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .queryIcon {
@@ -204,8 +205,8 @@
         justify-content: center;
         flex-shrink: 0;
         svg {
-          width: 18px;
-          height: 18px;
+          width: 14px;
+          height: 14px;
           fill: white;
           display: block;
         }
@@ -358,8 +359,8 @@
       width: 36px;
 
       svg {
-        height: 24px;
-        width: 24px;
+        height: 26px;
+        width: 26px;
         display: block;
       }
 
