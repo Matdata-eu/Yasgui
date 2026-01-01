@@ -73,13 +73,20 @@
 
     .yasqe_share {
       cursor: pointer;
-      margin-top: 3px;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
       background: none;
+      padding: 6px;
+      margin-left: 8px;
+      height: 36px;
+      width: 36px;
+
       svg {
-        height: 25px;
-        width: 25px;
+        height: 24px;
+        width: 24px;
+        display: block;
       }
 
       &:hover {
@@ -90,8 +97,8 @@
     }
 
     button {
-      vertical-align: top;
-      margin-left: 5px;
+      vertical-align: middle;
+      margin-left: 8px;
     }
     .yasqe_sharePopup {
       position: absolute;
@@ -175,26 +182,32 @@
       position: relative;
       border: 1px solid #337ab7;
       background: #337ab7;
-      padding: 8px 16px;
+      padding: 6px 14px;
       cursor: pointer;
       border-radius: 4px;
       color: white;
       font-weight: 500;
       font-size: 14px;
       transition: all 0.2s ease;
+      line-height: 1.5;
+      height: 36px;
 
       .yasqe_queryButton_text {
         display: inline-block;
-        line-height: 1;
+        line-height: 1.5;
+        white-space: nowrap;
       }
 
       .queryIcon {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
         svg {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           fill: white;
+          display: block;
         }
       }
 
@@ -283,16 +296,21 @@
     }
 
     .yasqe_saveButton {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
       background: none;
       cursor: pointer;
-      padding: 0;
-      margin-left: 5px;
+      padding: 6px;
+      margin-left: 8px;
+      height: 36px;
+      width: 36px;
 
       svg {
-        height: 25px;
-        width: 25px;
+        height: 24px;
+        width: 24px;
+        display: block;
       }
 
       &:hover {
@@ -303,16 +321,21 @@
     }
 
     .yasqe_formatButton {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
       background: none;
       cursor: pointer;
-      padding: 0;
-      margin-left: 5px;
+      padding: 6px;
+      margin-left: 8px;
+      height: 36px;
+      width: 36px;
 
       svg {
-        height: 25px;
-        width: 25px;
+        height: 24px;
+        width: 24px;
+        display: block;
       }
 
       &:hover {
@@ -323,16 +346,21 @@
     }
 
     .yasqe_fullscreenButton {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
       background: none;
       cursor: pointer;
-      padding: 0;
-      margin-left: 5px;
+      padding: 6px;
+      margin-left: 8px;
+      height: 36px;
+      width: 36px;
 
       svg {
-        height: 25px;
-        width: 25px;
+        height: 24px;
+        width: 24px;
+        display: block;
       }
 
       .fullscreenExitIcon {
