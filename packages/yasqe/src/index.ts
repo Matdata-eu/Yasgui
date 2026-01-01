@@ -1358,7 +1358,27 @@ export class Yasqe extends CodeMirror {
           //we don't want the gutter error, so return
           return;
         }
-        // Instead of showing gutter icon, change run button to red
+
+        // Add gutter error icon
+        const errorEl = document.createElement("i");
+        errorEl.className = "fas fa-exclamation-circle parseErrorIcon";
+
+        // Build tooltip message
+        if (state.errorMsg) {
+          tooltip(this, errorEl, escape(state.errorMsg));
+        } else if (state.possibleCurrent && state.possibleCurrent.length > 0) {
+          const expectedEncoded: string[] = [];
+          state.possibleCurrent.forEach(function (expected) {
+            expectedEncoded.push("<strong style='text-decoration:underline'>" + escape(expected) + "</strong>");
+          });
+          tooltip(this, errorEl, "This line is invalid. Expected: " + expectedEncoded.join(", "));
+        } else {
+          tooltip(this, errorEl, "Syntax error");
+        }
+
+        this.setGutterMarker(l, "gutterErrorBar", errorEl);
+
+        // Also change run button to show error state
         if (this.queryBtn) {
           addClass(this.queryBtn, "query_error");
           this.queryBtn.title = "Query has syntax errors";
@@ -1441,8 +1461,10 @@ export class Yasqe extends CodeMirror {
             warningEl.className = "fas fa-exclamation-triangle constructVariableWarning";
             tooltip(
               this,
-              warningEl as HTMLElement,
-              escape(`Variable ${undefinedVar} is used in CONSTRUCT but not defined in WHERE clause`),
+              warningEl,
+              "Variable <strong>" +
+                escape(undefinedVar) +
+                "</strong> is used in CONSTRUCT but not defined in WHERE clause",
             );
             this.setGutterMarker(l, "gutterConstructWarning", warningEl);
             break; // Only one marker per line
