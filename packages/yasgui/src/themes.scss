@@ -27,7 +27,7 @@
   --yasgui-input-border: rgba(0, 0, 0, 0.26);
   --yasgui-input-focus: #337ab7;
   --yasgui-label-color: rgba(0, 0, 0, 0.54);
-  --yasgui-tooltip-bg: rgba(0, 0, 0, 0.8);
+  --yasgui-tooltip-bg: rgba(0, 0, 0, 1);
   --yasgui-tooltip-text: #fff;
   --yasgui-error-color: #d32f2f;
   --yasgui-notification-bg: #eee;
@@ -77,7 +77,7 @@
   --yasgui-input-border: rgba(255, 255, 255, 0.15);
   --yasgui-input-focus: #4fc3f7;
   --yasgui-label-color: rgba(255, 255, 255, 0.6);
-  --yasgui-tooltip-bg: rgba(55, 55, 55, 0.95);
+  --yasgui-tooltip-bg: rgba(0, 0, 0, 1);
   --yasgui-tooltip-text: #d4d4d4;
   --yasgui-error-color: #f48771;
   --yasgui-notification-bg: #2d2d30;
@@ -183,13 +183,7 @@
 
     &:hover {
       color: var(--yasgui-button-hover);
-      fill: var(--yasgui-button-hover);
       background: var(--yasgui-bg-secondary);
-    }
-
-    svg {
-      width: 20px;
-      height: 20px;
     }
   }
 
@@ -273,29 +267,25 @@
     background-color: var(--yasgui-resize-handle);
   }
 
-  .parseErrorIcon svg g {
-    fill: var(--yasgui-error-color);
-  }
-
   .cm-matchhighlight {
     background-color: var(--yasgui-match-highlight-bg);
   }
 
   // Yasqe buttons theming (share, query, fullscreen)
   .yasqe_buttons {
-    svg {
-      fill: var(--yasgui-button-text) !important;
+    i {
+      color: var(--yasgui-button-text) !important;
     }
 
     .yasqe_share {
-      &:hover svg {
-        fill: var(--yasgui-button-hover) !important;
+      &:hover i {
+        color: var(--yasgui-button-hover) !important;
       }
     }
 
     .yasqe_fullscreenButton {
-      &:hover svg {
-        fill: var(--yasgui-accent-color) !important;
+      &:hover i {
+        color: var(--yasgui-accent-color) !important;
       }
     }
 
@@ -491,19 +481,16 @@ li.CodeMirror-hint-active {
       color: var(--yasgui-accent-color) !important;
       border-color: var(--yasgui-accent-color) !important;
 
-      svg {
-        fill: var(--yasgui-accent-color) !important;
+      i {
         color: var(--yasgui-accent-color) !important;
       }
 
       &:hover {
         color: var(--yasgui-link-hover) !important;
         border-color: var(--yasgui-accent-color) !important;
-        fill: var(--yasgui-link-hover) !important;
 
-        svg {
+        i {
           color: var(--yasgui-link-hover) !important;
-          fill: var(--yasgui-link-hover) !important;
         }
       }
     }

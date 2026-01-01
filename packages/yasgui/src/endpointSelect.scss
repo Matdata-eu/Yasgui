@@ -186,9 +186,8 @@
     flex-shrink: 0;
     transition: all 0.2s ease;
 
-    svg {
-      width: 16px;
-      height: 16px;
+    i {
+      font-size: 16px;
     }
 
     &:hover {

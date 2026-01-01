@@ -24,7 +24,7 @@
     "directory": "packages/yasr"
   },
   "dependencies": {
-    "@fortawesome/free-solid-svg-icons": "^5.14.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@json2csv/plainjs": "^7.0.4",
     "@matdata/yasgui-utils": "^4.6.1",
     "@matdata/yasqe": "^4.6.1",

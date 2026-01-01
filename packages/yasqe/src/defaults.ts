@@ -87,6 +87,10 @@ SELECT * WHERE {
         const yasqe: Yasqe = _yasqe;
         yasqe.getInputField().blur();
       },
+      F11: function (_yasqe: any) {
+        const yasqe: Yasqe = _yasqe;
+        yasqe.toggleFullscreen();
+      },
     },
 
     createShareableLink: function (yasqe: Yasqe) {

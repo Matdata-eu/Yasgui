@@ -18,24 +18,6 @@ import { getWorkspaceBackend } from "./queryManagement/backends/getWorkspaceBack
 import { asWorkspaceBackendError } from "./queryManagement/backends/errors";
 import { normalizeQueryFilename } from "./queryManagement/normalizeQueryFilename";
 
-// Layout orientation toggle icons
-const HORIZONTAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24">
-  <rect x="2" y="4" width="9" height="16" stroke="currentColor" stroke-width="2" fill="none"/>
-  <rect x="13" y="4" width="9" height="16" stroke="currentColor" stroke-width="2" fill="none"/>
-</svg>`;
-
-const VERTICAL_LAYOUT_ICON = `<svg viewBox="0 0 24 24">
-  <rect x="2" y="2" width="20" height="8" stroke="currentColor" stroke-width="2" fill="none"/>
-  <rect x="2" y="12" width="20" height="10" stroke="currentColor" stroke-width="2" fill="none"/>
-</svg>`;
-
-// Overflow dropdown icon (three horizontal dots / ellipsis menu)
-const OVERFLOW_ICON = `<svg viewBox="0 0 24 24" fill="currentColor">
-  <circle cx="5" cy="12" r="2"/>
-  <circle cx="12" cy="12" r="2"/>
-  <circle cx="19" cy="12" r="2"/>
-</svg>`;
-
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
 }
@@ -569,8 +551,11 @@ export class Tab extends EventEmitter {
     if (!this.orientationToggleButton) return;
 
     // Show the icon for the layout we'll switch TO (not the current layout)
+    // fa-columns for horizontal (side-by-side), fa-grip-lines for vertical (stacked)
     this.orientationToggleButton.innerHTML =
-      this.currentOrientation === "vertical" ? HORIZONTAL_LAYOUT_ICON : VERTICAL_LAYOUT_ICON;
+      this.currentOrientation === "vertical"
+        ? '<i class="fas fa-grip-lines-vertical"></i>'
+        : '<i class="fas fa-grip-lines"></i>';
     this.orientationToggleButton.title =
       this.currentOrientation === "vertical" ? "Switch to horizontal layout" : "Switch to vertical layout";
   }
@@ -746,7 +731,7 @@ export class Tab extends EventEmitter {
     if (!this.endpointOverflowButton) {
       this.endpointOverflowButton = document.createElement("button");
       addClass(this.endpointOverflowButton, "endpointOverflowBtn");
-      this.endpointOverflowButton.innerHTML = OVERFLOW_ICON;
+      this.endpointOverflowButton.innerHTML = '<i class="fas fa-ellipsis-vertical"></i>';
       this.endpointOverflowButton.title = "More endpoints";
       this.endpointOverflowButton.setAttribute("aria-label", "More endpoint options");
       this.endpointOverflowButton.setAttribute("aria-haspopup", "true");
@@ -1310,7 +1295,13 @@ export class Tab extends EventEmitter {
     }
     this.yasqe = new Yasqe(this.yasqeWrapperEl, yasqeConf);
 
-    this.initSaveManagedQueryIcon();
+    // Hook up the save button to managed query save
+    this.yasqe.on("saveManagedQuery", () => {
+      void this.saveManagedQueryOrSaveAsManagedQuery();
+    });
+
+    // Show/hide save button based on workspace configuration
+    this.updateSaveButtonVisibility();
 
     this.yasqe.on("blur", this.handleYasqeBlur);
     this.yasqe.on("query", this.handleYasqeQuery);
@@ -1325,6 +1316,13 @@ export class Tab extends EventEmitter {
 
     // Add Ctrl+Click handler for URIs
     this.attachYasqeMouseHandler();
+  }
+
+  private updateSaveButtonVisibility() {
+    if (!this.yasqe) return;
+    const workspaces = this.yasgui.persistentConfig.getWorkspaces();
+    const hasWorkspaces = workspaces && workspaces.length > 0;
+    this.yasqe.setSaveButtonVisible(hasWorkspaces);
   }
 
   private initSaveManagedQueryIcon() {
@@ -1345,10 +1343,7 @@ export class Tab extends EventEmitter {
     saveBtn.className = "yasqe_saveManagedQueryButton";
     saveBtn.title = "Save managed query";
     saveBtn.setAttribute("aria-label", "Save managed query");
-    saveBtn.innerHTML =
-      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-      '<path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-1 2l3 3h-3V5zM7 5h7v4H7V5zm5 16H7v-6h5v6zm2 0v-6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6H5V5h1v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V5h1v5h4v11h-6z"/>' +
-      "</svg>";
+    saveBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i>';
 
     saveBtn.addEventListener("click", (e) => {
       e.preventDefault();
