@@ -19,6 +19,7 @@ import { ThemeManager, Theme } from "./ThemeManager";
 import QueryBrowser from "./queryManagement/QueryBrowser";
 import "./index.scss";
 import "./themes.scss";
+import "./github-dark-theme.scss";
 import "../../yasr/src/scss/global.scss";
 import "codemirror/theme/material-palenight.css";
 
@@ -170,6 +171,9 @@ export class Yasgui extends EventEmitter {
     }
     this.themeManager.listenToSystemTheme();
     this.persistentConfig = new PersistentConfig(this);
+
+    // Set persistentConfig reference in ThemeManager so it can access CodeMirror theme preference
+    this.themeManager.setPersistentConfig(this.persistentConfig);
 
     // Load persisted showSnippetsBar if available
     const persistedShowSnippetsBar = this.persistentConfig.getShowSnippetsBar();

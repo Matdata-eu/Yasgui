@@ -358,6 +358,123 @@ export default class TabSettingsModal {
       return;
     }
 
+    // Available CodeMirror themes
+    const themes = [
+      { value: "default", label: "Default" },
+      { value: "github-dark", label: "GitHub Dark Default" },
+      { value: "material-palenight", label: "Material Palenight" },
+      { value: "monokai", label: "Monokai" },
+      { value: "dracula", label: "Dracula" },
+      { value: "nord", label: "Nord" },
+      { value: "solarized dark", label: "Solarized Dark" },
+      { value: "solarized light", label: "Solarized Light" },
+      { value: "twilight", label: "Twilight" },
+      { value: "material", label: "Material" },
+      { value: "cobalt", label: "Cobalt" },
+      { value: "darcula", label: "Darcula" },
+      { value: "gruvbox-dark", label: "Gruvbox Dark" },
+      { value: "oceanic-next", label: "Oceanic Next" },
+      { value: "material-darker", label: "Material Darker" },
+      { value: "blackboard", label: "Blackboard" },
+      { value: "base16-dark", label: "Base16 Dark" },
+      { value: "base16-light", label: "Base16 Light" },
+      { value: "eclipse", label: "Eclipse" },
+      { value: "elegant", label: "Elegant" },
+      { value: "idea", label: "IntelliJ IDEA" },
+      { value: "mbo", label: "MBO" },
+      { value: "neat", label: "Neat" },
+      { value: "neo", label: "Neo" },
+      { value: "night", label: "Night" },
+      { value: "paraiso-dark", label: "Paraiso Dark" },
+      { value: "paraiso-light", label: "Paraiso Light" },
+      { value: "pastel-on-dark", label: "Pastel on Dark" },
+      { value: "rubyblue", label: "Ruby Blue" },
+      { value: "the-matrix", label: "The Matrix" },
+      { value: "tomorrow-night-bright", label: "Tomorrow Night Bright" },
+      { value: "tomorrow-night-eighties", label: "Tomorrow Night 80s" },
+      { value: "vibrant-ink", label: "Vibrant Ink" },
+      { value: "xq-dark", label: "XQ Dark" },
+      { value: "xq-light", label: "XQ Light" },
+    ];
+
+    // Light Mode Theme Section
+    const themeLightSection = document.createElement("div");
+    addClass(themeLightSection, "settingsSection");
+
+    const themeLightLabel = document.createElement("label");
+    themeLightLabel.textContent = "Editor Theme (Light Mode)";
+    addClass(themeLightLabel, "settingsLabel");
+
+    const themeLightHelp = document.createElement("div");
+    themeLightHelp.textContent = "Syntax highlighting theme when using light mode.";
+    addClass(themeLightHelp, "settingsHelp");
+
+    const themeLightSelect = document.createElement("select");
+    themeLightSelect.id = "codeMirrorThemeLightSelect";
+    addClass(themeLightSelect, "settingsSelect");
+
+    themes.forEach((theme) => {
+      const option = document.createElement("option");
+      option.value = theme.value;
+      option.textContent = theme.label;
+      themeLightSelect.appendChild(option);
+    });
+
+    const storedLightTheme = this.tab.yasgui.persistentConfig.getCodeMirrorTheme("light");
+    themeLightSelect.value = storedLightTheme || "default";
+
+    themeLightSection.appendChild(themeLightLabel);
+    themeLightSection.appendChild(themeLightHelp);
+    themeLightSection.appendChild(themeLightSelect);
+    container.appendChild(themeLightSection);
+
+    // Dark Mode Theme Section
+    const themeDarkSection = document.createElement("div");
+    addClass(themeDarkSection, "settingsSection");
+
+    const themeDarkLabel = document.createElement("label");
+    themeDarkLabel.textContent = "Editor Theme (Dark Mode)";
+    addClass(themeDarkLabel, "settingsLabel");
+
+    const themeDarkHelp = document.createElement("div");
+    themeDarkHelp.textContent = "Syntax highlighting theme when using dark mode.";
+    addClass(themeDarkHelp, "settingsHelp");
+
+    const themeDarkSelect = document.createElement("select");
+    themeDarkSelect.id = "codeMirrorThemeDarkSelect";
+    addClass(themeDarkSelect, "settingsSelect");
+
+    themes.forEach((theme) => {
+      const option = document.createElement("option");
+      option.value = theme.value;
+      option.textContent = theme.label;
+      themeDarkSelect.appendChild(option);
+    });
+
+    const storedDarkTheme = this.tab.yasgui.persistentConfig.getCodeMirrorTheme("dark");
+    themeDarkSelect.value = storedDarkTheme || "material-palenight";
+
+    themeDarkSection.appendChild(themeDarkLabel);
+    themeDarkSection.appendChild(themeDarkHelp);
+    themeDarkSection.appendChild(themeDarkSelect);
+    container.appendChild(themeDarkSection);
+
+    // Theme reference link
+    const themeReferenceSection = document.createElement("div");
+    addClass(themeReferenceSection, "settingsSection");
+
+    const themeReferenceLink = document.createElement("a");
+    themeReferenceLink.href = "https://codemirror.net/5/demo/theme.html";
+    themeReferenceLink.target = "_blank";
+    themeReferenceLink.rel = "noopener noreferrer";
+    themeReferenceLink.textContent = "Preview CodeMirror themes →";
+    themeReferenceLink.style.display = "inline-block";
+    themeReferenceLink.style.marginTop = "5px";
+    themeReferenceLink.style.fontSize = "13px";
+
+    themeReferenceSection.appendChild(themeReferenceLink);
+    container.appendChild(themeReferenceSection);
+
     // Formatter Type Section
     const formatterSection = document.createElement("div");
     addClass(formatterSection, "settingsSection");
@@ -1355,9 +1472,38 @@ export default class TabSettingsModal {
     // Save editor settings
     const yasqe = this.tab.getYasqe();
     if (yasqe && yasqe.persistentConfig) {
+      const codeMirrorThemeLightSelect = document.getElementById("codeMirrorThemeLightSelect") as HTMLSelectElement;
+      const codeMirrorThemeDarkSelect = document.getElementById("codeMirrorThemeDarkSelect") as HTMLSelectElement;
       const formatterSelect = document.getElementById("formatterTypeSelect") as HTMLSelectElement;
       const autoformatCheckbox = document.getElementById("autoformatOnQuery") as HTMLInputElement;
       const constructValidationCheckbox = document.getElementById("checkConstructVariables") as HTMLInputElement;
+
+      // Save CodeMirror themes for both light and dark modes
+      if (codeMirrorThemeLightSelect) {
+        const selectedTheme = codeMirrorThemeLightSelect.value;
+        this.tab.yasgui.persistentConfig.setCodeMirrorTheme("light", selectedTheme);
+      }
+
+      if (codeMirrorThemeDarkSelect) {
+        const selectedTheme = codeMirrorThemeDarkSelect.value;
+        this.tab.yasgui.persistentConfig.setCodeMirrorTheme("dark", selectedTheme);
+      }
+
+      // Apply the appropriate theme based on current mode
+      const currentMode = this.tab.yasgui.getTheme();
+      const themeToApply =
+        currentMode === "dark"
+          ? codeMirrorThemeDarkSelect?.value || "material-palenight"
+          : codeMirrorThemeLightSelect?.value || "default";
+
+      // Apply theme to all CodeMirror instances
+      const cmElements = document.querySelectorAll(".CodeMirror");
+      cmElements.forEach((element) => {
+        const cm = (element as any).CodeMirror;
+        if (cm && cm.setOption) {
+          cm.setOption("theme", themeToApply);
+        }
+      });
 
       if (formatterSelect) {
         yasqe.persistentConfig.formatterType = formatterSelect.value as "sparql-formatter" | "legacy";

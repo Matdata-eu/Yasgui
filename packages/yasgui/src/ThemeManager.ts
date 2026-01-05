@@ -1,4 +1,5 @@
 import { Storage as YStorage } from "@matdata/yasgui-utils";
+import PersistentConfig from "./PersistentConfig";
 
 export type Theme = "light" | "dark";
 
@@ -7,12 +8,20 @@ export class ThemeManager {
   private storage: YStorage;
   private currentTheme: Theme;
   private rootElement: HTMLElement;
+  private persistentConfig?: PersistentConfig;
 
   constructor(rootElement: HTMLElement) {
     this.storage = new YStorage("yasgui");
     this.rootElement = rootElement;
     this.currentTheme = this.getStoredTheme() || this.getSystemTheme();
     this.applyTheme(this.currentTheme);
+  }
+
+  /**
+   * Set PersistentConfig for accessing CodeMirror theme preference
+   */
+  public setPersistentConfig(persistentConfig: PersistentConfig): void {
+    this.persistentConfig = persistentConfig;
   }
 
   /**
@@ -61,7 +70,15 @@ export class ThemeManager {
    * Update CodeMirror theme for all Yasqe editors
    */
   private updateCodeMirrorTheme(theme: Theme): void {
-    const cmTheme = theme === "dark" ? "material-palenight" : "default";
+    // Get user's stored CodeMirror theme preference for the current mode, or use default
+    let cmTheme: string;
+    if (this.persistentConfig) {
+      const storedTheme = this.persistentConfig.getCodeMirrorTheme(theme);
+      cmTheme = storedTheme || (theme === "dark" ? "material-palenight" : "default");
+    } else {
+      // Fallback if persistentConfig not yet available
+      cmTheme = theme === "dark" ? "material-palenight" : "default";
+    }
 
     // Find all CodeMirror instances within the root element
     const cmElements = this.rootElement.querySelectorAll(".CodeMirror");

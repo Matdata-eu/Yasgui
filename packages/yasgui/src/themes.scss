@@ -52,49 +52,49 @@
 }
 
 [data-theme="dark"] {
-  // Dark theme colors
-  --yasgui-bg-primary: #1e1e1e;
-  --yasgui-bg-secondary: #252526;
-  --yasgui-bg-tertiary: #2d2d30;
-  --yasgui-bg-quaternary: #3e3e42;
-  --yasgui-text-primary: #d4d4d4;
-  --yasgui-text-secondary: #cccccc;
-  --yasgui-text-muted: #858585;
-  --yasgui-border-color: #3e3e42;
-  --yasgui-border-color-secondary: rgba(255, 255, 255, 0.15);
-  --yasgui-border-color-light: #3e3e42;
-  --yasgui-link-color: #4fc3f7;
-  --yasgui-link-hover: #81d4fa;
-  --yasgui-accent-color: #4fc3f7;
-  --yasgui-button-text: #cccccc;
-  --yasgui-button-hover: #ffffff;
-  --yasgui-chip-bg: #2d2d30;
-  --yasgui-chip-text: #cccccc;
-  --yasgui-tab-bg: #2d2d30;
-  --yasgui-tab-bg-active: #1e1e1e;
-  --yasgui-tab-border: #3e3e42;
-  --yasgui-tab-managed: #2b3c4b;
-  --yasgui-input-border: rgba(255, 255, 255, 0.15);
-  --yasgui-input-focus: #4fc3f7;
-  --yasgui-label-color: rgba(255, 255, 255, 0.6);
-  --yasgui-tooltip-bg: rgba(0, 0, 0, 1);
-  --yasgui-tooltip-text: #d4d4d4;
-  --yasgui-error-color: #f48771;
-  --yasgui-notification-bg: #2d2d30;
-  --yasgui-notification-text: #858585;
-  --yasgui-help-bg: #1a4d5e;
-  --yasgui-help-text: #4fc3f7;
-  --yasgui-fallback-bg: #252526;
-  --yasgui-fallback-border: #3e3e42;
-  --yasgui-resize-handle: #3e3e42;
-  --yasgui-nav-bg: #2d2d30;
-  --yasgui-match-highlight-bg: #3a4a5a;
-  --yasgui-endpoint-button-bg: #4fc3f7;
-  --yasgui-endpoint-button-border: #4fc3f7;
-  --yasgui-endpoint-button-text: #1e1e1e;
-  --yasgui-endpoint-button-hover-bg: #81d4fa;
-  --yasgui-endpoint-button-hover-border: #81d4fa;
-  --yasgui-endpoint-button-focus: #81d4fa;
+  // Dark theme colors - GitHub Dark Default inspired
+  --yasgui-bg-primary: #0d1117;
+  --yasgui-bg-secondary: #161b22;
+  --yasgui-bg-tertiary: #21262d;
+  --yasgui-bg-quaternary: #30363d;
+  --yasgui-text-primary: #c9d1d9;
+  --yasgui-text-secondary: #b1bac4;
+  --yasgui-text-muted: #8b949e;
+  --yasgui-border-color: #30363d;
+  --yasgui-border-color-secondary: rgba(240, 246, 252, 0.1);
+  --yasgui-border-color-light: #30363d;
+  --yasgui-link-color: #58a6ff;
+  --yasgui-link-hover: #79c0ff;
+  --yasgui-accent-color: #58a6ff;
+  --yasgui-button-text: #c9d1d9;
+  --yasgui-button-hover: #f0f6fc;
+  --yasgui-chip-bg: #21262d;
+  --yasgui-chip-text: #c9d1d9;
+  --yasgui-tab-bg: #0d1117;
+  --yasgui-tab-bg-active: #161b22;
+  --yasgui-tab-border: #30363d;
+  --yasgui-tab-managed: #1c2d41;
+  --yasgui-input-border: #30363d;
+  --yasgui-input-focus: #58a6ff;
+  --yasgui-label-color: #8b949e;
+  --yasgui-tooltip-bg: #161b22;
+  --yasgui-tooltip-text: #c9d1d9;
+  --yasgui-error-color: #f85149;
+  --yasgui-notification-bg: #21262d;
+  --yasgui-notification-text: #8b949e;
+  --yasgui-help-bg: #1c2d41;
+  --yasgui-help-text: #58a6ff;
+  --yasgui-fallback-bg: #161b22;
+  --yasgui-fallback-border: #30363d;
+  --yasgui-resize-handle: #30363d;
+  --yasgui-nav-bg: #161b22;
+  --yasgui-match-highlight-bg: #1f6feb;
+  --yasgui-endpoint-button-bg: #238636;
+  --yasgui-endpoint-button-border: #238636;
+  --yasgui-endpoint-button-text: #ffffff;
+  --yasgui-endpoint-button-hover-bg: #2ea043;
+  --yasgui-endpoint-button-hover-border: #2ea043;
+  --yasgui-endpoint-button-focus: #58a6ff;
 }
 
 // Apply theme colors to Yasgui components

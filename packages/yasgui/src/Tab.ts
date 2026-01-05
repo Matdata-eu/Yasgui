@@ -1216,9 +1216,10 @@ export class Tab extends EventEmitter {
   }
 
   private initYasqe() {
-    // Set theme based on current yasgui theme
+    // Set theme based on stored preference for current mode
     const currentTheme = this.yasgui.getTheme();
-    const cmTheme = currentTheme === "dark" ? "material-palenight" : "default";
+    const storedCmTheme = this.yasgui.persistentConfig.getCodeMirrorTheme(currentTheme);
+    const cmTheme = storedCmTheme || (currentTheme === "dark" ? "github-dark" : "default");
 
     const yasqeConf: Partial<YasqeConfig> = {
       ...this.yasgui.config.yasqe,

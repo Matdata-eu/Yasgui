@@ -19,6 +19,8 @@ export interface PersistedJson {
   orientation?: "vertical" | "horizontal";
   showSnippetsBar?: boolean;
   disabledDevButtons?: string[]; // Endpoints of developer-configured buttons that are disabled by user
+  codeMirrorThemeLight?: string; // User-selected CodeMirror theme for light mode
+  codeMirrorThemeDark?: string; // User-selected CodeMirror theme for dark mode
 }
 function getDefaults(): PersistedJson {
   return {
@@ -179,6 +181,19 @@ export default class PersistentConfig {
 
   public setShowSnippetsBar(show: boolean) {
     this.persistedJson.showSnippetsBar = show;
+    this.toStorage();
+  }
+
+  public getCodeMirrorTheme(mode: "light" | "dark"): string | undefined {
+    return mode === "dark" ? this.persistedJson.codeMirrorThemeDark : this.persistedJson.codeMirrorThemeLight;
+  }
+
+  public setCodeMirrorTheme(mode: "light" | "dark", theme: string) {
+    if (mode === "dark") {
+      this.persistedJson.codeMirrorThemeDark = theme;
+    } else {
+      this.persistedJson.codeMirrorThemeLight = theme;
+    }
     this.toStorage();
   }
 

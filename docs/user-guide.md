@@ -328,9 +328,35 @@ Light Theme characteristics:
 
 Dark Theme characteristics:
 - Dark backgrounds with light text
-- Material Palenight CodeMirror theme for syntax highlighting
+- GitHub Dark CodeMirror theme for syntax highlighting (customizable)
 - Reduced eye strain in low-light environments
 - Cyan accent color (#4fc3f7)
+
+**Editor Theme Customization:**
+
+You can customize the syntax highlighting theme separately for light and dark modes:
+
+1. Click the Settings button (⚙) in the control bar
+2. Navigate to the "Editor" tab
+3. Select your preferred theme for light mode from the dropdown
+4. Select your preferred theme for dark mode from the dropdown
+5. Click "Save" to apply your changes
+
+**Available Themes:**
+YASGUI supports 35+ CodeMirror themes including:
+- **GitHub Dark**: Custom theme matching GitHub's dark default colors
+- Material themes (Darker, Palenight, Ocean)
+- Dracula
+- Monokai
+- Solarized (Light/Dark)
+- Nord
+- Tomorrow Night
+- Zenburn
+- And many more...
+
+You can preview all available themes at [CodeMirror's theme demo page](https://codemirror.net/5/demo/theme.html).
+
+Your theme preferences are stored separately for light and dark modes, so switching between app themes (light/dark) will automatically apply the appropriate editor theme.
 
 **System Theme Detection:**
 
@@ -698,6 +724,12 @@ Access comprehensive configuration options through the Settings modal.
 **Formatting Tab:**
 - Select formatter (sparql-formatter or legacy)
 - Enable/disable auto-format on query execution
+
+**Editor Tab:**
+- Select CodeMirror theme for light mode
+- Select CodeMirror theme for dark mode
+- Test themes at [CodeMirror Theme Demo](https://codemirror.net/5/demo/theme.html)
+- Includes custom "GitHub Dark" theme matching GitHub's dark default colors
 
 All settings are saved automatically to local storage.
 
