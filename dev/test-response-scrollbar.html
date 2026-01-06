@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Response Plugin Scrollbar Test</title>
+    <link rel="stylesheet" href="http://localhost:4000/@fs/home/runner/work/Yasgui/Yasgui/packages/yasr/build/yasr.min.css">
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #yasr-container { 
+            height: 400px; 
+            border: 2px solid #ccc;
+            background: white;
+        }
+        h1 { margin: 0 0 20px 0; }
+        .info { background: #e7f3ff; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Response Plugin Scrollbar Test</h1>
+    <div class="info">
+        <strong>Test Objective:</strong> Verify that the response plugin shows a scrollbar when content exceeds container height.
+        <br>The container below is fixed at 400px height with a large JSON response.
+    </div>
+    <div id="yasr-container"></div>
+    
+    <script type="module">
+        import Yasr from 'http://localhost:4000/@fs/home/runner/work/Yasgui/Yasgui/packages/yasr/src/index.ts';
+        
+        // Create a large JSON response for testing
+        const largeResponse = {
+            items: Array.from({length: 100}, (_, i) => ({
+                id: i,
+                name: `Item ${i}`,
+                description: `This is a description for item ${i} with some additional text to make it longer`,
+                data: {
+                    field1: `value${i}`,
+                    field2: `value${i}`,
+                    field3: `value${i}`,
+                    field4: `value${i}`
+                }
+            }))
+        };
+        
+        const yasr = new Yasr(document.getElementById('yasr-container'), {
+            pluginOrder: ['response'],
+            defaultPlugin: 'response'
+        });
+        
+        // Set a mock response
+        yasr.setResponse({
+            status: 200,
+            data: JSON.stringify(largeResponse, null, 2),
+            contentType: 'application/json'
+        });
+    </script>
+</body>
+</html>

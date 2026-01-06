@@ -5,6 +5,7 @@
       border: 1px solid #d1d1d1;
       margin-top: 5px;
       height: 100%;
+      overflow: auto;
       &.overflow::before {
         background: linear-gradient(transparent 0%, #ffffffaa 75%, white 100%);
         content: "";
