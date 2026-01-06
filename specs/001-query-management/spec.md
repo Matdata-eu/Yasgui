@@ -3,19 +3,18 @@
 - [Feature Specification: Query Management](#feature-specification-query-management)
   - [Clarifications](#clarifications)
     - [Session 2025-12-26](#session-2025-12-26)
-  - [User Scenarios \& Testing *(mandatory)*](#user-scenarios--testing-mandatory)
+  - [User Scenarios \& Testing _(mandatory)_](#user-scenarios--testing-mandatory)
     - [User Story 1 - Browse and open managed queries (Priority: P1)](#user-story-1---browse-and-open-managed-queries-priority-p1)
     - [User Story 2 - Save a tab as a managed query (Priority: P2)](#user-story-2---save-a-tab-as-a-managed-query-priority-p2)
     - [User Story 3 - Configure and manage workspaces (Priority: P3)](#user-story-3---configure-and-manage-workspaces-priority-p3)
     - [Edge Cases](#edge-cases)
-  - [Requirements *(mandatory)*](#requirements-mandatory)
+  - [Requirements _(mandatory)_](#requirements-mandatory)
     - [Functional Requirements](#functional-requirements)
     - [Assumptions](#assumptions)
     - [Dependencies](#dependencies)
-    - [Key Entities *(include if feature involves data)*](#key-entities-include-if-feature-involves-data)
-  - [Success Criteria *(mandatory)*](#success-criteria-mandatory)
+    - [Key Entities _(include if feature involves data)_](#key-entities-include-if-feature-involves-data)
+  - [Success Criteria _(mandatory)_](#success-criteria-mandatory)
     - [Measurable Outcomes](#measurable-outcomes)
-
 
 **Feature Branch**: `[001-query-management]`  
 **Created**: 2025-12-26  
@@ -31,13 +30,13 @@
 - Q: If a managed query is saved to an existing filename/path, what should happen? → A: Overwrite it (create a new version).
 - Q: For Git-based workspaces, should endpoint association be stored with the query? → A: No; Git-based queries store only the query text (no endpoint association).
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 <!--
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
   Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
   you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
+
   Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
   Think of each story as a standalone slice of functionality that can be:
   - Developed independently
@@ -106,7 +105,7 @@ As a user, I can add, edit, and remove workspaces so I can organize queries acro
 - Duplicate names/paths: saving to an existing filename/path overwrites the existing managed query (new version) rather than creating a duplicate.
 - Very large workspaces: browsing and searching remain usable (no UI freeze) and support deep folder hierarchies.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -145,7 +144,7 @@ As a user, I can add, edit, and remove workspaces so I can organize queries acro
 - Users must have access rights to the selected long-term storage (repository or endpoint) for read/write operations.
 - The chosen storage backend must be reachable over the network for browsing and saving.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **Workspace**: A named configuration that points to exactly one long-term storage backend; includes label/description, authentication details, and a folder hierarchy.
 - **Workspace Folder**: A node in a workspace’s hierarchy used to organize managed queries; may be nested.
@@ -154,7 +153,7 @@ As a user, I can add, edit, and remove workspaces so I can organize queries acro
 - **Commit/Save Message Template**: A user-configurable template used when persisting a new version to Git-based storage.
 - **Credential**: A stored secret used to access a workspace’s backing store (e.g., repository access token); never displayed after entry.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 <!--
   ACTION REQUIRED: Define measurable success criteria.

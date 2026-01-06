@@ -74,6 +74,7 @@
 YASGUI is a comprehensive SPARQL query interface that combines a powerful query editor (YASQE) with a versatile results viewer (YASR). Whether you're new to SPARQL or an experienced user, YASGUI provides an intuitive interface for working with semantic data.
 
 **Key Benefits:**
+
 - Write and execute SPARQL queries against any endpoint
 - Visualize results in multiple formats (tables, graphs, maps, etc.)
 - Save and manage multiple query tabs
@@ -100,6 +101,7 @@ For a comprehensive, beginner-friendly guide to SPARQL, visit:
 **[https://kvistgaard.github.io/sparql/](https://kvistgaard.github.io/sparql/)**
 
 This excellent resource covers:
+
 - SPARQL syntax and structure
 - Query types (SELECT, CONSTRUCT, ASK, DESCRIBE)
 - Filters and functions
@@ -125,6 +127,7 @@ YASGUI is available at: **[https://yasgui.matdata.eu/](https://yasgui.matdata.eu
 You can run YASGUI locally using Docker, which is especially useful when working with local SPARQL endpoints.
 
 **Why Use Docker?**
+
 - Avoids browser mixed content restrictions when querying local endpoints
 - No need to grant browser permissions for local network access
 - Self-contained environment with all dependencies included
@@ -137,30 +140,36 @@ docker run -p 8080:8080 mathiasvda/yasgui
 ```
 
 This command:
+
 - Downloads the YASGUI Docker image (first run only)
 - Starts YASGUI on port 8080
 - Makes it accessible at `http://localhost:8080`
 
 **Accessing YASGUI:**
+
 - Open your browser and navigate to: `http://localhost:8080`
 - YASGUI will load and be ready to use
 - You can now query local endpoints without browser permission prompts
 
 **Benefits for Local Endpoints:**
+
 - Both YASGUI and your local endpoint use HTTP (no mixed content issues)
 - No browser security prompts
 - Seamless connection to localhost services
 - See [Querying Local Endpoints](#querying-local-endpoints) for more details
 
 **Stopping YASGUI:**
+
 - Press `Ctrl+C` in the terminal where Docker is running
 - Or use: `docker stop <container-id>`
 
 **Custom Port:**
 To run on a different port (e.g., 3000):
+
 ```bash
 docker run -p 3000:8080 mathiasvda/yasgui
 ```
+
 Then access at `http://localhost:3000`
 
 ### Your First Query
@@ -171,6 +180,7 @@ Then access at `http://localhost:3000`
 4. **View Results**: Results appear in the results viewer below
 
 **Example Query:**
+
 ```sparql
 SELECT ?subject ?predicate ?object
 WHERE {
@@ -182,6 +192,7 @@ LIMIT 10
 ### Saving Your Work
 
 YASGUI automatically saves:
+
 - Your queries in local storage
 - Tab configurations
 - User preferences (theme, layout, etc.)
@@ -203,16 +214,14 @@ YASGUI can query SPARQL endpoints running on your local machine (e.g., Apache Je
 3. **Grant Browser Permission**: Your browser will show a permission request to access the local endpoint
 
    **In Microsoft Edge:**
-   
+
    ![Permission request dialog](img/local_endpoint_msedge_permission_request.png)
-   
    - Click **"Allow"** to grant permission
    - The permission applies for the domain on which you run yasgui (for example https://yasgui.matdata.eu/)
 
 4. **If You Blocked the Request**: You can change the permission later
 
    ![Change permission settings](img/local_endpoint_msedge_permission_change.png)
-   
    - Click the lock icon in the address bar
    - Find the "Local network access" or similar setting
    - Change it to "Allow"
@@ -221,13 +230,13 @@ YASGUI can query SPARQL endpoints running on your local machine (e.g., Apache Je
 5. **Permission Denied Error**: If same-origin policy was not accepted, you'll see an error
 
    ![Permission denied error](img/local_endpoint_msedge_error.png)
-   
    - Follow step 4 to grant permission
    - Re-execute your query
 
 **Other Browsers:**
 
 The process is similar in Chrome, Firefox, and Safari:
+
 - Chrome: the same as Edge (verified by author)
 - Firefox: May require setting `security.mixed_content.block_active_content` to false in about:config (unverified by author)
 - Safari: Check "Disable local file restrictions" in Develop menu (unverified by author)
@@ -236,20 +245,24 @@ The process is similar in Chrome, Firefox, and Safari:
 **Alternative: Use Docker to Avoid Permission Issues**
 
 If you frequently work with local endpoints, consider running YASGUI locally with Docker:
+
 ```bash
 docker run -p 8080:8080 mathiasvda/yasgui
 ```
+
 Then open your browser and navigate to `http://localhost:8080`.
 
 This eliminates browser permission prompts since both YASGUI and your local endpoint use HTTP. See [Running YASGUI with Docker](#running-yasgui-with-docker) for details.
 
 **Important Notes:**
+
 - Permission is required because YASGUI is served over HTTPS while your local endpoint uses HTTP
 - This is a browser security feature to protect against mixed content attacks
 - You'll need to grant permission once and it should apply for all browser session (when you don't clear cache & settings)
 - Consider using HTTPS for your local endpoint for automatic permission
 
 **Troubleshooting Local Endpoints:**
+
 - Ensure your local SPARQL server is running before querying
 - Check that the port number is correct (e.g., 3030, 3333, 7200)
 - Verify the endpoint path matches your server configuration
@@ -259,7 +272,6 @@ This eliminates browser permission prompts since both YASGUI and your local endp
 
 ## Components Overview
 
-
 YASGUI consists of three main components working together:
 
 ### YASQE (Query Editor)
@@ -267,6 +279,7 @@ YASGUI consists of three main components working together:
 The query editor where you write and edit SPARQL queries.
 
 **Features:**
+
 - Syntax highlighting for SPARQL
 - Auto-completion for keywords, prefixes, and URIs
 - Line numbers and code folding
@@ -279,6 +292,7 @@ The query editor where you write and edit SPARQL queries.
 The results viewer displays query results in various formats.
 
 **Features:**
+
 - Multiple visualization plugins (table, graph, map, etc.)
 - Export results to different formats
 - Pagination for large result sets
@@ -290,6 +304,7 @@ The results viewer displays query results in various formats.
 The container that brings YASQE and YASR together with additional functionality.
 
 **Features:**
+
 - Multiple query tabs
 - Tab management (rename, duplicate, close)
 - Endpoint management
@@ -306,6 +321,7 @@ The container that brings YASQE and YASR together with additional functionality.
 YASGUI supports both light and dark themes, allowing you to customize the appearance of the SPARQL IDE according to your preferences.
 
 **Features:**
+
 - **Light Theme**: Default bright theme suitable for well-lit environments with high contrast and blue accents
 - **Dark Theme**: Easy-on-the-eyes dark theme with Material Palenight syntax highlighting and cyan accents
 - **Theme Toggle**: Quick switching between themes via UI button in the tab bar
@@ -313,6 +329,7 @@ YASGUI supports both light and dark themes, allowing you to customize the appear
 - **System Preference**: Automatically detects and applies your system's theme preference on first visit
 
 **How to Change Theme:**
+
 - Click the theme toggle button in the top-right area of the tab bar
   - **Light Mode**: Shows a sun icon (☀️) - clicking switches to dark mode
   - **Dark Mode**: Shows a moon icon (🌙) - clicking switches to light mode
@@ -321,12 +338,14 @@ YASGUI supports both light and dark themes, allowing you to customize the appear
 **Theme Details:**
 
 Light Theme characteristics:
+
 - Clean, bright interface with high contrast
 - Default CodeMirror syntax highlighting
 - White backgrounds with dark text
 - Blue accent color (#337ab7)
 
 Dark Theme characteristics:
+
 - Dark backgrounds with light text
 - GitHub Dark CodeMirror theme for syntax highlighting (customizable)
 - Reduced eye strain in low-light environments
@@ -344,6 +363,7 @@ You can customize the syntax highlighting theme separately for light and dark mo
 
 **Available Themes:**
 YASGUI supports 35+ CodeMirror themes including:
+
 - **GitHub Dark**: Custom theme matching GitHub's dark default colors
 - Material themes (Darker, Palenight, Ocean)
 - Dracula
@@ -361,6 +381,7 @@ Your theme preferences are stored separately for light and dark modes, so switch
 **System Theme Detection:**
 
 If you haven't manually selected a theme, YASGUI will:
+
 1. Check your system's color scheme preference
 2. Apply dark theme if your system prefers dark mode
 3. Apply light theme otherwise
@@ -371,17 +392,20 @@ If you haven't manually selected a theme, YASGUI will:
 YASGUI offers two layout options to optimize screen space:
 
 **Vertical Layout (Default):**
+
 - Query editor on top
 - Results viewer below
 - Best for standard monitors and laptops
 
 **Horizontal Layout:**
+
 - Query editor on left
 - Results viewer on right (side-by-side)
 - Ideal for wide/ultrawide monitors
 - Maximizes vertical space for both components
 
 **How to Change Layout:**
+
 - Click the layout toggle button in the control bar (next to the endpoint selector)
 - Icon shows stacked rectangles (vertical) or side-by-side rectangles (horizontal)
 - Layout preference is saved automatically
@@ -391,6 +415,7 @@ YASGUI offers two layout options to optimize screen space:
 Keep your SPARQL queries clean and readable with automatic formatting.
 
 **Features:**
+
 - Format button in the editor toolbar
 - Keyboard shortcut: `Shift+Ctrl+F`
 - Choice of formatting engines:
@@ -399,11 +424,13 @@ Keep your SPARQL queries clean and readable with automatic formatting.
 - Auto-format on query execution (configurable in Settings)
 
 **How to Format:**
+
 1. Write or paste your query
 2. Click the format button or press `Shift+Ctrl+F`
 3. Query is automatically reformatted with proper indentation and spacing
 
 **Configuration:**
+
 - Open Settings (⚙ icon) to:
   - Select your preferred formatter
   - Enable/disable auto-format on query execution
@@ -414,6 +441,7 @@ Keep your SPARQL queries clean and readable with automatic formatting.
 YASGUI helps you write correct CONSTRUCT queries by detecting undefined variables.
 
 **Feature:**
+
 - Automatically checks if variables used in the CONSTRUCT template are defined in the WHERE clause
 - Shows orange warning markers in the gutter for undefined variables
 - Displays tooltips explaining which variable is undefined
@@ -421,6 +449,7 @@ YASGUI helps you write correct CONSTRUCT queries by detecting undefined variable
 
 **How It Works:**
 When you write a CONSTRUCT query, YASGUI analyzes the variables:
+
 ```sparql
 PREFIX ex: <http://example.org/>
 CONSTRUCT {
@@ -433,17 +462,20 @@ WHERE {
 ```
 
 **Visual Feedback:**
+
 - **Orange warning icon**: Appears in the gutter next to lines with undefined variables
 - **Tooltip**: Hover over the warning icon to see which variable is undefined
 - **Non-blocking**: Queries can still be executed even with warnings
 
 **Configuration:**
+
 - Open Settings (⚙ icon) → Editor tab
 - Toggle "Validate CONSTRUCT query variables" checkbox
 - Enabled by default
 - Setting is saved persistently
 
 **Why This Helps:**
+
 - Catch typos in variable names early
 - Ensure CONSTRUCT queries will produce expected results
 - Understand which variables are actually bound in your query
@@ -454,6 +486,7 @@ WHERE {
 Quickly insert common SPARQL patterns and query types using the code snippets bar.
 
 **Features:**
+
 - **Quick insertion**: Click a snippet button to insert code at your cursor position
 - **Default snippets**: Includes 5 useful SPARQL snippets (SELECT, CONSTRUCT, ASK, FILTER, OPTIONAL)
 - **Dropdown grouping**: When more than 10 snippets are configured, they are grouped in dropdown menus
@@ -461,12 +494,14 @@ Quickly insert common SPARQL patterns and query types using the code snippets ba
 - **Visibility toggle**: Show or hide the snippets bar based on preference
 
 **How to Use:**
+
 1. Position your cursor where you want to insert code
 2. Click a snippet button in the snippets bar (above the editor)
 3. The code is inserted at your cursor position
 4. Continue editing as needed
 
 **Default Snippets:**
+
 - **SELECT**: Basic SELECT query template
 - **CONSTRUCT**: CONSTRUCT query template
 - **ASK**: ASK query template
@@ -475,11 +510,13 @@ Quickly insert common SPARQL patterns and query types using the code snippets ba
 
 **Grouped Snippets (>10):**
 When more than 10 snippets are configured, they are organized into dropdown menus by group:
+
 - Click a group button (e.g., "Query Types", "Patterns") to open the dropdown
 - Click a snippet in the dropdown to insert it
 - The dropdown closes automatically after insertion
 
 **Configuration:**
+
 - Snippets bar visibility is saved in user preferences
 - Developers can configure custom snippets with label, code, and group properties
 - The bar is hidden automatically when no snippets are configured
@@ -489,10 +526,12 @@ When more than 10 snippets are configured, they are organized into dropdown menu
 Maximize screen space for editing or viewing results.
 
 **Available Modes:**
+
 - **YASQE Fullscreen**: Editor takes up the entire screen
 - **YASR Fullscreen**: Results viewer takes up the entire screen
 
 **How to Use:**
+
 - Press `F11` to toggle YASQE fullscreen
 - Press `F10` to toggle YASR fullscreen
 - Press `F9` to switch between YASQE and YASR fullscreen
@@ -503,6 +542,7 @@ Maximize screen space for editing or viewing results.
 Simplify query writing with reusable prefix declarations.
 
 **Features:**
+
 - **Saved Prefixes**: Define commonly-used prefixes once, reuse everywhere
 - **Auto-capture**: YASGUI automatically captures new prefixes from your queries
 - **PREFIX Button**: Insert saved prefixes into your query with one click
@@ -510,16 +550,19 @@ Simplify query writing with reusable prefix declarations.
 
 **Default Prefixes:**
 YASGUI includes standard prefixes like:
+
 - `rdf:` - RDF vocabulary
 - `rdfs:` - RDF Schema
 
 **How to Use:**
+
 1. Click the "PREFIX" button to insert all saved prefixes
 2. Open Settings (⚙) to manage your prefix collection
 3. Enable/disable auto-capture in Settings
 
 **Auto-completion:**
 When typing a prefix declaration, YASGUI queries [prefix.cc](https://prefix.cc) to suggest standard URIs:
+
 ```sparql
 PREFIX foaf: <  # Auto-suggests http://xmlns.com/foaf/0.1/
 ```
@@ -529,6 +572,7 @@ PREFIX foaf: <  # Auto-suggests http://xmlns.com/foaf/0.1/
 The endpoint quick switch buttons feature allows you to quickly switch between different SPARQL endpoints with a single click. You can use predefined endpoints or add your own custom buttons.
 
 **Features:**
+
 - **One-click switching**: Instantly switch to a different SPARQL endpoint
 - **Developer-configured buttons**: Administrators can configure endpoint buttons during initialization
 - **User-configurable buttons**: Enable/disable developer-configured buttons or add your own
@@ -548,6 +592,7 @@ If the developer has configured endpoint buttons when initializing YASGUI, you c
 This allows you to customize which developer-configured buttons appear in your toolbar without losing the configuration.
 
 **How to Add Custom Endpoints:**
+
 1. Click the Settings button (⚙) in the control bar
 2. Navigate to the "Endpoints" tab
 3. Scroll to the "SPARQL Endpoints" section
@@ -559,6 +604,7 @@ This allows you to customize which developer-configured buttons appear in your t
 Custom endpoint configurations persist across browser sessions. You can delete endpoints by clicking the "Delete" button.
 
 **How to Switch Endpoints:**
+
 - Buttons are displayed next to the endpoint textbox in the control bar
 - Click any endpoint button to immediately update the endpoint field
 - The endpoint change triggers the same behavior as manually entering an endpoint
@@ -566,6 +612,7 @@ Custom endpoint configurations persist across browser sessions. You can delete e
 
 **Overflow Dropdown for Limited Space:**
 When the control bar is too narrow to display all endpoint buttons (e.g., when resizing the window or having many endpoints), buttons that don't fit are automatically grouped into an overflow dropdown menu:
+
 - A "more" button (⋯) appears at the end of the visible buttons
 - Click the overflow button to reveal a dropdown with the hidden endpoint buttons
 - The dropdown automatically adjusts as you resize the window
@@ -573,6 +620,7 @@ When the control bar is too narrow to display all endpoint buttons (e.g., when r
 - The overflow button only appears when needed and stays visible as long as there is room for it
 
 **Behavior:**
+
 - Clicking a button updates the endpoint textbox with the configured endpoint
 - The endpoint change is immediate and doesn't require confirmation
 - Multiple buttons can be displayed for different endpoints
@@ -583,6 +631,7 @@ When the control bar is too narrow to display all endpoint buttons (e.g., when r
 Backup, share, and migrate your YASGUI configuration using RDF Turtle format. This feature allows you to export all your settings, tabs, queries, and preferences, then import them on another device or browser.
 
 **Features:**
+
 - **Export to file**: Download your configuration as a `.ttl` file
 - **Copy to clipboard**: Quickly copy configuration for sharing
 - **Import from file**: Upload a previously exported configuration
@@ -593,11 +642,13 @@ Backup, share, and migrate your YASGUI configuration using RDF Turtle format. Th
 **Configuration Ontology:**
 
 YASGUI uses a custom RDF ontology to represent configuration:
+
 - Namespace: `https://yasgui.matdata.eu/ontology#`
 - Classes: `Configuration`, `Tab`
 - Properties: `activeTab`, `prefixes`, `endpoint`, `query`, `tabName`, etc.
 
 **What Gets Exported:**
+
 - All query tabs and their content
 - Endpoint configurations
 - Saved prefixes
@@ -606,6 +657,7 @@ YASGUI uses a custom RDF ontology to represent configuration:
 - Editor preferences
 
 **How to Export Configuration:**
+
 1. Click the Settings button (⚙) in the control bar
 2. Navigate to the "Import/Export" tab
 3. Choose export method:
@@ -614,6 +666,7 @@ YASGUI uses a custom RDF ontology to represent configuration:
 4. Share the file or clipboard content with others, or save it for backup
 
 **How to Import Configuration:**
+
 1. Click the Settings button (⚙) in the control bar
 2. Navigate to the "Import/Export" tab
 3. Choose import method:
@@ -624,6 +677,7 @@ YASGUI uses a custom RDF ontology to represent configuration:
 5. Reload the page to see the imported configuration
 
 **Example Configuration (RDF Turtle):**
+
 ```turtle
 @prefix yasgui: <https://yasgui.matdata.eu/ontology#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -643,6 +697,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>""" ;
 ```
 
 **Use Cases:**
+
 - **Backup**: Export configuration before clearing browser data
 - **Migration**: Move your setup to a different browser or device
 - **Sharing**: Share query collections with colleagues
@@ -650,6 +705,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>""" ;
 - **Collaboration**: Distribute standardized query setups to teams
 
 **Important Notes:**
+
 - Import will replace your current configuration (confirm before proceeding)
 - Page reload is required to fully apply imported configuration
 - Configuration is stored in browser's local storage
@@ -660,6 +716,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>""" ;
 Quickly explore RDF resources by Ctrl+clicking on URIs in your query.
 
 **How It Works:**
+
 1. Hold `Ctrl` and click any URI in the query editor
 2. YASGUI automatically generates and executes a CONSTRUCT query exploring:
    - Outgoing triples (where the URI is the subject)
@@ -675,6 +732,7 @@ Ctrl+clicking on `http://dbpedia.org/resource/European_Union` automatically quer
 Manage multiple queries simultaneously with tabs.
 
 **Features:**
+
 - Create unlimited query tabs
 - Rename tabs by double-clicking the tab name
 - Duplicate tabs to create query variations
@@ -687,6 +745,7 @@ Manage multiple queries simultaneously with tabs.
   - Plugin selection
 
 **Tab Operations:**
+
 - **New Tab**: Click the "+" button in the tab bar
 - **Rename**: Double-click the tab name
 - **Duplicate**: Right-click and select "Duplicate"
@@ -698,16 +757,19 @@ Manage multiple queries simultaneously with tabs.
 Access comprehensive configuration options through the Settings modal.
 
 **How to Open:**
+
 - Click the settings button (⚙) in the control bar
 
 **Settings Sections:**
 
 **Prefixes Tab:**
+
 - Manage saved prefix declarations
 - Enable/disable auto-capture
 - Add, edit, or remove prefixes
 
 **Request Configuration Tab:**
+
 - HTTP request method (GET/POST)
 - Accept headers
 - Custom request parameters
@@ -715,6 +777,7 @@ Access comprehensive configuration options through the Settings modal.
 - Custom HTTP headers
 
 **Endpoints Tab:**
+
 - **Developer-Configured Endpoint Buttons**: Enable/disable developer-configured buttons
 - **SPARQL Endpoints**: Manage all your endpoints in one place
 - Configure authentication per endpoint
@@ -722,10 +785,12 @@ Access comprehensive configuration options through the Settings modal.
 - Automatically tracks accessed endpoints
 
 **Formatting Tab:**
+
 - Select formatter (sparql-formatter or legacy)
 - Enable/disable auto-format on query execution
 
 **Editor Tab:**
+
 - Select CodeMirror theme for light mode
 - Select CodeMirror theme for dark mode
 - Test themes at [CodeMirror Theme Demo](https://codemirror.net/5/demo/theme.html)
@@ -755,6 +820,7 @@ You can enable or disable any developer-configured button by checking or uncheck
 **Managing User Endpoints:**
 
 The SPARQL Endpoints table shows:
+
 - **Endpoint**: The URL of the SPARQL endpoint
 - **Label**: Optional friendly name for the endpoint
 - **Button**: Checkbox to show endpoint as a quick-switch button (requires label)
@@ -784,21 +850,25 @@ YASGUI supports multiple authentication methods for endpoints that require crede
 
 **Authentication Types:**
 
-*HTTP Basic Authentication:*
+_HTTP Basic Authentication:_
+
 - Username: Your endpoint username
 - Password: Your endpoint password
 - Use case: Simple username/password authentication
 
-*Bearer Token:*
+_Bearer Token:_
+
 - Token: Your pre-configured bearer token
 - Use case: When you have a pre-generated access token
 
-*API Key (Custom Header):*
+_API Key (Custom Header):_
+
 - Header Name: The HTTP header name (e.g., X-API-Key)
 - API Key: Your API key value
 - Use case: Endpoints using custom header-based authentication
 
-*OAuth 2.0:*
+_OAuth 2.0:_
+
 - Client ID: Your OAuth application's client ID
 - Authorization Endpoint: The OAuth provider's authorization URL
 - Token Endpoint: The OAuth provider's token exchange URL
@@ -819,6 +889,7 @@ YASGUI supports multiple authentication methods for endpoints that require crede
 **How Authentication Works:**
 
 Authentication is stored per-endpoint, which means:
+
 - All tabs using the same endpoint share the same credentials
 - You only need to configure authentication once per endpoint
 - Credentials persist across browser sessions (stored in localStorage)
@@ -826,21 +897,25 @@ Authentication is stored per-endpoint, which means:
 When authentication is configured:
 
 For **Basic Authentication**:
+
 1. YASGUI encodes your credentials using Base64 encoding
 2. Adds an `Authorization` header with the format: `Basic <encoded-credentials>`
 3. Sends this header with every SPARQL query request to that endpoint
 
 For **Bearer Token**:
+
 1. Uses the provided token as-is
 2. Adds an `Authorization` header with the format: `Bearer <token>`
 3. Sends this header with every SPARQL query request to that endpoint
 
 For **API Key**:
+
 1. Uses the specified custom header name and API key value
 2. Adds a custom header with the format: `<Header-Name>: <api-key>`
 3. Sends this header with every SPARQL query request to that endpoint
 
 For **OAuth 2.0**:
+
 1. Opens a popup window for OAuth provider authentication
 2. Uses Authorization Code flow with PKCE for secure token exchange
 3. Stores access token and refresh token
@@ -854,21 +929,24 @@ For **OAuth 2.0**:
 **⚠️ Important Prerequisite:**
 Before using OAuth 2.0, the OAuth administrator must register the redirect URI (callback URL) in the OAuth provider's configuration. By default, YASGUI uses the current page URL as the redirect URI. For example, if YASGUI is hosted at `https://yasgui.example.com/`, this URL must be added to the allowed redirect URIs in your OAuth application settings.
 
-*Microsoft Azure (Entra ID):*
+_Microsoft Azure (Entra ID):_
+
 - Authorization Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize`
 - Token Endpoint: `https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token`
 - Scope: `api://your-app-id/.default` or `openid profile`
 - Note: Your app must be registered in Azure AD with public client flow enabled
 - **Redirect URI Registration**: Add your YASGUI URL to "Redirect URIs" in Azure AD app registration
 
-*AWS Cognito:*
+_AWS Cognito:_
+
 - Authorization Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/authorize`
 - Token Endpoint: `https://your-domain.auth.region.amazoncognito.com/oauth2/token`
 - Scope: `openid profile` (adjust as needed)
 - Note: Enable "Authorization code grant" flow in your app client settings
 - **Redirect URI Registration**: Add your YASGUI URL to "Allowed callback URLs" in Cognito app client settings
 
-*Keycloak:*
+_Keycloak:_
+
 - Authorization Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/auth`
 - Token Endpoint: `https://your-keycloak-domain.com/realms/{realm-name}/protocol/openid-connect/token`
 - Scope: `openid profile` (adjust based on client configuration)
@@ -937,7 +1015,7 @@ Then configure YASGUI to use the endpoint URL:
 
 - **GitHub** (including GitHub Enterprise)
 - **GitLab** (GitLab.com and self-hosted)
-- **Bitbucket Cloud** 
+- **Bitbucket Cloud**
 - **Gitea** (self-hosted)
 
 Currently GitHub and GitLab have been thoroughly tested; Bitbucket Cloud and Gitea support covers the same as GitHub/GitLab but have not been extensively tested.
@@ -985,6 +1063,7 @@ Git workspaces are implemented via the providers' **HTTPS REST APIs**.
 YASGUI automatically saves your work locally.
 
 **What's Saved:**
+
 - Query text in each tab
 - Tab names and order
 - Endpoint configurations
@@ -993,6 +1072,7 @@ YASGUI automatically saves your work locally.
 - Custom endpoint buttons
 
 **Persistence Duration:**
+
 - Default: 30 days
 - Configurable by administrators
 
@@ -1015,6 +1095,7 @@ YASQE provides a share button (when `createShareableLink` is configured) that of
 **How to Share:**
 
 YASGUI supports URL-based query sharing:
+
 1. Craft your query in YASGUI
 2. Click the share button (sharing icon in the top-right corner)
 3. Select your preferred format
@@ -1022,6 +1103,7 @@ YASGUI supports URL-based query sharing:
 5. Share with others or execute in your terminal
 
 **URL Parameters:**
+
 - `query`: The SPARQL query
 - `endpoint`: The endpoint URL
 - Other tab configurations
@@ -1029,6 +1111,7 @@ YASGUI supports URL-based query sharing:
 **Command-Line Formats:**
 
 All command-line formats (cURL, PowerShell, wget) include:
+
 - The complete SPARQL query
 - All configured headers
 - Authentication credentials (if configured)
@@ -1038,7 +1121,8 @@ All command-line formats (cURL, PowerShell, wget) include:
 
 **Example Formats:**
 
-*cURL:*
+_cURL:_
+
 ```bash
 curl 'https://example.com/sparql' \
   --data 'query=SELECT%20...' \
@@ -1047,7 +1131,8 @@ curl 'https://example.com/sparql' \
   -H 'Accept: application/sparql-results+json'
 ```
 
-*PowerShell:*
+_PowerShell:_
+
 ```powershell
 $params = @{
     Uri = "https://example.com/sparql"
@@ -1064,7 +1149,8 @@ $params = @{
 Invoke-WebRequest @params
 ```
 
-*wget:*
+_wget:_
+
 ```bash
 wget 'https://example.com/sparql' \
   --body-data 'query=SELECT%20...' \
@@ -1085,6 +1171,7 @@ YASR (Results Viewer) uses plugins to visualize query results in different forma
 Displays SELECT query results in an interactive, high-performance table with advanced features.
 
 **Features:**
+
 - **Virtual Scrolling**: Efficiently handles 10,000+ rows without pagination
 - **Sortable Columns**: Click column headers to sort ascending/descending
 - **Column Resizing**: Drag column borders to resize
@@ -1102,6 +1189,7 @@ Displays SELECT query results in an interactive, high-performance table with adv
   - **Fit Controls**: Fit table to data width or window width
 
 **Controls:**
+
 - **Search**: Text field to filter rows in real-time with highlighted matches
 - **URI Display**: Toggle between abbreviated (prefix:localName) and full URI display
 - **Datatypes**: Toggle visibility of datatype annotations on literal values
@@ -1114,6 +1202,7 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - **Download CSV**: Access via YASR's download button for CSV file export
 
 **Best For:**
+
 - SELECT queries with large result sets (10,000+ rows)
 - Exploring structured data with complex URIs
 - Interactive data analysis with sorting and filtering
@@ -1121,6 +1210,7 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - Extracting specific data subsets via cell selection
 
 **Usage:**
+
 - Execute a SELECT query
 - Table plugin activates automatically for SELECT results
 - Click column headers to sort (click again to reverse)
@@ -1141,16 +1231,19 @@ Visit the [Table Plugin Repository](https://github.com/Matdata-eu/yasgui-table-p
 Displays boolean results from ASK queries.
 
 **Features:**
+
 - Clear true/false visual indicator
 - Color-coded responses (green for true, red for false)
 - Large, easy-to-read display
 
 **Best For:**
+
 - ASK queries
 - Checking if patterns exist in the data
 - Boolean validation queries
 
 **Usage:**
+
 - Execute an ASK query
 - Boolean plugin activates automatically
 - Result shown as TRUE ✓ or FALSE ✗
@@ -1160,6 +1253,7 @@ Displays boolean results from ASK queries.
 Shows the raw response from the SPARQL endpoint.
 
 **Features:**
+
 - Syntax highlighting for different formats:
   - JSON
   - XML
@@ -1170,12 +1264,14 @@ Shows the raw response from the SPARQL endpoint.
 - Line numbers
 
 **Best For:**
+
 - Debugging queries
 - Inspecting raw endpoint responses
 - Understanding response structure
 - Working with specific response formats
 
 **Usage:**
+
 - Execute any query
 - Select "Response" from the plugin selector
 - View raw response with syntax highlighting
@@ -1185,6 +1281,7 @@ Shows the raw response from the SPARQL endpoint.
 Visualizes RDF data as an interactive node-edge graph.
 
 **Features:**
+
 - Interactive force-directed graph layout
 - Zoom and pan navigation
 - Node and edge highlighting on hover
@@ -1193,12 +1290,14 @@ Visualizes RDF data as an interactive node-edge graph.
 - Export graph visualization
 
 **Best For:**
+
 - CONSTRUCT queries
 - DESCRIBE queries
 - Exploring RDF structure and relationships
 - Visualizing knowledge graphs
 
 **Usage:**
+
 - Execute a CONSTRUCT or DESCRIBE query
 - Select "Graph" from the plugin selector
 - Interact with nodes by clicking and dragging
@@ -1216,6 +1315,7 @@ Visit the [Graph Plugin Repository](https://github.com/Matdata-eu/yasgui-graph-p
 Displays geographic data on an interactive map.
 
 **Features:**
+
 - Interactive map with zoom and pan
 - Marker clustering for dense data
 - Popup information on marker click
@@ -1223,12 +1323,14 @@ Displays geographic data on an interactive map.
 - Theme-aware styling
 
 **Best For:**
+
 - Queries returning coordinates (latitude/longitude)
 - Geographic/spatial data
 - Location-based queries
 - Visualizing geographic distributions
 
 **Usage:**
+
 - Execute a query returning geo-coordinates
 - Results should include latitude/longitude properties
 - Select "Geo" from the plugin selector
@@ -1236,6 +1338,7 @@ Displays geographic data on an interactive map.
 
 **Expected Data Format:**
 The plugin looks for common coordinate properties:
+
 - `wkt` (Well-Known Text)
 - `lat`/`long` or `latitude`/`longitude`
 - GeoJSON structures
@@ -1248,6 +1351,7 @@ Visit [Yasgui Geo Plugin](https://github.com/Thib-G/yasgui-geo-tg) for detailed 
 Displays error messages and diagnostic information when queries fail.
 
 **Features:**
+
 - Detailed error messages
 - HTTP status codes
 - SPARQL endpoint errors
@@ -1255,17 +1359,20 @@ Displays error messages and diagnostic information when queries fail.
 - Helpful suggestions for common issues
 
 **Best For:**
+
 - Understanding query failures
 - Debugging endpoint issues
 - Troubleshooting CORS problems
 
 **When It Appears:**
+
 - Query execution fails
 - Network errors occur
 - SPARQL syntax errors
 - Endpoint unavailable
 
 **Common Error Types:**
+
 - **CORS Errors**: Cross-origin request blocked
 - **Syntax Errors**: Invalid SPARQL syntax
 - **Timeout**: Query took too long
@@ -1276,11 +1383,13 @@ Displays error messages and diagnostic information when queries fail.
 
 **Automatic Selection:**
 YASGUI automatically selects the most appropriate plugin based on:
+
 - Query type (SELECT, CONSTRUCT, ASK, DESCRIBE)
 - Response content type
 - Data structure
 
 **Manual Selection:**
+
 - Use the plugin selector buttons at the top of the results area
 - Available plugins depend on the query results
 - Your selection is saved per tab
@@ -1293,42 +1402,43 @@ Master YASGUI with these keyboard shortcuts for faster querying.
 
 ### Query Editor (YASQE)
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Enter` / `Cmd+Enter` | Execute query |
-| `Ctrl+Space` | Trigger autocomplete |
-| `Ctrl+S` | Save query to local storage |
-| `Ctrl+Shift+F` | Format query |
-| `Ctrl+/` | Toggle comment on selected lines |
-| `Ctrl+Shift+D` | Duplicate current line |
-| `Ctrl+Shift+K` | Delete current line |
-| `Esc` | Remove focus from editor |
-| `Ctrl+Click` (on URI) | Explore URI connections |
+| Shortcut                   | Action                           |
+| -------------------------- | -------------------------------- |
+| `Ctrl+Enter` / `Cmd+Enter` | Execute query                    |
+| `Ctrl+Space`               | Trigger autocomplete             |
+| `Ctrl+S`                   | Save query to local storage      |
+| `Ctrl+Shift+F`             | Format query                     |
+| `Ctrl+/`                   | Toggle comment on selected lines |
+| `Ctrl+Shift+D`             | Duplicate current line           |
+| `Ctrl+Shift+K`             | Delete current line              |
+| `Esc`                      | Remove focus from editor         |
+| `Ctrl+Click` (on URI)      | Explore URI connections          |
 
 ### Fullscreen
 
-| Shortcut | Action |
-|----------|--------|
-| `F11` | Toggle YASQE (editor) fullscreen |
-| `F10` | Toggle YASR (results) fullscreen |
-| `F9` | Switch between YASQE and YASR fullscreen |
-| `Esc` | Exit fullscreen mode |
+| Shortcut | Action                                   |
+| -------- | ---------------------------------------- |
+| `F11`    | Toggle YASQE (editor) fullscreen         |
+| `F10`    | Toggle YASR (results) fullscreen         |
+| `F9`     | Switch between YASQE and YASR fullscreen |
+| `Esc`    | Exit fullscreen mode                     |
 
 ### General Editor
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+F` / `Cmd+F` | Find in query |
-| `Ctrl+H` / `Cmd+H` | Find and replace |
-| `Ctrl+G` / `Cmd+G` | Go to line |
-| `Ctrl+Z` / `Cmd+Z` | Undo |
-| `Ctrl+Y` / `Cmd+Y` | Redo |
-| `Tab` | Indent selection |
-| `Shift+Tab` | Outdent selection |
+| Shortcut           | Action            |
+| ------------------ | ----------------- |
+| `Ctrl+F` / `Cmd+F` | Find in query     |
+| `Ctrl+H` / `Cmd+H` | Find and replace  |
+| `Ctrl+G` / `Cmd+G` | Go to line        |
+| `Ctrl+Z` / `Cmd+Z` | Undo              |
+| `Ctrl+Y` / `Cmd+Y` | Redo              |
+| `Tab`              | Indent selection  |
+| `Shift+Tab`        | Outdent selection |
 
 ### Results Viewer (YASR)
 
 Navigation and interaction depend on the active plugin. Most plugins support:
+
 - **Mouse wheel**: Scroll through results
 - **Arrow keys**: Navigate table cells (in Table plugin)
 - **Click**: Select/interact with elements
@@ -1342,10 +1452,12 @@ Navigation and interaction depend on the active plugin. Most plugins support:
 #### Query Not Executing
 
 **Symptoms:**
+
 - Click Execute but nothing happens
 - No results appear
 
 **Solutions:**
+
 1. **Check Query Syntax**: Look for red error indicators in the editor
 2. **Verify Endpoint**: Ensure the endpoint URL is correct and accessible
 3. **Check Browser Console**: Open browser developer tools (F12) for error messages
@@ -1358,6 +1470,7 @@ Navigation and interaction depend on the active plugin. Most plugins support:
 #### CORS Errors
 
 **Symptoms:**
+
 - Error message about "Cross-Origin Request Blocked"
 - Query works in other tools but not in YASGUI
 
@@ -1365,6 +1478,7 @@ Navigation and interaction depend on the active plugin. Most plugins support:
 CORS (Cross-Origin Resource Sharing) is a browser security feature. Some SPARQL endpoints don't allow browser-based queries from different domains.
 
 **Solutions:**
+
 1. **Check Endpoint CORS Policy**: Contact the endpoint administrator
 2. **Use CORS Proxy**: Setup a local hosted CORS proxy (see (#virtuoso-preflight-authentication-issues)) or a remote one (google it)
 3. **Use Desktop/Server Version**: Run YASGUI locally or server-side where CORS doesn't apply
@@ -1374,6 +1488,7 @@ CORS (Cross-Origin Resource Sharing) is a browser security feature. Some SPARQL 
 #### Local Endpoint Issues
 
 **Symptoms:**
+
 - Cannot connect to localhost or 127.0.0.1 endpoints
 - "Mixed content blocked" or similar errors
 - Permission denied when querying local server
@@ -1382,14 +1497,16 @@ CORS (Cross-Origin Resource Sharing) is a browser security feature. Some SPARQL 
 Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content policy). This is a security feature to prevent malicious websites from accessing your local services.
 
 **Solutions:**
+
 1. **Run YASGUI Locally with Docker** (Recommended):
    ```bash
    docker run -p 8080:8080 mathiasvda/yasgui
    ```
+
    - Eliminates all permission issues
    - Both YASGUI and local endpoint use HTTP
    - See [Running YASGUI with Docker](#running-yasgui-with-docker) for details
-2. **Grant Browser Permission**: 
+2. **Grant Browser Permission**:
    - Click "Allow" when the browser prompts for permission
    - See [Querying Local Endpoints](#querying-local-endpoints) for detailed instructions with screenshots
 3. **Check Permission Settings**:
@@ -1406,6 +1523,7 @@ Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content 
 9. **Virtuoso with Authentication**: If using Virtuoso 07.20.3242 or earlier with Basic Authentication, see [Virtuoso Preflight Authentication Issues](#virtuoso-preflight-authentication-issues)
 
 **Browser-Specific Notes:**
+
 - **Edge/Chrome/Vivaldi**: Look for shield icon in address bar to manage blocked content
 - **Firefox**: May need to adjust `security.mixed_content.block_active_content` in about:config
 - **Safari**: Enable "Disable local file restrictions" in Develop menu
@@ -1413,6 +1531,7 @@ Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content 
 #### Virtuoso Preflight Authentication Issues
 
 **Symptoms:**
+
 - Using Virtuoso 07.20.3242 (and earlier?) with Basic Authentication
 - SPARQL queries work from curl/Postman but fail from browser
 - Browser shows 401 Unauthorized error on OPTIONS request
@@ -1430,17 +1549,20 @@ This issue was supposed to be fixed in Virtuoso 08.03.3326 (see [release notes](
 Run a simple proxy server that handles CORS and authentication correctly:
 
 1. **Quick Start with Docker:**
+
    ```bash
    docker run -d --name simple-cors-proxy -p 8080:8080 mathiasvda/simple-cors-proxy
    ```
 
 2. **Or install from source:**
+
    ```bash
    git clone https://github.com/Matdata-eu/simple-cors-proxy.git
    cd simple-cors-proxy
    npm install
    npm start
    ```
+
    The proxy runs on port 8080 by default.
 
 3. **Configure YASGUI endpoint:**
@@ -1452,7 +1574,7 @@ Run a simple proxy server that handles CORS and authentication correctly:
      ```
      http://localhost:8080/proxy/https://your-virtuoso-server.com/sparql
      ```
-   
+
    The proxy URL format is: `http://localhost:8080/proxy/[TARGET_ENDPOINT_URL]`
 
 **Option 2: Upgrade Virtuoso** (Recommended for production)
@@ -1466,6 +1588,7 @@ If you control the web server in front of Virtuoso, configure it to return 200 O
 **Why This Happens:**
 
 When YASGUI sends an authenticated request from a browser:
+
 1. Browser detects cross-origin request with custom headers (Authorization)
 2. Browser sends preflight OPTIONS request (without credentials)
 3. Virtuoso incorrectly requires authentication for OPTIONS
@@ -1473,11 +1596,13 @@ When YASGUI sends an authenticated request from a browser:
 5. Your SPARQL query never executes
 
 The proxy solves this by:
+
 - Accepting the OPTIONS request and returning proper CORS headers
 - Forwarding only the actual GET/POST requests to Virtuoso with credentials
 - Translating between browser CORS requirements and Virtuoso's behavior
 
 **Additional Notes:**
+
 - This issue only affects browser-based queries with authentication
 - Command-line tools (curl, Postman) work fine because they don't send OPTIONS
 - The issue affects other triple stores with similar CORS/authentication bugs
@@ -1486,10 +1611,12 @@ The proxy solves this by:
 #### Slow Queries
 
 **Symptoms:**
+
 - Query takes very long to execute
 - Browser becomes unresponsive
 
 **Solutions:**
+
 1. **Add LIMIT Clause**: Restrict result size:
    ```sparql
    SELECT * WHERE { ?s ?p ?o } LIMIT 100
@@ -1502,10 +1629,12 @@ The proxy solves this by:
 #### Results Not Displaying Correctly
 
 **Symptoms:**
+
 - Results appear but look wrong
 - Visualization doesn't show expected data
 
 **Solutions:**
+
 1. **Try Different Plugin**: Switch between Table, Response, and other plugins
 2. **Check Response Plugin**: View raw response to verify data structure
 3. **Check Data Format**: Ensure query returns expected format for the plugin
@@ -1515,10 +1644,12 @@ The proxy solves this by:
 #### Autocomplete Not Working
 
 **Symptoms:**
+
 - No suggestions appear when typing
 - Ctrl+Space does nothing
 
 **Solutions:**
+
 1. **Check Internet Connection**: Prefix suggestions require network access
 2. **Wait for Typing Pause**: Autocomplete appears after a brief delay
 3. **Position Cursor Correctly**: Autocomplete context-dependent (prefixes, keywords, etc.)
@@ -1528,10 +1659,12 @@ The proxy solves this by:
 #### Lost Queries
 
 **Symptoms:**
+
 - Previous queries disappeared
 - Tabs missing after reload
 
 **Solutions:**
+
 1. **Check Browser Storage**: Ensure browser allows local storage
 2. **Avoid Private/Incognito Mode**: These modes don't persist local storage
 3. **Check Storage Limits**: Browser might have cleared old data
@@ -1542,10 +1675,12 @@ The proxy solves this by:
 #### Theme/Layout Not Saving
 
 **Symptoms:**
+
 - Theme reverts to default on reload
 - Layout orientation doesn't persist
 
 **Solutions:**
+
 1. **Enable Local Storage**: Check browser settings
 2. **Check Private Mode**: Use normal browser mode
 3. **Clear and Reset**: Clear browser data, reconfigure preferences
@@ -1554,10 +1689,12 @@ The proxy solves this by:
 #### Formatting Issues
 
 **Symptoms:**
+
 - Format button doesn't work
 - Query becomes malformed after formatting
 
 **Solutions:**
+
 1. **Check Query Syntax**: Formatter requires valid SPARQL
 2. **Try Different Formatter**: Switch between sparql-formatter and legacy in Settings
 3. **Manual Formatting**: Format query manually if auto-format fails
@@ -1580,6 +1717,7 @@ If you encounter issues not covered here:
 ### Best Practices
 
 **For Reliable Querying:**
+
 - Always use `LIMIT` when exploring new data
 - Test complex queries incrementally
 - Save important queries outside the browser
@@ -1589,6 +1727,7 @@ If you encounter issues not covered here:
 - Use appropriate query types (SELECT vs CONSTRUCT)
 
 **For Better Performance:**
+
 - Format queries for readability
 - Use specific property paths instead of `?p`
 - Add filters early in query patterns
@@ -1608,4 +1747,4 @@ If you encounter issues not covered here:
 
 ---
 
-*This user guide is maintained as part of the YASGUI project. For technical implementation details, see the Developer Guide.*
+_This user guide is maintained as part of the YASGUI project. For technical implementation details, see the Developer Guide._

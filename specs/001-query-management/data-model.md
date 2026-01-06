@@ -5,9 +5,11 @@ This document defines the data model needed to implement query management, inclu
 ## Client-Side (YASGUI persisted configuration)
 
 ### WorkspaceConfig
+
 Represents a user-configured workspace stored locally (alongside existing endpoint config).
 
 Fields:
+
 - `id: string` (stable identifier; UUID-like)
 - `label: string`
 - `description?: string`
@@ -18,6 +20,7 @@ Fields:
 Type-specific:
 
 #### GitWorkspaceConfig
+
 - `remoteUrl: string` (HTTPS URL)
 - `branch: string`
 - `rootPath: string` (folder within repo; empty means repo root)
@@ -27,14 +30,17 @@ Type-specific:
   - `username?: string` (optional; some providers require)
 
 #### SparqlWorkspaceConfig
+
 - `endpoint: string` (SPARQL endpoint URL; should align with existing endpoint configuration)
 - `workspaceIri: string` (IRI of the `yasgui:Workspace` concept scheme)
 - `defaultGraph?: string` (if the store requires graph targeting)
 
 ### ManagedTabMetadata
+
 Associates an open tab with a managed query.
 
 Fields:
+
 - `workspaceId: string`
 - `backendType: "git" | "sparql"`
 - `queryRef:`
@@ -48,16 +54,19 @@ Fields:
 ## Backend-Neutral Domain Model
 
 ### Folder
+
 - `id: string` (path for git; IRI for SPARQL)
 - `label: string`
 - `parentId?: string`
 
 ### ManagedQuery
+
 - `id: string` (path for git; IRI for SPARQL)
 - `label: string` (filename without extension, or `rdfs:label`)
 - `folderId?: string` (path segment or folder IRI)
 
 ### ManagedQueryVersion
+
 - `id: string` (commit hash or version IRI)
 - `managedQueryId: string`
 - `createdAt: string` (ISO datetime)
@@ -68,12 +77,14 @@ Fields:
 ## Backend Mapping
 
 ### Git-Based Storage
+
 - Folder hierarchy: repository directories under `rootPath`.
 - ManagedQuery: `.rq` file (or `.sparql`) at `rootPath/<folder...>/<name>.rq` (or `.sparql`).
 - Versioning: git commit history affecting a path (or provider equivalent history).
 - Endpoint association: **none** (FR-022).
 
 ### SPARQL Endpoint-Based Storage (RDF)
+
 Uses the vocabulary from `spec-query-management/ontology.ttl`:
 
 - Workspace: `yasgui:Workspace` (subClassOf `skos:ConceptScheme`).

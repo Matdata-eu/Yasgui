@@ -28,10 +28,12 @@ Scope: mainly Yasgui
 The workspace is the top level component in the query management system and is linked to one storage system types.
 
 We want to support 2 long term persistent storage system types:
+
 - Git-based storage
 - SPARQL endpoint-based storage
 
 The user can configure multiple workspaces of either type and switch between them simultaneously. Workspaces contains:
+
 - 1 storage system type
 - Their own folder structure
 - Authentication credentials
@@ -41,6 +43,7 @@ The user can configure multiple workspaces of either type and switch between the
 ## Technical Architecture
 
 ### Git Integration
+
 - **Storage Location**: Remote repositories (GitHub, GitLab, or any HTTPS-accessible git server)
 - **Authentication**: HTTPS with Personal Access Tokens
 - **File Format**: Plain `.rq` files (or `.sparql` for backwards compatibility) containing only the SPARQL query text
@@ -48,9 +51,11 @@ The user can configure multiple workspaces of either type and switch between the
 - **Folder Structure**: Hierarchical folders in the repository
 
 #### Conflict Resolution
+
 Git conflicts must be resolved outside of Yasgui (using git client or GitHub/GitLab web interface). Query save operations will fail with an error message if conflicts exist, prompting the user to sync/resolve externally.
 
 ### SPARQL Endpoint Storage
+
 - **Storage Location**: SPARQL endpoint
 - **Authentication**: As defined in the sparql endpoint configuration
 - **Ontology**: SPIN, DCTerms, PROV-based vocabulary with some additional classes/properties under `yasgui:` namespace
@@ -68,7 +73,7 @@ Git conflicts must be resolved outside of Yasgui (using git client or GitHub/Git
   - Query content
 - **Folder Structure**: SKOS-based hierarchy using `skos:ConceptScheme` and `skos:narrower`
 
-#### Ontology 
+#### Ontology
 
 ```turtle
 
@@ -517,38 +522,44 @@ LIMIT 100
 
 ### Navigating managed queries
 
-A hamburger icon on the left side of the tabs opens a resizable and collapsible file browser sidebar. 
+A hamburger icon on the left side of the tabs opens a resizable and collapsible file browser sidebar.
 
 **Structure:**
+
 - **First level**: Workspace selector (users can have multiple workspaces)
 - **Git-based workspace**: Shows folder structure and `.rq` (or `.sparql`) files from the repository
 - **SPARQL endpoint workspace**: Uses SKOS hierarchy with `skos:ConceptScheme` (`yasgui:ManagedQueryFileSystem`) as root, `skos:narrower` concepts representing folders, and managed queries linked to folder concepts
 
 **Features:**
+
 - Filename filtering with regex support
 - Search by query name
 - Visual hierarchy with expand/collapse
 
 ### Activating a managed query
+
 User selects a query from the file browser, and a new tab opens with the query loaded. The tab is visually distinct to indicate it is linked to a managed query.
 
 ### Updating a managed query
 
-A user can change a managed query in a tab like a regular tab. Once a change in the query has been made, this should be visible with a small dot in the tab name (like unsaved changes in editors). 
+A user can change a managed query in a tab like a regular tab. Once a change in the query has been made, this should be visible with a small dot in the tab name (like unsaved changes in editors).
 
 **Visual Distinction:**
 **Saving:**
+
 - Save button located next to the query execution button in yasqe
 - Keyboard shortcut: `Ctrl+S` (Windows/Linux) or `Cmd+S` (Mac)
 - **No auto-save** - user must explicitly save changes
 - Visual indicator: Small dot in tab name when unsaved changes exist
 
 **Commit Messages:**
+
 - User can customize commit message template in settings
 - Default template: `"feat: updated query [query name]"`
 - Eachny tab (including regular unmanaged tabs), when the user clicks the save button:
 
 **Workflow:**
+
 1. User clicks save button
 2. If not linked to managed query, dialog prompts:
    - Select workspace (from configured workspaces)
@@ -567,21 +578,26 @@ User can save legacy tabs as managed queries or create a new managed query from 
 - Managed and unmanaged tabs coexist
 
 Two entry points:
+
 - create a new empty tab and save it as managed query
 - create a new managed query from the file browser
 
 ### Managing workspaces
+
 The settings modal window should contain a new section to configure the query management options.
 
 Two entry points:
+
 1. **From file browser**: Click "Add Workspace" button/icon → redirects to settings modal, Query Management section
 2. **From settings**: Open settings modal → navigate to Query Management section → click "Add Workspace"
 
 **General properties for all workspaces:**
+
 - **Label**: User-friendly name for the workspace
 - **Type selection**: Git-based or SPARQL endpoint-based
 
 **Git workspace configuration:**
+
 - HTTPS only, e.g., `https://github.com/user/repo.git`
 - Personal Access Token for authentication
   - Token must have repository read/write permissions
@@ -599,15 +615,18 @@ Two entry points:
 - Default template: `"feat: updated query [query name]"`
 
 **SPARQL endpoint workspace configuration:**
+
 - Select from existing configured SPARQL endpoints (dropdown)
 - Endpoint URL and credentials inherited from endpoint configuration
 - No additional authentication needed (reuses endpoint credentials)
 
 **Credential storage:**
+
 - Stored in persistent storage (same mechanism as current endpoint credentials)
 - Encrypted/secured similar to existing credential handling
 
 **Workspace management:**
+
 - List all configured workspaces
 - Edit workspace settings
 - Delete workspace (does not delete remote data)

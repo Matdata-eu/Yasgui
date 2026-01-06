@@ -1,4 +1,3 @@
-
 # Implementation Plan: Query Management
 
 **Branch**: `[001-query-management]` | **Date**: 2025-12-26 | **Spec**: `./spec.md`
@@ -9,6 +8,7 @@
 Add long-term, versioned query storage via configurable workspaces (Git-based and SPARQL endpoint-based) while keeping the existing short-term tab workflow intact.
 
 The implementation will:
+
 - Persist workspace configuration (including credentials) in YASGUI’s existing persisted config (`PersistentConfig`) in browser storage.
 - Add a Query Browser drawer (hamburger entry point) that lists folders/queries for the active workspace and opens selected queries into new tabs.
 - Add explicit “save as managed query” behavior (no autosave), including overwrite-on-same-path and version creation only when query text changes.
@@ -17,6 +17,7 @@ The implementation will:
   - SPARQL endpoint storage: SPARQL 1.1 operations using the existing request/auth stack and the existing yasgui RDF model.
 
 Phase deliverables:
+
 - Phase 0 (Research): `./research.md`
 - Phase 1 (Design): `./data-model.md`, `./contracts/*`, `./quickstart.md`
 
@@ -25,11 +26,13 @@ Phase deliverables:
 **Language/Version**: TypeScript (repo uses TypeScript 5.9.x; build toolchain runs on Node.js v20 LTS)
 
 **Primary Dependencies**:
+
 - Build/dev: Vite (dev), esbuild (prod bundling)
 - Editor/results: `@matdata/yasqe`, `@matdata/yasr`
 - Utilities: `@matdata/yasgui-utils`, `lodash-es`
 
 **Storage**:
+
 - Local persistence: `@matdata/yasgui-utils` `Storage` (localStorage-backed), used by `PersistentConfig`
 - Remote persistence (new):
   - SPARQL endpoint: SPARQL 1.1 SELECT/UPDATE using the existing Yasqe request/auth stack
@@ -38,26 +41,30 @@ Phase deliverables:
 **Testing**: Mocha + Chai (tests rely on build output; build-first is mandatory)
 
 **Target Platform**:
+
 - Product runtime: browser
 - Build/test tooling: Node.js
 
 **Project Type**: TypeScript monorepo (npm workspaces; packages under `packages/*`)
 
 **Performance Goals**:
+
 - Keep query browsing/search responsive for ~1,000 managed queries (search/filter results update < 1s in typical cases)
 
 **Constraints**:
+
 - No autosave; explicit save only
 - WCAG 2.1 AA for any UI changes
 - Do not commit generated artifacts (repo `build/`, package `packages/*/build/`)
 - No new monorepo dependency cycles (`utils` remains bottom layer)
 
 **Scale/Scope**:
+
 - Support deep folder hierarchies and large lists without UI freezes (debounce input; avoid O(n) DOM work per keystroke; consider progressive rendering if needed)
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - Build-first enforced: plan and quickstart run `npm run build` before any tests.
 - No build artifacts committed: feature changes will only touch `packages/*/src`, `test/`, and docs under `specs/`.
@@ -116,5 +123,5 @@ test/
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| (none) | (n/a) | (n/a) |
+| --------- | ---------- | ------------------------------------ |
+| (none)    | (n/a)      | (n/a)                                |
