@@ -1036,6 +1036,36 @@ Git workspaces are implemented via the providers' **HTTPS REST APIs**.
   - **Root path**: optional subfolder within the repo
   - **Username**: optional; required by Bitbucket Cloud when using an app password
 
+**GitHub Personal Access Token Setup:**
+
+To use a GitHub repository as a workspace, you need to create a Personal Access Token with appropriate permissions.
+
+[Create a GitHub Personal Access Token →](https://github.com/settings/personal-access-tokens)
+
+Required permissions:
+
+**For Classic Personal Access Token:**
+
+- **`public_repo`** - For public repositories only
+- **`repo`** (full scope) - For private repositories or full access
+
+**For Fine-grained Personal Access Token:**
+
+Select these Repository permissions:
+
+- **Contents**: Read and write (required for reading/writing `.rq` and `.sparql` files)
+- **Metadata**: Read (required for repository access validation)
+
+The token must have access to the specific repository you're configuring as a workspace.
+
+**What the token is used for:**
+
+- Reading repository structure and query files (`.rq`, `.sparql`)
+- Creating and updating query files
+- Deleting query files
+- Reading commit history for versioning
+- Validating repository access
+
 **Limitations / notes:**
 
 - If the provider API is blocked by browser **CORS** policies, a Git workspace may not work without a proxy.
@@ -1499,6 +1529,7 @@ Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content 
 **Solutions:**
 
 1. **Run YASGUI Locally with Docker** (Recommended):
+
    ```bash
    docker run -p 8080:8080 mathiasvda/yasgui
    ```
@@ -1506,6 +1537,7 @@ Browsers block HTTP requests to local endpoints from HTTPS pages (mixed content 
    - Eliminates all permission issues
    - Both YASGUI and local endpoint use HTTP
    - See [Running YASGUI with Docker](#running-yasgui-with-docker) for details
+
 2. **Grant Browser Permission**:
    - Click "Allow" when the browser prompts for permission
    - See [Querying Local Endpoints](#querying-local-endpoints) for detailed instructions with screenshots
