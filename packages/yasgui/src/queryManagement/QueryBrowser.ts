@@ -3,7 +3,7 @@ import { addClass, removeClass } from "@matdata/yasgui-utils";
 import type { WorkspaceConfig, FolderEntry } from "./types";
 import { filterFolderEntriesByName } from "./browserFilter";
 import { getWorkspaceBackend } from "./backends/getWorkspaceBackend";
-import { asWorkspaceBackendError } from "./backends/errors";
+import { asWorkspaceBackendError, isWorkspaceBackendError, WorkspaceBackendError } from "./backends/errors";
 import { getEndpointToAutoSwitch } from "./openManagedQuery";
 import { hashQueryText } from "./textHash";
 import type { BackendType, VersionRef, ManagedTabMetadata } from "./types";
@@ -36,7 +36,7 @@ export default class QueryBrowser {
   private expandedFolderIds = new Set<string>();
   private folderEntriesById = new Map<string, FolderEntry[]>();
   private folderLoadingById = new Set<string>();
-  private folderErrorById = new Map<string, string>();
+  private folderErrorById = new Map<string, WorkspaceBackendError>();
 
   private debouncedSearchHandle?: number;
 
@@ -315,7 +315,7 @@ export default class QueryBrowser {
       this.folderEntriesById.set(key, entries);
     } catch (e) {
       const err = asWorkspaceBackendError(e);
-      this.folderErrorById.set(key, err.message || "Failed to load folder");
+      this.folderErrorById.set(key, err);
       this.folderEntriesById.set(key, []);
     } finally {
       this.folderLoadingById.delete(key);
@@ -325,6 +325,22 @@ export default class QueryBrowser {
   private formatStatusError(err: Error, workspaceType: WorkspaceConfig["type"]) {
     const message = err.message || "Unknown error";
 
+    // Check for authentication/authorization errors
+    if (isWorkspaceBackendError(err)) {
+      if (err.code === "AUTH_FAILED") {
+        return `⚠️ Authentication failed. Please check your workspace configuration and credentials in Settings → Workspaces.`;
+      }
+      if (err.code === "FORBIDDEN") {
+        return `⚠️ Access forbidden. Please verify your ${workspaceType === "git" ? "token permissions" : "endpoint authentication"} in Settings → Workspaces.`;
+      }
+      if (err.code === "NETWORK_ERROR") {
+        return `⚠️ Unable to connect to workspace. Please check your workspace configuration and network connection.`;
+      }
+      if (err.code === "NOT_FOUND") {
+        return `⚠️ Workspace not found. Please verify your workspace configuration in Settings → Workspaces.`;
+      }
+    }
+
     if (message.includes("No GitProviderClient configured")) {
       return "Git workspaces require a supported provider. Supported: GitHub, GitLab, Bitbucket Cloud (bitbucket.org), and Gitea. For self-hosted/enterprise instances, configure a git workspace 'provider' and/or 'apiBaseUrl'.";
     }
@@ -333,7 +349,8 @@ export default class QueryBrowser {
       return "This workspace backend is not supported yet.";
     }
 
-    return message;
+    // Generic error with helpful suggestion
+    return `⚠️ Failed to load workspace: ${message}. Please check your workspace configuration and authentication in Settings → Workspaces.`;
   }
 
   private clearList() {
@@ -923,7 +940,7 @@ export default class QueryBrowser {
               addClass(error, "yasgui-query-browser__tree-meta");
               addClass(error, "yasgui-query-browser__tree-meta--error");
               error.setAttribute("style", makeIndentStyle(depth + 1));
-              error.textContent = err;
+              error.textContent = this.formatStatusError(err, backend.type);
               this.listEl.appendChild(error);
             }
 
@@ -1041,6 +1058,15 @@ export default class QueryBrowser {
       if (runId !== this.refreshRunId) return;
 
       const rootKey = this.folderKey(undefined);
+
+      // Check if root folder failed to load
+      const rootError = this.folderErrorById.get(rootKey);
+      if (rootError) {
+        this.setStatus(this.formatStatusError(rootError, workspace.type));
+        this.clearList();
+        return;
+      }
+
       const rootEntries = this.folderEntriesById.get(rootKey) || [];
 
       const expandedIds = Array.from(this.expandedFolderIds).sort();
@@ -1053,8 +1079,9 @@ export default class QueryBrowser {
             .sort()
             .join("|");
           const loading = this.folderLoadingById.has(key) ? "1" : "0";
-          const err = this.folderErrorById.get(key) || "";
-          return `${key}:${loading}:${err}:${entryPart}`;
+          const err = this.folderErrorById.get(key);
+          const errStr = err ? `${err.code}:${err.message}` : "";
+          return `${key}:${loading}:${errStr}:${entryPart}`;
         })
         .join(";");
 
