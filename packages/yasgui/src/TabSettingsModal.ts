@@ -468,9 +468,7 @@ export default class TabSettingsModal {
     themeReferenceLink.target = "_blank";
     themeReferenceLink.rel = "noopener noreferrer";
     themeReferenceLink.textContent = "Preview CodeMirror themes →";
-    themeReferenceLink.style.display = "inline-block";
-    themeReferenceLink.style.marginTop = "5px";
-    themeReferenceLink.style.fontSize = "13px";
+    addClass(themeReferenceLink, "settingsLink");
 
     themeReferenceSection.appendChild(themeReferenceLink);
     container.appendChild(themeReferenceSection);

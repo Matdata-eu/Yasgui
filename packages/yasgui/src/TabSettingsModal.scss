@@ -160,6 +160,18 @@
   font-style: italic;
 }
 
+.settingsLink {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--yasgui-accent-color, #337ab7);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .settingsField {
   margin-bottom: 10px;
 }
