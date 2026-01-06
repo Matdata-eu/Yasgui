@@ -955,7 +955,22 @@ _Keycloak:_
 
 ### Managed Queries and Workspaces
 
-YASGUI can be configured with **managed-queries and workspaces**, which provide a shared, versioned store for SPARQL queries (for example in Git or in an RDF store). A managed query is the name of a query that is saved in a workspace. A workspace can be linked to a git or sparql backand, is setup by the user and is required before queries can be saved.
+YASGUI can be configured with **managed queries and workspaces**, which provide a shared, versioned store for SPARQL queries (for example in Git or in an RDF store). A managed query is a saved query stored in a workspace. A workspace can be linked to a Git repository or SPARQL endpoint, is set up by the user, and is required before queries can be saved.
+
+**Purpose and Use Cases:**
+
+This feature is designed for **power users** who want to:
+
+- Save and organize their favorite queries with versioning
+- Collaborate on queries with team members through Git or shared RDF stores
+- Maintain project-specific query collections
+- Have persistent, reliable query storage beyond browser tabs
+
+**Not for new user onboarding:** This is not primarily intended as a way to distribute sample queries to help new users get started with an endpoint. If you need to provide example queries for onboarding, consider:
+
+- Using the developer configuration to embed queries in your YASGUI instance
+- Using the snippets functionality for quick templates
+- Implementing a custom wrapper that loads example queries programmatically
 
 #### Workspaces
 
@@ -992,6 +1007,77 @@ Notes:
 - The URI does **not** include the query name
 - Renaming a query changes its `rdfs:label`, not its URI.
 - Versions are immutable snapshots linked via `dcterms:isVersionOf`.
+
+**Vocabulary and Ontology:** SPARQL workspaces use RDF vocabularies including SPIN/SP (for representing SPARQL queries), DCTERMS (for versioning via `dcterms:isVersionOf`), RDFS (for labels and descriptions), SKOS (for workspace organization), and custom YASGUI predicates for workspace-specific metadata. For implementation details and example data, see the [example workspace data in Turtle format](https://github.com/Matdata-eu/Yasgui/blob/main/specs/001-query-management/manual-input/example-data.ttl) and the [full specification](https://github.com/Matdata-eu/Yasgui/tree/main/specs/001-query-management). To see how the data is structured in practice, save a few queries with versions in a SPARQL workspace, then query the endpoint to examine the RDF triples.
+
+**Example Workspace Data:**
+
+Here's an example showing how a managed query with multiple versions is stored in RDF:
+
+```turtle
+PREFIX dcterms:  <http://purl.org/dc/terms/>
+PREFIX prov:     <http://www.w3.org/ns/prov#>
+PREFIX rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sp:       <http://spinrdf.org/sp#>
+PREFIX spin:     <http://spinrdf.org/spin#>
+PREFIX ssd:      <http://www.w3.org/ns/sparql-service-description#>
+PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#>
+PREFIX yasgui:   <https://matdata.eu/ns/yasgui#>
+PREFIX yasgui-d: <http://matdata.eu/d/yasgui/>
+
+# Workspace definition
+yasgui-d:ws1  rdf:type  yasgui:Workspace .
+
+# Managed query (with stable identifier)
+yasgui-d:ws1_mq_aaf6a7e1-6dfa-4d06-89c4-7fbd8de475c4
+        rdf:type          yasgui:ManagedQuery;
+        rdfs:label        "DemoQuery";
+        dcterms:isPartOf  yasgui-d:ws1 .
+
+# Version 1 (original version with endpoint and description)
+yasgui-d:ws1_mq_v_1e1c4bec-0d79-474a-a930-6f38ec8f90b5
+        rdf:type             yasgui:ManagedQueryVersion;
+        dcterms:created      "2026-01-06T21:31:33.736Z"^^xsd:dateTime;
+        dcterms:description  "This is a demo query to use as example in the user documentation of Yasgui";
+        dcterms:isVersionOf  yasgui-d:ws1_mq_aaf6a7e1-6dfa-4d06-89c4-7fbd8de475c4;
+        spin:text            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT * WHERE {\n  ?sub ?pred ?obj .\n} LIMIT 10";
+        prov:used            [ rdf:type      ssd:Service;
+                               ssd:endpoint  <https://data-interop.era.europa.eu/api/sparql>
+                             ] .
+
+# Version 2 (updated query text)
+yasgui-d:ws1_mq_v_a7aa79b3-f6b9-441b-a33c-c4a7569b2d89
+        rdf:type             yasgui:ManagedQueryVersion;
+        dcterms:created      "2026-01-06T21:31:52.422Z"^^xsd:dateTime;
+        dcterms:isVersionOf  yasgui-d:ws1_mq_aaf6a7e1-6dfa-4d06-89c4-7fbd8de475c4;
+        spin:text            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT * WHERE {\n  # New version\n  ?s ?p ?o .\n} LIMIT 10" .
+
+# Version 3 (latest version with formatting changes)
+yasgui-d:ws1_mq_v_21c919b1-cc80-4dea-a94f-9ab1cb8b7df5
+        rdf:type             yasgui:ManagedQueryVersion;
+        dcterms:created      "2026-01-06T21:32:19.959Z"^^xsd:dateTime;
+        dcterms:isVersionOf  yasgui-d:ws1_mq_aaf6a7e1-6dfa-4d06-89c4-7fbd8de475c4;
+        spin:text            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n\nSELECT *\nWHERE {\n  # New version\n  ?s ?p ?o .\n}\nLIMIT 10" .
+
+# Endpoint reference (can be shared across queries)
+[ rdf:type      ssd:Service;
+  ssd:endpoint  <https://dbpedia.org/sparql>
+] .
+```
+
+This example shows:
+
+- A **workspace** (`yasgui-d:ws1`)
+- A **managed query** with a stable URI and human-readable label ("DemoQuery")
+- Three **versions** of that query, each with:
+  - Creation timestamp
+  - Link back to the parent query via `dcterms:isVersionOf`
+  - Query text stored in `spin:text`
+  - Optional endpoint reference (version 1) via `prov:used`
+  - Optional description (version 1)
+
+**Authentication Requirements:** SPARQL workspaces require appropriate permissions on the endpoint. Read access is required to browse and open queries, while write access is required to save, update, or delete queries. Configure authentication for the endpoint in the Endpoints tab before setting up the workspace. If saving fails silently, check that your endpoint credentials have write permissions.
 
 **Tip: local Apache Jena/Fuseki endpoint (Docker)**
 
@@ -1070,6 +1156,9 @@ The token must have access to the specific repository you're configuring as a wo
 
 - If the provider API is blocked by browser **CORS** policies, a Git workspace may not work without a proxy.
 - Git workspaces store only query text files (`.rq` or `.sparql`); they do not store endpoint associations, so opening a Git-managed query will not auto-switch endpoints.
+- **File format**: Queries are stored as plain text files containing only the SPARQL query text. Files with `.rq` extension (W3C recommended) or `.sparql` extension are recognized and displayed in the query browser.
+- The repository can contain other files; only `.rq` and `.sparql` files will be shown in the query browser.
+- Authentication/permission errors may not always display clear error messages - check browser console if saves fail silently.
 
 #### Managed queries
 
