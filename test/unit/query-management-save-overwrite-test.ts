@@ -31,9 +31,9 @@ describe("Query management - save overwrite", () => {
     });
 
     const entries = await backend.listFolder("folder");
-    expect(entries.filter((e) => e.kind === "query").map((e) => e.id)).to.deep.equal(["folder/q.sparql"]);
+    expect(entries.filter((e) => e.kind === "query").map((e) => e.id)).to.deep.equal(["folder/q.rq"]);
 
-    const read = await backend.readQuery("folder/q.sparql");
+    const read = await backend.readQuery("folder/q.rq");
     expect(read.queryText).to.equal("SELECT 2 WHERE {}");
   });
 });
