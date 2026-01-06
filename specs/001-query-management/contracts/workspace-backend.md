@@ -69,7 +69,7 @@ Returns `VersionInfo[]` ordered newest-first.
 Returns `ReadResult` for a historical version.
 
 ## Git Backend Notes
-- Query storage is plain `.sparql` text (FR-022).
+- Query storage is plain `.rq` (or `.sparql`) text (FR-022).
 - Endpoint association is not stored, so `associatedEndpoint` is always absent.
 - Conflicts must be surfaced as `CONFLICT` and instruct external resolution (FR-013).
 

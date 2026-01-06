@@ -131,7 +131,7 @@ As a user, I can add, edit, and remove workspaces so I can organize queries acro
 - **FR-019**: The system MUST create a new managed-query version only when the query text changes.
 - **FR-020**: When opening a managed query that has an associated endpoint, the system MUST set the active endpoint to the endpoint associated with that query/version.
 - **FR-021**: If the user saves a managed query to an existing filename/path, the system MUST overwrite the existing managed query (creating a new version as applicable).
-- **FR-022**: For Git-based workspaces, managed queries MUST be stored as plain `.sparql` files containing only the SPARQL query text (no endpoint metadata).
+- **FR-022**: For Git-based workspaces, managed queries MUST be stored as plain `.rq` files (or `.sparql` for backwards compatibility) containing only the SPARQL query text (no endpoint metadata).
 
 ### Assumptions
 

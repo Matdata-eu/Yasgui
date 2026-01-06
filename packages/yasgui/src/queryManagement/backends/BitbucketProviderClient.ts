@@ -217,9 +217,9 @@ export class BitbucketProviderClient extends BaseGitProviderClient {
         }
 
         if (v.type === "commit_file") {
-          if (!/\.sparql$/i.test(name)) continue;
+          if (!/\.(rq|sparql)$/i.test(name)) continue;
           const id = relPath ? this.joinPath(relPath, name) : name;
-          const label = name.replace(/\.sparql$/i, "");
+          const label = name.replace(/\.(rq|sparql)$/i, "");
           entries.push({ kind: "query", id, label, parentId: relPath || undefined });
         }
       }

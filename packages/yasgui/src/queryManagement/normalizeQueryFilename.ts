@@ -3,6 +3,8 @@ export function normalizeQueryFilename(rawName: string): string {
   if (!name) throw new Error("Filename is required");
 
   const lower = name.toLowerCase();
-  if (lower.endsWith(".sparql")) return name;
-  return `${name}.sparql`;
+  // Accept both .rq and .sparql extensions for backwards compatibility
+  if (lower.endsWith(".rq") || lower.endsWith(".sparql")) return name;
+  // Default to .rq for new files
+  return `${name}.rq`;
 }

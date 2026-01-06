@@ -160,9 +160,9 @@ export class GitlabProviderClient extends BaseGitProviderClient {
       }
 
       if (item.type === "blob") {
-        if (!/\.sparql$/i.test(item.name)) continue;
+        if (!/\.(rq|sparql)$/i.test(item.name)) continue;
         const id = relPath ? this.joinPath(relPath, item.name) : item.name;
-        const label = item.name.replace(/\.sparql$/i, "");
+        const label = item.name.replace(/\.(rq|sparql)$/i, "");
         entries.push({ kind: "query", id, label, parentId: relPath || undefined });
       }
     }

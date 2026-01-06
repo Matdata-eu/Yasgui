@@ -89,7 +89,7 @@ description: "Task list for Query Management feature"
 
 ### Implementation for User Story 2
 
-- [X] T033 [P] [US2] Implement filename normalization to `.sparql` in packages/yasgui/src/queryManagement/normalizeQueryFilename.ts
+- [X] T033 [P] [US2] Implement filename normalization to `.rq` (with `.sparql` backwards compatibility) in packages/yasgui/src/queryManagement/normalizeQueryFilename.ts
 - [X] T034 [P] [US2] Implement Save Managed Query modal UI scaffold in packages/yasgui/src/queryManagement/SaveManagedQueryModal.ts
 - [X] T035 [US2] Add “Save as managed query” action to tab UI/menu in packages/yasgui/src/TabContextMenu.ts
 - [X] T036 [P] [US2] Implement save flow helper (choose workspace/path, call backend.writeQuery) in packages/yasgui/src/queryManagement/saveManagedQuery.ts

@@ -961,7 +961,7 @@ Git workspaces are implemented via the providers' **HTTPS REST APIs**.
 **Limitations / notes:**
 
 - If the provider API is blocked by browser **CORS** policies, a Git workspace may not work without a proxy.
-- Git workspaces store only query text files (`.sparql`); they do not store endpoint associations, so opening a Git-managed query will not auto-switch endpoints.
+- Git workspaces store only query text files (`.rq` or `.sparql`); they do not store endpoint associations, so opening a Git-managed query will not auto-switch endpoints.
 
 #### Managed queries
 

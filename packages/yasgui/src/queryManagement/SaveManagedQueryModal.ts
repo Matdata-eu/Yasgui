@@ -185,7 +185,7 @@ export default class SaveManagedQueryModal {
     this.nameEl.addEventListener("input", () => {
       if (this.filenameTouched) return;
       const suggested = this.suggestFilenameFromName(this.nameEl.value);
-      if (suggested) this.filenameEl.value = suggested.replace(/\.sparql$/i, "");
+      if (suggested) this.filenameEl.value = suggested.replace(/\.(rq|sparql)$/i, "");
     });
 
     this.filenameEl = document.createElement("input");
@@ -373,7 +373,7 @@ export default class SaveManagedQueryModal {
     let resolvedFilename = filename;
 
     if (isGit) {
-      resolvedFilename = resolvedFilename.replace(/\.sparql$/i, "");
+      resolvedFilename = resolvedFilename.replace(/\.(rq|sparql)$/i, "");
       if (!resolvedFilename) {
         window.alert("Please enter a filename");
         return;
@@ -446,7 +446,7 @@ export default class SaveManagedQueryModal {
 
     const defaultFilename =
       defaults?.filename ?? (defaultName ? (this.suggestFilenameFromName(defaultName) ?? "") : "");
-    this.filenameEl.value = defaultFilename.replace(/\.sparql$/i, "");
+    this.filenameEl.value = defaultFilename.replace(/\.(rq|sparql)$/i, "");
     this.messageEl.value = defaults?.message ?? "";
 
     this.folderPickerOpen = false;

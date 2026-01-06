@@ -69,7 +69,7 @@ Fields:
 
 ### Git-Based Storage
 - Folder hierarchy: repository directories under `rootPath`.
-- ManagedQuery: `.sparql` file at `rootPath/<folder...>/<name>.sparql`.
+- ManagedQuery: `.rq` file (or `.sparql`) at `rootPath/<folder...>/<name>.rq` (or `.sparql`).
 - Versioning: git commit history affecting a path (or provider equivalent history).
 - Endpoint association: **none** (FR-022).
 

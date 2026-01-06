@@ -13,7 +13,7 @@ The implementation will:
 - Add a Query Browser drawer (hamburger entry point) that lists folders/queries for the active workspace and opens selected queries into new tabs.
 - Add explicit “save as managed query” behavior (no autosave), including overwrite-on-same-path and version creation only when query text changes.
 - Implement a backend abstraction (`WorkspaceBackend`) with concrete backends for:
-  - Git-based storage: initial reference implementation via git hosting provider HTTP APIs (pluggable adapter), storing plain `.sparql` files.
+  - Git-based storage: initial reference implementation via git hosting provider HTTP APIs (pluggable adapter), storing plain `.rq` files (with backwards compatibility for `.sparql` files).
   - SPARQL endpoint storage: SPARQL 1.1 operations using the existing request/auth stack and the existing yasgui RDF model.
 
 Phase deliverables:

@@ -94,7 +94,7 @@ Turn the feature spec into an implementable design that fits YASGUI’s current 
 **Resolution for planning:** Treat “raw git protocol support” as optional/advanced; primary supported route is provider APIs or consumer-supplied adapter.
 
 ### Q2 — Endpoint auto-switch for Git-based queries
-**Resolution for planning:** Since Git-based queries store only `.sparql` text (FR-022), they have no endpoint association. Auto-switch behavior (FR-020) applies only when the opened managed query has an associated endpoint (e.g., endpoint-based workspace versions).
+**Resolution for planning:** Since Git-based queries store only `.rq` (or `.sparql`) text (FR-022), they have no endpoint association. Auto-switch behavior (FR-020) applies only when the opened managed query has an associated endpoint (e.g., endpoint-based workspace versions).
 
 ## Risks
 - Browser CORS may block provider APIs or git servers in some environments; plan must include clear errors and documentation guidance.

@@ -43,7 +43,7 @@ The user can configure multiple workspaces of either type and switch between the
 ### Git Integration
 - **Storage Location**: Remote repositories (GitHub, GitLab, or any HTTPS-accessible git server)
 - **Authentication**: HTTPS with Personal Access Tokens
-- **File Format**: Plain `.sparql` files containing only the SPARQL query text
+- **File Format**: Plain `.rq` files (or `.sparql` for backwards compatibility) containing only the SPARQL query text
 - **Version Control**: git history
 - **Folder Structure**: Hierarchical folders in the repository
 
@@ -521,7 +521,7 @@ A hamburger icon on the left side of the tabs opens a resizable and collapsible 
 
 **Structure:**
 - **First level**: Workspace selector (users can have multiple workspaces)
-- **Git-based workspace**: Shows folder structure and `.sparql` files from the repository
+- **Git-based workspace**: Shows folder structure and `.rq` (or `.sparql`) files from the repository
 - **SPARQL endpoint workspace**: Uses SKOS hierarchy with `skos:ConceptScheme` (`yasgui:ManagedQueryFileSystem`) as root, `skos:narrower` concepts representing folders, and managed queries linked to folder concepts
 
 **Features:**
@@ -553,7 +553,7 @@ A user can change a managed query in a tab like a regular tab. Once a change in 
 2. If not linked to managed query, dialog prompts:
    - Select workspace (from configured workspaces)
    - Select or create folder path
-   - Enter filename (with `.sparql` extension auto-added if omitted)
+   - Enter filename (with `.rq` extension auto-added if omitted; `.sparql` also accepted)
 3. User can interactively create new folders in the dialog
 4. Query is saved and tab becomes linked to managed query
 5. Tab appearance updates to show managed query visual styling

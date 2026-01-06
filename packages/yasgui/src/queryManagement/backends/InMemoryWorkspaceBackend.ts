@@ -65,7 +65,7 @@ export default class InMemoryWorkspaceBackend implements WorkspaceBackend {
         queries.push({
           kind: "query",
           id: queryId,
-          label: basename(queryId).replace(/\.sparql$/i, ""),
+          label: basename(queryId).replace(/\.(rq|sparql)$/i, ""),
           parentId: undefined,
         });
         continue;
@@ -75,7 +75,7 @@ export default class InMemoryWorkspaceBackend implements WorkspaceBackend {
         queries.push({
           kind: "query",
           id: queryId,
-          label: basename(queryId).replace(/\.sparql$/i, ""),
+          label: basename(queryId).replace(/\.(rq|sparql)$/i, ""),
           parentId: folder,
         });
         continue;
@@ -101,7 +101,7 @@ export default class InMemoryWorkspaceBackend implements WorkspaceBackend {
     if (!q) return [];
     const hits: FolderEntry[] = [];
     for (const queryId of this.versionsByQueryId.keys()) {
-      const label = basename(queryId).replace(/\.sparql$/i, "");
+      const label = basename(queryId).replace(/\.(rq|sparql)$/i, "");
       if (label.toLowerCase().includes(q)) {
         hits.push({ kind: "query", id: queryId, label, parentId: dirname(queryId) || undefined });
       }
@@ -159,7 +159,7 @@ export default class InMemoryWorkspaceBackend implements WorkspaceBackend {
     const versions = this.versionsByQueryId.get(queryId);
     if (!versions || versions.length === 0) throw new WorkspaceBackendError("NOT_FOUND", "Query not found");
 
-    const newId = dirname(queryId) ? `${dirname(queryId)}/${trimmed}.sparql` : `${trimmed}.sparql`;
+    const newId = dirname(queryId) ? `${dirname(queryId)}/${trimmed}.rq` : `${trimmed}.rq`;
     if (newId === queryId) return;
     if (this.versionsByQueryId.has(newId))
       throw new WorkspaceBackendError("CONFLICT", "A query with this name already exists");

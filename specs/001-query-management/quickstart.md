@@ -85,7 +85,7 @@ IRI conventions used by the implementation:
 
 Rationale:
 - Managed query identities must remain immutable even if the user renames the query or moves it between folders.
-- The `.sparql` file extension is a Git workspace detail and is not part of the SPARQL-managed query identity.
+- The `.rq` (or `.sparql`) file extension is a Git workspace detail and is not part of the SPARQL-managed query identity.
 
 ## Test data for SPARQL backend
 The repo contains example RDF and shapes:
