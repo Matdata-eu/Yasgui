@@ -74,10 +74,10 @@ export class ThemeManager {
     let cmTheme: string;
     if (this.persistentConfig) {
       const storedTheme = this.persistentConfig.getCodeMirrorTheme(theme);
-      cmTheme = storedTheme || (theme === "dark" ? "material-palenight" : "default");
+      cmTheme = storedTheme || (theme === "dark" ? "github-dark" : "default");
     } else {
       // Fallback if persistentConfig not yet available
-      cmTheme = theme === "dark" ? "material-palenight" : "default";
+      cmTheme = theme === "dark" ? "github-dark" : "default";
     }
 
     // Find all CodeMirror instances within the root element

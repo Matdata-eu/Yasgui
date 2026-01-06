@@ -452,7 +452,7 @@ export default class TabSettingsModal {
     });
 
     const storedDarkTheme = this.tab.yasgui.persistentConfig.getCodeMirrorTheme("dark");
-    themeDarkSelect.value = storedDarkTheme || "material-palenight";
+    themeDarkSelect.value = storedDarkTheme || "github-dark";
 
     themeDarkSection.appendChild(themeDarkLabel);
     themeDarkSection.appendChild(themeDarkHelp);
@@ -1491,7 +1491,7 @@ export default class TabSettingsModal {
       const currentMode = this.tab.yasgui.getTheme();
       const themeToApply =
         currentMode === "dark"
-          ? codeMirrorThemeDarkSelect?.value || "material-palenight"
+          ? codeMirrorThemeDarkSelect?.value || "github-dark"
           : codeMirrorThemeLightSelect?.value || "default";
 
       // Apply theme to all CodeMirror instances
