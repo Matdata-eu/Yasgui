@@ -290,6 +290,63 @@
   }
 }
 
+.keyValueContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.keyValueRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+
+  .keyInput,
+  .valueInput {
+    padding: 8px;
+    border: 1px solid var(--yasgui-input-border, #ccc);
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: var(--yasgui-bg-secondary, white);
+    color: var(--yasgui-text-primary, #000);
+
+    &:focus {
+      outline: none;
+      border-color: var(--yasgui-input-focus, #337ab7);
+      box-shadow: 0 0 0 2px rgba(51, 122, 183, 0.1);
+    }
+
+    &::placeholder {
+      color: var(--yasgui-text-secondary, #999);
+    }
+  }
+
+  .removeButton {
+    padding: 6px 10px;
+    background-color: var(--yasgui-danger-color, #d9534f);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--yasgui-danger-hover, #c9302c);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(217, 83, 79, 0.3);
+    }
+
+    i {
+      pointer-events: none;
+    }
+  }
+}
+
 .prefixTextarea {
   width: 100%;
   padding: 10px;

@@ -24,6 +24,9 @@ const AcceptHeaderGraphMap: { key: string; value: string }[] = [
   { key: "TSV", value: "text/tab-separated-values,*/*;q=0.9" },
 ];
 
+// Type for key-value pairs (headers, args, etc.)
+type KeyValuePair = { name: string; value: string };
+
 // Default API Key header name
 const DEFAULT_API_KEY_HEADER = "X-API-Key";
 
@@ -1380,6 +1383,81 @@ export default class TabSettingsModal {
     acceptGraphSelect.setAttribute("data-config", "acceptHeaderGraph");
     acceptGraphSection.appendChild(acceptGraphSelect);
     container.appendChild(acceptGraphSection);
+
+    // Custom Headers section
+    const headersSection = this.createSection("Custom HTTP Headers");
+    const headersContainer = document.createElement("div");
+    addClass(headersContainer, "keyValueContainer");
+    headersContainer.setAttribute("data-config", "headers");
+
+    // Get existing headers
+    const existingHeaders = typeof reqConfig.headers === "function" ? {} : reqConfig.headers || {};
+    const headerPairs: KeyValuePair[] = Object.entries(existingHeaders).map(([name, value]) => ({
+      name,
+      value,
+    }));
+
+    // Draw existing headers
+    headerPairs.forEach((pair, index) => {
+      this.createKeyValueRow(headersContainer, pair, index);
+    });
+
+    // Add empty row for adding new headers
+    this.createKeyValueRow(headersContainer, { name: "", value: "" }, headerPairs.length);
+
+    headersSection.appendChild(headersContainer);
+    container.appendChild(headersSection);
+  }
+
+  private createKeyValueRow(container: HTMLElement, pair: KeyValuePair, index: number) {
+    const row = document.createElement("div");
+    addClass(row, "keyValueRow");
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Header Name";
+    nameInput.value = pair.name;
+    addClass(nameInput, "keyInput");
+
+    const valueInput = document.createElement("input");
+    valueInput.type = "text";
+    valueInput.placeholder = "Header Value";
+    valueInput.value = pair.value;
+    addClass(valueInput, "valueInput");
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.innerHTML = '<i class="fas fa-times"></i>';
+    removeButton.title = "Remove header";
+    addClass(removeButton, "removeButton");
+
+    // Auto-add new empty row when typing in the last row
+    const onInput = () => {
+      const allRows = container.querySelectorAll(".keyValueRow");
+      const isLastRow = row === allRows[allRows.length - 1];
+
+      if (isLastRow && (nameInput.value.trim() || valueInput.value.trim())) {
+        // Add a new empty row
+        this.createKeyValueRow(container, { name: "", value: "" }, allRows.length);
+      }
+    };
+
+    nameInput.addEventListener("input", onInput);
+    valueInput.addEventListener("input", onInput);
+
+    removeButton.onclick = () => {
+      row.remove();
+      // Ensure there's always at least one empty row
+      const remainingRows = container.querySelectorAll(".keyValueRow");
+      if (remainingRows.length === 0) {
+        this.createKeyValueRow(container, { name: "", value: "" }, 0);
+      }
+    };
+
+    row.appendChild(nameInput);
+    row.appendChild(valueInput);
+    row.appendChild(removeButton);
+    container.appendChild(row);
   }
 
   private createSection(title: string): HTMLElement {
@@ -1546,6 +1624,22 @@ export default class TabSettingsModal {
           updates[config] = (select as HTMLSelectElement).value;
         }
       });
+
+      // Save custom headers
+      const headersContainer = requestContent.querySelector(".keyValueContainer[data-config='headers']");
+      if (headersContainer) {
+        const headers: { [key: string]: string } = {};
+        const rows = headersContainer.querySelectorAll(".keyValueRow");
+        rows.forEach((row) => {
+          const nameInput = row.querySelector(".keyInput") as HTMLInputElement;
+          const valueInput = row.querySelector(".valueInput") as HTMLInputElement;
+          if (nameInput && valueInput && nameInput.value.trim()) {
+            headers[nameInput.value.trim()] = valueInput.value;
+          }
+        });
+        updates.headers = headers;
+      }
+
       this.tab.setRequestConfig(updates);
     }
 
