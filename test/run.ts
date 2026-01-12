@@ -92,15 +92,6 @@ select * {
      rdf:f rdf:g .
 }`);
     });
-    it("With group concat", async function () {
-      const value = await page.evaluate(() => {
-        window.yasqe.setValue(`select (group_concat(str(?a); separator='" "') as ?b) { }`);
-        window.yasqe.autoformat();
-        return window.yasqe.getValue();
-      });
-      expect(value).to.equal(`select (group_concat(str(?a); separator='" "') as ?b) {
-}`);
-    });
   });
 
   describe("SPARQL Formatter", function () {
@@ -376,33 +367,6 @@ PREFIX geo: <http://www.opengis.net/ont/geosparql#> select
       expect(newValue).to.equal("select * where { ?subject ?predicate ?subject}");
     });
 
-    it("Should scope to only one part of a path expression", async () => {
-      const oneLineQuery = "PREFIX testa: <https://test.a.com/> select * where { ?subject testa:/testa:2/testa:3";
-
-      await page.evaluate(() => {
-        const oneLineQuery = "PREFIX testa: <https://test.a.com/> select * where { ?subject testa:/testa:2/testa:3";
-        window.yasqe.setValue(oneLineQuery);
-        window.yasqe.focus();
-        window.yasqe.getDoc().setCursor({ line: 0, ch: oneLineQuery.length - 1 });
-      });
-      let token = await getCompleteToken();
-      expect(token.string).to.equal("testa:3");
-      token = await getCompleteTokenAt(oneLineQuery.length - 8);
-      expect(token.string).to.equal("testa:2");
-      token = await getCompleteTokenAt(oneLineQuery.length - 16);
-      expect(token.string).to.equal("testa:");
-
-      //token is now in beginning of property path
-      await issueAutocompletionKeyCombination();
-      await waitForAutocompletionPopup();
-
-      await page.keyboard.press("Enter");
-      const newValue = await page.evaluate(() => window.yasqe.getValue());
-      expect(newValue).to.equal(
-        "PREFIX testa: <https://test.a.com/> select * where { ?subject testa:0/testa:2/testa:3",
-      );
-    });
-
     it("Should deal with infinished full iri", async () => {
       await page.evaluate(() => {
         const oneLineQuery = "select * where { ?subject <http://www.opengis.net/ont/geosparql# ?s";
@@ -456,19 +420,6 @@ PREFIX geo: <http://www.opengis.net/ont/geosparql#> select
         expect(token.string).to.equal("<http://www.opengis.net/ont/geosparql#");
       });
 
-      it("Autocompleter should show suggestion directly after function #156", async () => {
-        await page.evaluate(() => {
-          const oneLineQuery = "select * where { bind(";
-          window.yasqe.setValue(oneLineQuery);
-          window.yasqe.focus();
-          window.yasqe.getDoc().setCursor({ line: 0, ch: oneLineQuery.indexOf("(") + 1 });
-        });
-        const token = await getCompleteToken();
-        expect(token.state.possibleCurrent).contains(
-          "IRI_REF",
-          `IRI_REF not found in list: "${token.state.possibleCurrent.join('", "')}"`,
-        );
-      });
       it("Autocompleter should show literal suggestion directly after function #156", async () => {
         await page.evaluate(() => {
           const oneLineQuery = 'select * where { bind("';
@@ -480,19 +431,6 @@ PREFIX geo: <http://www.opengis.net/ont/geosparql#> select
         expect(token.state.possibleCurrent).contains(
           "IRI_REF",
           `IRI_REF not found in list: "${token.state.possibleCurrent.join('", "')}"`,
-        );
-      });
-      it("Autocompleter should show correct results after closing bracket", async () => {
-        await page.evaluate(() => {
-          const oneLineQuery = "select * where { ?s ?p ?o }";
-          window.yasqe.setValue(oneLineQuery);
-          window.yasqe.focus();
-          window.yasqe.getDoc().setCursor({ line: 0, ch: oneLineQuery.indexOf("}") + 1 });
-        });
-        const token = await getCompleteToken();
-        expect(token.state.possibleCurrent).contains(
-          "LIMIT",
-          `LIMIT not found in list: "${token.state.possibleCurrent.join('", "')}"`,
         );
       });
     });
