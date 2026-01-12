@@ -62,7 +62,7 @@
 }
 
 .cm-s-github-dark span.cm-atom {
-  color: #79c0ff; // Variables (?var, $var)
+  color: #f3f9ff; // Variables (?var, $var)
 }
 
 .cm-s-github-dark span.cm-string {
@@ -70,11 +70,11 @@
 }
 
 .cm-s-github-dark span.cm-string-2 {
-  color: #ffa657; // Prefixed names (rdf:type, foaf:name)
+  color: #5784ff; // Prefix namespace (rdf:, foaf:)
 }
 
 .cm-s-github-dark span.cm-variable-3 {
-  color: #d2a8ff; // URIs in angle brackets
+  color: #1b9b8e; // URIs in angle brackets
 }
 
 .cm-s-github-dark span.cm-number {
@@ -82,7 +82,7 @@
 }
 
 .cm-s-github-dark span.cm-comment {
-  color: #8b949e; // Comments
+  color: #696e74; // Comments
   font-style: italic;
 }
 

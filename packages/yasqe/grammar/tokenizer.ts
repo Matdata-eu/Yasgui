@@ -40,6 +40,7 @@ export interface State {
   seenWhereClause: boolean;
   constructVariables: { [varName: string]: string };
   whereVariables: { [varName: string]: string };
+  pendingToken: Token | undefined;
 }
 export interface Token {
   quotePos: "end" | "start" | "content" | undefined;
@@ -292,7 +293,7 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
     {
       name: "PNAME_LN",
       regex: new RegExp("^" + PNAME_LN),
-      style: "string-2",
+      style: "string",
     },
 
     {
@@ -322,6 +323,16 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
   }
 
   function tokenBase(stream: CodeMirror.StringStream, state: State) {
+    // If we have a pending token from a previous split, consume it from stream and return style
+    if (state.pendingToken) {
+      const token = state.pendingToken;
+      state.pendingToken = undefined;
+      // Advance the stream by the length of the pending token
+      stream.pos += token.string.length;
+      // Don't parse, just return the style
+      return token.style;
+    }
+
     function nextToken(): Token {
       let consumed: string[];
       if (state.inLiteral) {
@@ -375,6 +386,39 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
       for (var i = 0; i < terminals.length; ++i) {
         consumed = stream.match(terminals[i].regex as any, true, false) as any;
         if (consumed) {
+          // Special handling for PNAME_LN: split into prefix (string-2) and local name (string)
+          if (terminals[i].name === "PNAME_LN") {
+            const fullString = consumed[0];
+            const colonIndex = fullString.indexOf(":");
+            if (colonIndex >= 0) {
+              const prefixPart = fullString.substring(0, colonIndex + 1);
+              const localPart = fullString.substring(colonIndex + 1);
+
+              // Store the local name part for next token call
+              if (localPart.length > 0) {
+                state.pendingToken = {
+                  cat: "PNAME_LN_LOCAL",
+                  style: "string",
+                  string: localPart,
+                  start: stream.start + prefixPart.length,
+                  quotePos: undefined,
+                };
+
+                // Back up the stream to just after the prefix part
+                stream.pos = stream.start + prefixPart.length;
+
+                // Return the prefix part
+                return {
+                  cat: "PNAME_LN_PREFIX",
+                  style: "string-2",
+                  string: prefixPart,
+                  start: stream.start,
+                  quotePos: undefined,
+                };
+              }
+            }
+          }
+
           return {
             cat: terminals[i].name,
             style: terminals[i].style,
@@ -498,6 +542,12 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
 
     const tokenOb = nextToken();
 
+    // If this is a pending token (second part of a split), just return its style without parsing
+    if (tokenOb.cat === "PNAME_LN_LOCAL") {
+      state.possibleCurrent = state.possibleNext;
+      return tokenOb.style;
+    }
+
     if (tokenOb.cat == "<invalid_token>") {
       // set error state, and
       if (state.OK == true) {
@@ -517,7 +567,8 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
     // or failure
     var finished = false;
     var topSymbol;
-    const tokenCat = tokenOb.cat;
+    // Treat PNAME_LN_PREFIX as PNAME_LN for parsing purposes
+    const tokenCat = tokenOb.cat === "PNAME_LN_PREFIX" ? "PNAME_LN" : tokenOb.cat;
     if (state.possibleFullIri && tokenOb.string === ">") {
       state.possibleFullIri = false;
     }
@@ -576,7 +627,10 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
             }
 
             //check whether a used prefix is actually defined
-            if (!state.inPrefixDecl && (tokenCat === "PNAME_NS" || tokenCat === "PNAME_LN")) {
+            if (
+              !state.inPrefixDecl &&
+              (tokenCat === "PNAME_NS" || tokenCat === "PNAME_LN" || tokenCat === "PNAME_LN_PREFIX")
+            ) {
               const colonIndex = tokenOb.string.indexOf(":");
               if (colonIndex >= 0) {
                 const prefNs = tokenOb.string.slice(0, colonIndex);
@@ -747,6 +801,7 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
         seenWhereClause: false,
         constructVariables: {},
         whereVariables: {},
+        pendingToken: undefined,
       };
     },
     indent: indent,
