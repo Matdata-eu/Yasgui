@@ -127,7 +127,32 @@
 }
 
 .cm-s-github-dark span.cm-bracket {
-  color: #c9d1d9; // Brackets
+  color: #c9d1d9; // Brackets (fallback)
+}
+
+// Rainbow bracket colors
+.cm-s-github-dark span.cm-bracket-level-0 {
+  color: #ffd700; // Gold
+}
+
+.cm-s-github-dark span.cm-bracket-level-1 {
+  color: #d2a8ff; // Purple
+}
+
+.cm-s-github-dark span.cm-bracket-level-2 {
+  color: #d85896; // Blue
+}
+
+.cm-s-github-dark span.cm-bracket-level-3 {
+  color: #229922; // Green
+}
+
+.cm-s-github-dark span.cm-bracket-paren {
+  color: #c9d1d9; // Constant color for () and []
+}
+
+.cm-s-github-dark span.cm-bracket-mismatch {
+  color: #ff7b72; // Red for mismatched brackets
 }
 
 .cm-s-github-dark span.cm-error {

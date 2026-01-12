@@ -41,6 +41,8 @@ export interface State {
   constructVariables: { [varName: string]: string };
   whereVariables: { [varName: string]: string };
   pendingToken: Token | undefined;
+  bracketStack: Array<{ type: string; level: number }>;
+  bracketLevel: number;
 }
 export interface Token {
   quotePos: "end" | "start" | "content" | undefined;
@@ -442,14 +444,45 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
 
       // Punctuation
       consumed = stream.match(grammar.punct, true, false) as any;
-      if (consumed)
+      if (consumed) {
+        const punctChar = consumed[0];
+        let style = "punc";
+
+        // Rainbow bracket colorization (only for curly braces)
+        // Parentheses and square brackets always have the same color
+        if (punctChar === "{") {
+          // Opening curly brace - rainbow color
+          state.bracketStack.push({ type: punctChar, level: state.bracketLevel });
+          style = "bracket bracket-level-" + (state.bracketLevel % 4);
+          state.bracketLevel++;
+        } else if (punctChar === "}") {
+          // Closing curly brace - rainbow color
+          if (state.bracketStack.length > 0) {
+            const last = state.bracketStack.pop();
+            if (last) {
+              state.bracketLevel = last.level;
+              style = "bracket bracket-level-" + (last.level % 4);
+            }
+          } else {
+            // Unmatched closing bracket
+            style = "bracket bracket-mismatch";
+          }
+        } else if (punctChar === "[" || punctChar === "(") {
+          // Opening parenthesis or square bracket - constant color
+          style = "bracket bracket-paren";
+        } else if (punctChar === "]" || punctChar === ")") {
+          // Closing parenthesis or square bracket - constant color
+          style = "bracket bracket-paren";
+        }
+
         return {
           cat: stream.current(),
-          style: "punc",
+          style: style,
           string: consumed[0],
           start: stream.start,
           quotePos: undefined,
         };
+      }
 
       // Token is invalid
       // better consume something anyway, or else we're stuck
@@ -802,6 +835,8 @@ export default function (config: CodeMirror.EditorConfiguration): CodeMirror.Mod
         constructVariables: {},
         whereVariables: {},
         pendingToken: undefined,
+        bracketStack: [],
+        bracketLevel: 0,
       };
     },
     indent: indent,
