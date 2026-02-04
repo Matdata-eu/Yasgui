@@ -1459,7 +1459,7 @@ export class Tab extends EventEmitter {
       // This is a prefix token, get the next token for the local name
       const nextToken = this.yasqe.getTokenAt({ line: pos.line, ch: token.end + 1 });
       if (nextToken && nextToken.type === "string" && nextToken.start === token.end) {
-        tokenString = tokenString + nextToken.string.trim();
+        tokenString = `${tokenString}${nextToken.string.trim()}`;
       }
     } else if (token.type === "string" && token.start > 0) {
       // This might be a local name token, check if previous token is a prefix
@@ -1470,13 +1470,13 @@ export class Tab extends EventEmitter {
         prevToken.string.trim().endsWith(":") &&
         prevToken.end === token.start
       ) {
-        tokenString = prevToken.string.trim() + tokenString;
+        tokenString = `${prevToken.string.trim()}${tokenString}`;
       }
     }
 
     // Check if it's a URI - either in angle brackets or a prefixed name
     const isFullUri = tokenString.startsWith("<") && tokenString.endsWith(">");
-    const isPrefixedName = /^[\w-]+:/.test(tokenString) && tokenString.indexOf(":") > 0;
+    const isPrefixedName = /^[\w-]+:/.test(tokenString);
 
     if (!isFullUri && !isPrefixedName) return;
 
@@ -1491,9 +1491,8 @@ export class Tab extends EventEmitter {
     } else if (isPrefixedName) {
       // Expand prefixed name to full URI
       const prefixes = this.yasqe.getPrefixesFromQuery();
-      const colonIndex = tokenString.indexOf(":");
-      const prefix = tokenString.substring(0, colonIndex);
-      const localName = tokenString.substring(colonIndex + 1);
+      const [prefix, ...localParts] = tokenString.split(":");
+      const localName = localParts.join(":");
       const prefixUri = prefixes[prefix];
       if (prefixUri) {
         uri = prefixUri + localName;
