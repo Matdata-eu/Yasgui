@@ -27,13 +27,13 @@ export function resolveEndpointUrl(url: string): string {
     fullUrl += url;
   } else {
     // Relative path - join with current page's directory
-    let basePath = window.location.pathname;
+    let currentDirectory = window.location.pathname;
     // If pathname does not end with "/", treat it as a file and use its directory
-    if (!basePath.endsWith("/")) {
-      const lastSlashIndex = basePath.lastIndexOf("/");
-      basePath = lastSlashIndex >= 0 ? basePath.substring(0, lastSlashIndex + 1) : "/";
+    if (!currentDirectory.endsWith("/")) {
+      const lastSlashIndex = currentDirectory.lastIndexOf("/");
+      currentDirectory = lastSlashIndex >= 0 ? currentDirectory.substring(0, lastSlashIndex + 1) : "/";
     }
-    fullUrl += basePath + url;
+    fullUrl += currentDirectory + url;
   }
 
   return fullUrl;
