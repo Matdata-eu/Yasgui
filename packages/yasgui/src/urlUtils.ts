@@ -15,14 +15,14 @@ export function resolveEndpointUrl(url: string): string {
   if (!url) return url;
 
   // If URL already has a protocol (http: or https:), return as-is
-  if (url.indexOf("http://") === 0 || url.indexOf("https://") === 0) {
+  if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }
 
   // Build the base URL using current page's protocol and host
   let fullUrl = `${window.location.protocol}//${window.location.host}`;
 
-  if (url.indexOf("/") === 0) {
+  if (url.startsWith("/")) {
     // Absolute path (starts with /)
     fullUrl += url;
   } else {

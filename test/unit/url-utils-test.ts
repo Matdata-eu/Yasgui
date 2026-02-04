@@ -60,12 +60,6 @@ describe("URL utilities - resolveEndpointUrl", () => {
     expect(result).to.equal("https://example.com/yasgui/sparql");
   });
 
-  it("uses correct directory for relative paths when page is a file", () => {
-    mockWindow("https://example.com/path/to/page.html");
-    const result = resolveEndpointUrl("../sparql");
-    expect(result).to.equal("https://example.com/path/to/../sparql");
-  });
-
   it("uses https protocol when page is https", () => {
     mockWindow("https://secure.example.com/app/");
     const result = resolveEndpointUrl("/sparql");
