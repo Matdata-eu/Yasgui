@@ -1445,14 +1445,38 @@ export class Tab extends EventEmitter {
 
     // Check if token is a URI (not a variable)
     // URIs typically have token.type of 'string-2' or might be in angle brackets
-    const tokenString = token.string.trim();
+    let tokenString = token.string.trim();
 
     // Skip if it's a variable (starts with ? or $)
     if (tokenString.startsWith("?") || tokenString.startsWith("$")) return;
 
+    // Handle prefixed names that may be split into multiple tokens by the tokenizer
+    // The tokenizer splits "prefix:localname" into two tokens:
+    // - PNAME_LN_PREFIX (e.g., "bnd:") with type "string-2"
+    // - PNAME_LN_LOCAL (e.g., "_subnetwork_bane_KVGB") with type "string"
+    // We need to combine them to get the full prefixed name
+    if (token.type === "string-2" && tokenString.endsWith(":")) {
+      // This is a prefix token, get the next token for the local name
+      const nextToken = this.yasqe.getTokenAt({ line: pos.line, ch: token.end + 1 });
+      if (nextToken && nextToken.type === "string" && nextToken.start === token.end) {
+        tokenString = tokenString + nextToken.string.trim();
+      }
+    } else if (token.type === "string" && token.start > 0) {
+      // This might be a local name token, check if previous token is a prefix
+      const prevToken = this.yasqe.getTokenAt({ line: pos.line, ch: token.start - 1 });
+      if (
+        prevToken &&
+        prevToken.type === "string-2" &&
+        prevToken.string.trim().endsWith(":") &&
+        prevToken.end === token.start
+      ) {
+        tokenString = prevToken.string.trim() + tokenString;
+      }
+    }
+
     // Check if it's a URI - either in angle brackets or a prefixed name
     const isFullUri = tokenString.startsWith("<") && tokenString.endsWith(">");
-    const isPrefixedName = /^[\w-]+:[\w-]+/.test(tokenString);
+    const isPrefixedName = /^[\w-]+:/.test(tokenString) && tokenString.indexOf(":") > 0;
 
     if (!isFullUri && !isPrefixedName) return;
 
@@ -1467,7 +1491,9 @@ export class Tab extends EventEmitter {
     } else if (isPrefixedName) {
       // Expand prefixed name to full URI
       const prefixes = this.yasqe.getPrefixesFromQuery();
-      const [prefix, localName] = tokenString.split(":");
+      const colonIndex = tokenString.indexOf(":");
+      const prefix = tokenString.substring(0, colonIndex);
+      const localName = tokenString.substring(colonIndex + 1);
       const prefixUri = prefixes[prefix];
       if (prefixUri) {
         uri = prefixUri + localName;
