@@ -17,6 +17,7 @@ import { saveManagedQuery } from "./queryManagement/saveManagedQuery";
 import { getWorkspaceBackend } from "./queryManagement/backends/getWorkspaceBackend";
 import { asWorkspaceBackendError } from "./queryManagement/backends/errors";
 import { normalizeQueryFilename } from "./queryManagement/normalizeQueryFilename";
+import { resolveEndpointUrl } from "./urlUtils";
 
 export interface PersistedJsonYasr extends YasrPersistentConfig {
   responseSummary: Parser.ResponseSummary;
@@ -304,7 +305,7 @@ export class Tab extends EventEmitter {
         name: result.name,
         filename: result.filename,
         queryText: this.getQueryTextForSave(),
-        associatedEndpoint: workspace.type === "sparql" ? this.getEndpoint() : undefined,
+        associatedEndpoint: workspace.type === "sparql" ? resolveEndpointUrl(this.getEndpoint()) : undefined,
         message: result.message,
         expectedVersionTag,
       });
