@@ -467,6 +467,7 @@ export class Yasqe extends CodeMirror {
         urlBtn.className = "yasqe_btn yasqe_btn-sm yasqe_shareBtn";
         buttonContainer.appendChild(urlBtn);
         urlBtn.onclick = async () => {
+          if (!this.config.createShareableLink) return;
           const url = this.config.createShareableLink(this);
           await copyToClipboard(url, "URL");
         };
@@ -482,6 +483,7 @@ export class Yasqe extends CodeMirror {
             shortenBtn.disabled = true;
             shortenBtn.innerText = "Shortening...";
             try {
+              if (!this.config.createShareableLink) return;
               const longUrl = this.config.createShareableLink(this);
               const shortUrl = await createShortLink(this, longUrl);
               await copyToClipboard(shortUrl, "Shortened URL");
@@ -537,9 +539,25 @@ export class Yasqe extends CodeMirror {
         // Position popup after layout is complete
         const positionPopup = () => {
           if (!popup) return;
-          const sharePos = shareLinkWrapper.getBoundingClientRect();
-          popup.style.top = shareLinkWrapper.offsetTop + sharePos.height + "px";
-          popup.style.left = shareLinkWrapper.offsetLeft + shareLinkWrapper.clientWidth - popup.clientWidth + "px";
+          const buttonsRect = buttons.getBoundingClientRect();
+          const popupHeight = popup.offsetHeight || 300; // Estimated height
+          const viewportHeight = window.innerHeight;
+          const spaceAbove = buttonsRect.top;
+          const spaceBelow = viewportHeight - buttonsRect.bottom;
+
+          // If there's enough space above (with some padding), position above
+          // Otherwise position below (will use scrolling if needed)
+          if (spaceAbove >= popupHeight + 20) {
+            popup.style.bottom = (buttons.clientHeight || 46) + "px";
+            popup.style.top = "auto";
+            popup.style.right = "0px";
+          } else {
+            // Not enough space above, use fixed positioning at top of viewport
+            popup.style.position = "fixed";
+            popup.style.bottom = "auto";
+            popup.style.top = "20px";
+            popup.style.right = "20px";
+          }
         };
 
         if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
