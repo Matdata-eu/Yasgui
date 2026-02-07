@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quick Describe Test - YASGUI</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+      #yasgui {
+        height: calc(100% - 160px);
+      }
+      .info-banner {
+        background-color: #e3f2fd;
+        border: 1px solid #1976d2;
+        border-radius: 4px;
+        padding: 16px;
+        margin: 16px;
+        font-size: 14px;
+      }
+      .info-banner h3 {
+        margin-top: 0;
+        color: #1976d2;
+      }
+      .info-banner code {
+        background-color: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+      }
+      .info-banner ul {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="info-banner">
+      <h3>🧪 Quick Describe Feature Test</h3>
+      <p><strong>Instructions:</strong> Hold <code>Ctrl</code> (or <code>Cmd</code> on Mac) and click on any URI in the query below to trigger a quick describe query.</p>
+      <p><strong>Test URIs:</strong></p>
+      <ul>
+        <li><code>bnd:_subnetwork_bane_KVGB</code> - URI with underscore prefix</li>
+        <li><code>bno:BaneSubnetwork</code> - URI with camel case</li>
+      </ul>
+      <p><strong>Expected behavior:</strong> Clicking on these URIs should execute a CONSTRUCT query to describe the resource (even though the endpoint may not exist).</p>
+    </div>
+    <div id="yasgui"></div>
+
+    <script type="module">
+      import Yasgui from '../packages/yasgui/src/index.ts';
+
+      const testQuery = `PREFIX bnd: <https://data.banenor.no/data/>
+PREFIX rtm: <http://ontology.railml.org/railtopomodel#>
+PREFIX time: <http://www.w3.org/2006/time#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX gsp: <http://www.opengis.net/ont/geosparql#>
+PREFIX bno: <https://data.banenor.no/ontology/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT *
+WHERE {
+  bnd:_subnetwork_bane_KVGB a bno:BaneSubnetwork .
+}
+LIMIT 1000`;
+
+      const yasgui = new Yasgui(document.getElementById("yasgui"), {
+        requestConfig: {
+          endpoint: "https://data.banenor.no/sparql",
+        },
+        copyEndpointOnNewTab: true,
+      });
+
+      // Set the test query
+      yasgui.getTab().yasqe.setValue(testQuery);
+      
+      // Add a console log to track when quick describe is triggered
+      console.log("Test page loaded. Hold Ctrl and click on URIs to test quick describe feature.");
+    </script>
+  </body>
+</html>
