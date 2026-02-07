@@ -1958,7 +1958,7 @@ export interface Config extends Partial<CodeMirror.EditorConfiguration> {
    * By default, this feature is enabled, and the only the query value is appended to the link.
    * ps. This function should return an object which is parseable by jQuery.param (http://api.jquery.com/jQuery.param/)
    */
-  createShareableLink: (yasqe: Yasqe) => string;
+  createShareableLink: ((yasqe: Yasqe) => string) | undefined | null;
   createShortLink: ((yasqe: Yasqe, longLink: string) => Promise<string>) | undefined;
   consumeShareLink: ((yasqe: Yasqe) => void) | undefined | null;
   /**
