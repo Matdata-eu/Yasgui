@@ -27,7 +27,7 @@ This quickstart is for validating the feature once implemented.
 1. Open YASGUI settings (per-tab Settings button) and go to the **Workspaces** tab.
 2. Add a workspace configuration:
    - Git workspace: provide repo URL and a token (optional fields are under **Advanced**).
-   - SPARQL workspace: provide endpoint URL and a workspace IRI.
+   - SPARQL workspace: provide endpoint URL, then select an existing workspace IRI from the dropdown or enter a new one.
 3. Select a default workspace from the **Default workspace** dropdown.
 4. (Optional) Use **Validate access** to confirm the backend can be reached.
 

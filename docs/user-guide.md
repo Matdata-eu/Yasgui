@@ -989,8 +989,10 @@ Note: the recommended type of workspace is SPARQL. It is more feature rich (allo
 
 - **SPARQL endpoint**: which endpoint to use for reading/writing the workspace data. This is selected from your configured endpoints (including any auth headers you set up for that endpoint).
 - **Workspace IRI**: the IRI that identifies the workspace in the RDF store (the `yasgui:Workspace` / SKOS concept scheme).
-  - You can **reuse an existing** workspace IRI to point to already-stored managed queries.
-  - Or choose a **new** workspace IRI to start a fresh workspace.
+  - After selecting an endpoint, YASGUI **automatically queries** the endpoint to discover existing workspaces. Any workspaces found will appear in a dropdown menu for easy selection.
+  - You can **select an existing workspace** from the dropdown to reuse already-stored managed queries and collaborate with others using the same workspace.
+  - Or choose **"➕ Enter new workspace IRI"** from the dropdown to create a fresh workspace. This reveals a text field where you can enter a custom IRI for your new workspace.
+  - If the query for existing workspaces fails (e.g., due to permissions), the dropdown will show "Failed to load workspaces" and you can still enter a new workspace IRI manually.
 - **Default graph (optional)**: the named graph to read/write workspace data in (sent as `default-graph-uri`). Leave empty to use the store’s default dataset behavior.
 
 **URI minting strategy:**
