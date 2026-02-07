@@ -61,6 +61,9 @@ export class Yasqe extends CodeMirror {
   private queryBtn: HTMLButtonElement | undefined;
   private saveBtn: HTMLButtonElement | undefined;
   private fullscreenBtn: HTMLButtonElement | undefined;
+  private hamburgerBtn: HTMLButtonElement | undefined;
+  private hamburgerMenu: HTMLDivElement | undefined;
+  private shareBtn: HTMLButtonElement | undefined;
   private isFullscreen: boolean = false;
   private horizontalResizeWrapper?: HTMLDivElement;
   private snippetsBar?: HTMLDivElement;
@@ -318,6 +321,7 @@ export class Yasqe extends CodeMirror {
       shareLinkWrapper.setAttribute("aria-label", "Share query");
       shareLinkWrapper.appendChild(shareIcon);
       buttons.appendChild(shareLinkWrapper);
+      this.shareBtn = shareLinkWrapper;
       shareLinkWrapper.addEventListener("click", (event: MouseEvent) => showSharePopup(event));
       shareLinkWrapper.addEventListener("keydown", (event: KeyboardEvent) => {
         if (event.code === "Enter") {
@@ -609,6 +613,130 @@ export class Yasqe extends CodeMirror {
     this.fullscreenBtn.title = "Toggle fullscreen (F11)";
     this.fullscreenBtn.setAttribute("aria-label", "Toggle fullscreen");
     buttons.appendChild(this.fullscreenBtn);
+
+    /**
+     * Draw hamburger menu button and dropdown (for mobile)
+     */
+    this.hamburgerBtn = document.createElement("button");
+    addClass(this.hamburgerBtn, "yasqe_hamburgerButton");
+    const hamburgerIcon = document.createElement("i");
+    addClass(hamburgerIcon, "fas");
+    addClass(hamburgerIcon, "fa-bars");
+    hamburgerIcon.setAttribute("aria-hidden", "true");
+    this.hamburgerBtn.appendChild(hamburgerIcon);
+    this.hamburgerBtn.title = "More options";
+    this.hamburgerBtn.setAttribute("aria-label", "More options");
+    this.hamburgerBtn.setAttribute("aria-expanded", "false");
+    buttons.appendChild(this.hamburgerBtn);
+
+    // Create hamburger menu
+    this.hamburgerMenu = document.createElement("div");
+    this.hamburgerMenu.className = "yasqe_hamburgerMenu";
+    buttons.appendChild(this.hamburgerMenu);
+
+    // Add menu items
+    if (this.config.createShareableLink) {
+      const shareItem = document.createElement("button");
+      shareItem.className = "yasqe_hamburgerMenuItem";
+      const shareIconMenu = document.createElement("i");
+      addClass(shareIconMenu, "fas");
+      addClass(shareIconMenu, "fa-share-nodes");
+      shareIconMenu.setAttribute("aria-hidden", "true");
+      shareItem.appendChild(shareIconMenu);
+      const shareLabel = document.createElement("span");
+      shareLabel.textContent = "Share";
+      shareItem.appendChild(shareLabel);
+      shareItem.onclick = () => {
+        this.closeHamburgerMenu();
+        this.shareBtn?.click();
+      };
+      this.hamburgerMenu.appendChild(shareItem);
+    }
+
+    const saveItem = document.createElement("button");
+    saveItem.className = "yasqe_hamburgerMenuItem";
+    const saveIconMenu = document.createElement("i");
+    addClass(saveIconMenu, "fas");
+    addClass(saveIconMenu, "fa-save");
+    saveIconMenu.setAttribute("aria-hidden", "true");
+    saveItem.appendChild(saveIconMenu);
+    const saveLabel = document.createElement("span");
+    saveLabel.textContent = "Save";
+    saveItem.appendChild(saveLabel);
+    saveItem.onclick = () => {
+      this.closeHamburgerMenu();
+      this.emit("saveManagedQuery");
+    };
+    this.hamburgerMenu.appendChild(saveItem);
+
+    if (this.config.showFormatButton) {
+      const formatItem = document.createElement("button");
+      formatItem.className = "yasqe_hamburgerMenuItem";
+      const formatIconMenu = document.createElement("i");
+      addClass(formatIconMenu, "fas");
+      addClass(formatIconMenu, "fa-align-left");
+      formatIconMenu.setAttribute("aria-hidden", "true");
+      formatItem.appendChild(formatIconMenu);
+      const formatLabel = document.createElement("span");
+      formatLabel.textContent = "Format";
+      formatItem.appendChild(formatLabel);
+      formatItem.onclick = () => {
+        this.closeHamburgerMenu();
+        this.format();
+      };
+      this.hamburgerMenu.appendChild(formatItem);
+    }
+
+    const fullscreenItem = document.createElement("button");
+    fullscreenItem.className = "yasqe_hamburgerMenuItem";
+    const fullscreenIconMenu = document.createElement("i");
+    addClass(fullscreenIconMenu, "fas");
+    addClass(fullscreenIconMenu, "fa-expand");
+    fullscreenIconMenu.setAttribute("aria-hidden", "true");
+    fullscreenItem.appendChild(fullscreenIconMenu);
+    const fullscreenLabel = document.createElement("span");
+    fullscreenLabel.textContent = "Fullscreen";
+    fullscreenItem.appendChild(fullscreenLabel);
+    fullscreenItem.onclick = () => {
+      this.closeHamburgerMenu();
+      this.toggleFullscreen();
+    };
+    this.hamburgerMenu.appendChild(fullscreenItem);
+
+    // Toggle hamburger menu
+    this.hamburgerBtn.onclick = (e) => {
+      e.stopPropagation();
+      this.toggleHamburgerMenu();
+    };
+
+    // Close hamburger menu when clicking outside
+    document.addEventListener("click", (e) => {
+      if (
+        this.hamburgerMenu &&
+        this.hamburgerBtn &&
+        !this.hamburgerMenu.contains(e.target as Node) &&
+        !this.hamburgerBtn.contains(e.target as Node)
+      ) {
+        this.closeHamburgerMenu();
+      }
+    });
+  }
+
+  private toggleHamburgerMenu() {
+    if (!this.hamburgerMenu || !this.hamburgerBtn) return;
+    const isActive = this.hamburgerMenu.classList.contains("active");
+    if (isActive) {
+      this.closeHamburgerMenu();
+    } else {
+      addClass(this.hamburgerMenu, "active");
+      this.hamburgerBtn.setAttribute("aria-expanded", "true");
+    }
+  }
+
+  private closeHamburgerMenu() {
+    if (!this.hamburgerMenu || !this.hamburgerBtn) return;
+    removeClass(this.hamburgerMenu, "active");
+    this.hamburgerBtn.setAttribute("aria-expanded", "false");
   }
   public toggleFullscreen() {
     this.isFullscreen = !this.isFullscreen;
