@@ -102,6 +102,11 @@ export default class Error implements Plugin<never> {
         forbidden3.textContent = "Contact the endpoint administrator to request access";
         suggestions.appendChild(forbidden3);
 
+        const forbidden4 = document.createElement("li");
+        forbidden4.textContent =
+          "A firewall such as OWASP is blocking is blocking SPARQL queries because they resemble SQL injection attempts. Contact the endpoint administrator to whitelist your queries or adjust firewall settings";
+        suggestions.appendChild(forbidden4);
+
         guidanceEl.appendChild(suggestions);
         return guidanceEl;
 
