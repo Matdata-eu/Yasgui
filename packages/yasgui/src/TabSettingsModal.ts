@@ -39,6 +39,7 @@ export default class TabSettingsModal {
   private prefixButton!: HTMLButtonElement;
   private prefixTextarea!: HTMLTextAreaElement;
   private autoCaptureCheckbox!: HTMLInputElement;
+  private mouseDownOnOverlay = false;
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.key !== "Escape") return;
     if (!this.modalOverlay.classList.contains("open")) return;
@@ -91,8 +92,21 @@ export default class TabSettingsModal {
     // Modal overlay
     this.modalOverlay = document.createElement("div");
     addClass(this.modalOverlay, "tabSettingsModalOverlay");
-    // Removed: this.modalOverlay.onclick = () => this.close();
-    // Users must explicitly click 'Save' or 'Cancel' to close the modal
+
+    // Track mousedown on overlay to distinguish from text selection that moves outside
+    this.modalOverlay.addEventListener("mousedown", (e) => {
+      if (e.target === this.modalOverlay) {
+        this.mouseDownOnOverlay = true;
+      }
+    });
+
+    // Only close if mousedown also happened on overlay (not during text selection)
+    this.modalOverlay.addEventListener("mouseup", (e) => {
+      if (e.target === this.modalOverlay && this.mouseDownOnOverlay) {
+        this.close();
+      }
+      this.mouseDownOnOverlay = false;
+    });
 
     // Modal content
     this.modalContent = document.createElement("div");
@@ -912,10 +926,27 @@ export default class TabSettingsModal {
     const config = this.tab.yasgui.persistentConfig.getEndpointConfig(endpoint);
     const existingAuth = config?.authentication;
 
+    // Track mousedown for proper modal close behavior
+    let mouseDownOnOverlay = false;
+
     // Create modal overlay
     const authModalOverlay = document.createElement("div");
     addClass(authModalOverlay, "authModalOverlay");
-    authModalOverlay.onclick = () => authModalOverlay.remove();
+
+    // Track mousedown on overlay to distinguish from text selection that moves outside
+    authModalOverlay.addEventListener("mousedown", (e) => {
+      if (e.target === authModalOverlay) {
+        mouseDownOnOverlay = true;
+      }
+    });
+
+    // Only close if mousedown also happened on overlay (not during text selection)
+    authModalOverlay.addEventListener("mouseup", (e) => {
+      if (e.target === authModalOverlay && mouseDownOnOverlay) {
+        authModalOverlay.remove();
+      }
+      mouseDownOnOverlay = false;
+    });
 
     // Create modal content
     const authModal = document.createElement("div");
@@ -1516,6 +1547,7 @@ export default class TabSettingsModal {
   }
 
   public close() {
+    this.mouseDownOnOverlay = false;
     removeClass(this.modalOverlay, "open");
     document.removeEventListener("keydown", this.handleKeyDown);
   }

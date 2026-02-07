@@ -45,6 +45,7 @@ export default class SaveManagedQueryModal {
   private filenameTouched = false;
   private folderPickerOpen = false;
   private folderBrowsePath = "";
+  private mouseDownOnOverlay = false;
 
   private resolve?: (value: SaveManagedQueryModalResult) => void;
   private reject?: (reason?: unknown) => void;
@@ -247,7 +248,22 @@ export default class SaveManagedQueryModal {
 
     this.overlayEl.appendChild(this.modalEl);
 
-    this.overlayEl.addEventListener("click", () => this.cancel());
+    // Track mousedown on overlay to distinguish from text selection that moves outside
+    this.overlayEl.addEventListener("mousedown", (e) => {
+      // Only mark as overlay mousedown if the target is the overlay itself (not modal content)
+      if (e.target === this.overlayEl) {
+        this.mouseDownOnOverlay = true;
+      }
+    });
+
+    // Only close if mousedown also happened on overlay (not during text selection)
+    this.overlayEl.addEventListener("mouseup", (e) => {
+      if (e.target === this.overlayEl && this.mouseDownOnOverlay) {
+        this.cancel();
+      }
+      this.mouseDownOnOverlay = false;
+    });
+
     document.addEventListener("keydown", (e) => {
       if (!this.isOpen()) return;
       if (e.key === "Escape") {
@@ -324,6 +340,7 @@ export default class SaveManagedQueryModal {
   }
 
   private cancel() {
+    this.mouseDownOnOverlay = false;
     this.close();
     this.overlayEl.remove();
     this.reject?.(new Error("cancelled"));
@@ -399,6 +416,7 @@ export default class SaveManagedQueryModal {
       }
     }
 
+    this.mouseDownOnOverlay = false;
     this.close();
     this.overlayEl.remove();
 
@@ -454,6 +472,7 @@ export default class SaveManagedQueryModal {
     this.folderBrowsePath = this.folderPathEl.value.trim();
     this.folderPickerErrorEl.textContent = "";
     this.folderPickerListEl.innerHTML = "";
+    this.mouseDownOnOverlay = false;
 
     document.body.appendChild(this.overlayEl);
     this.open();

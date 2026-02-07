@@ -234,6 +234,9 @@ export class WorkspaceSettingsForm {
   }
 
   private openWorkspaceConfigModal(input: { mode: "add" } | { mode: "edit"; workspace: WorkspaceConfig }) {
+    // Track mousedown for proper modal close behavior
+    let mouseDownOnOverlay = false;
+
     const overlay = document.createElement("div");
     addClass(overlay, "tabSettingsModalOverlay", "workspaceConfigModalOverlay", "open");
 
@@ -242,6 +245,7 @@ export class WorkspaceSettingsForm {
     modal.onclick = (e) => e.stopPropagation();
 
     const close = () => {
+      mouseDownOnOverlay = false;
       overlay.remove();
       document.removeEventListener("keydown", onKeyDown);
     };
@@ -253,7 +257,20 @@ export class WorkspaceSettingsForm {
     };
     document.addEventListener("keydown", onKeyDown);
 
-    overlay.onclick = () => close();
+    // Track mousedown on overlay to distinguish from text selection that moves outside
+    overlay.addEventListener("mousedown", (e) => {
+      if (e.target === overlay) {
+        mouseDownOnOverlay = true;
+      }
+    });
+
+    // Only close if mousedown also happened on overlay (not during text selection)
+    overlay.addEventListener("mouseup", (e) => {
+      if (e.target === overlay && mouseDownOnOverlay) {
+        close();
+      }
+      mouseDownOnOverlay = false;
+    });
 
     const header = document.createElement("div");
     addClass(header, "modalHeader");
