@@ -27,6 +27,67 @@ export class WorkspaceSettingsForm {
     this.options = options;
   }
 
+  private async fetchExistingWorkspaces(endpoint: string): Promise<string[]> {
+    try {
+      const query = `
+PREFIX yasgui: <https://matdata.eu/ns/yasgui#>
+
+SELECT DISTINCT ?workspace WHERE {
+  ?workspace a yasgui:Workspace .
+}
+ORDER BY ?workspace`;
+
+      // Get authentication for this endpoint
+      const endpointConfig = this.options.persistentConfig.getEndpointConfig(endpoint);
+      const headers: Record<string, string> = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/sparql-results+json",
+      };
+
+      // Add authentication headers if configured
+      if (endpointConfig?.authentication) {
+        const auth = endpointConfig.authentication;
+        if (auth.type === "basic") {
+          const credentials = btoa(`${auth.username}:${auth.password}`);
+          headers["Authorization"] = `Basic ${credentials}`;
+        } else if (auth.type === "bearer") {
+          headers["Authorization"] = `Bearer ${auth.token}`;
+        } else if (auth.type === "apiKey") {
+          headers[auth.headerName] = auth.apiKey;
+        } else if (auth.type === "oauth2" && auth.accessToken) {
+          headers["Authorization"] = `Bearer ${auth.accessToken}`;
+        }
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: new URLSearchParams({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const workspaces: string[] = [];
+
+      if (data.results?.bindings) {
+        for (const binding of data.results.bindings) {
+          const workspace = binding.workspace?.value;
+          if (workspace) {
+            workspaces.push(workspace);
+          }
+        }
+      }
+
+      return workspaces;
+    } catch (error) {
+      console.error("Failed to fetch existing workspaces:", error);
+      return [];
+    }
+  }
+
   public render() {
     this.container.innerHTML = "";
 
@@ -457,11 +518,133 @@ export class WorkspaceSettingsForm {
       sparqlHelp.textContent =
         "Tip: you can reuse an existing Workspace IRI to point to an already-populated workspace, or choose a new IRI to start a fresh workspace.";
 
-      const workspaceIriInput = document.createElement("input");
-      workspaceIriInput.type = "url";
-      workspaceIriInput.placeholder = "Workspace IRI";
-      workspaceIriInput.value = existing && existing.type === "sparql" ? existing.workspaceIri : "";
-      addClass(workspaceIriInput, "settingsInput");
+      // Workspace IRI selection (dropdown + custom input)
+      const workspaceIriSelect = document.createElement("select");
+      workspaceIriSelect.setAttribute("aria-label", "Workspace IRI");
+      addClass(workspaceIriSelect, "settingsSelect");
+
+      const loadingOption = document.createElement("option");
+      loadingOption.value = "";
+      loadingOption.textContent = "Select endpoint first";
+      workspaceIriSelect.appendChild(loadingOption);
+
+      const workspaceIriCustomInput = document.createElement("input");
+      workspaceIriCustomInput.type = "url";
+      workspaceIriCustomInput.placeholder =
+        "Enter new workspace IRI (e.g., https://example.org/workspace/my-workspace)";
+      workspaceIriCustomInput.style.display = "none";
+      workspaceIriCustomInput.style.marginTop = "5px";
+      addClass(workspaceIriCustomInput, "settingsInput");
+
+      if (existing && existing.type === "sparql") {
+        workspaceIriCustomInput.value = existing.workspaceIri;
+      }
+
+      // Function to populate workspace options
+      const populateWorkspaceOptions = async (endpoint: string) => {
+        // Clear existing options
+        workspaceIriSelect.innerHTML = "";
+
+        // Add loading option
+        const loading = document.createElement("option");
+        loading.value = "";
+        loading.textContent = "Loading workspaces...";
+        workspaceIriSelect.appendChild(loading);
+        workspaceIriSelect.disabled = true;
+
+        try {
+          const workspaces = await this.fetchExistingWorkspaces(endpoint);
+
+          workspaceIriSelect.innerHTML = "";
+          workspaceIriSelect.disabled = false;
+
+          if (workspaces.length > 0) {
+            const selectPlaceholder = document.createElement("option");
+            selectPlaceholder.value = "";
+            selectPlaceholder.textContent = "Select existing workspace";
+            workspaceIriSelect.appendChild(selectPlaceholder);
+
+            for (const workspace of workspaces) {
+              const option = document.createElement("option");
+              option.value = workspace;
+              option.textContent = workspace;
+              workspaceIriSelect.appendChild(option);
+            }
+          } else {
+            const noWorkspaces = document.createElement("option");
+            noWorkspaces.value = "";
+            noWorkspaces.textContent = "No existing workspaces found";
+            workspaceIriSelect.appendChild(noWorkspaces);
+          }
+
+          // Add custom option
+          const customOption = document.createElement("option");
+          customOption.value = "__custom__";
+          customOption.textContent = "➕ Enter new workspace IRI";
+          workspaceIriSelect.appendChild(customOption);
+
+          // Set current value if editing existing
+          if (existing && existing.type === "sparql") {
+            const existingIri = existing.workspaceIri;
+            const matchingOption = workspaces.find((w) => w === existingIri);
+            if (matchingOption) {
+              workspaceIriSelect.value = existingIri;
+            } else {
+              workspaceIriSelect.value = "__custom__";
+              workspaceIriCustomInput.style.display = "";
+              workspaceIriCustomInput.value = existingIri;
+            }
+          }
+        } catch (error) {
+          workspaceIriSelect.innerHTML = "";
+          workspaceIriSelect.disabled = false;
+
+          const errorOption = document.createElement("option");
+          errorOption.value = "";
+          errorOption.textContent = "Failed to load workspaces";
+          workspaceIriSelect.appendChild(errorOption);
+
+          const customOption = document.createElement("option");
+          customOption.value = "__custom__";
+          customOption.textContent = "➕ Enter new workspace IRI";
+          workspaceIriSelect.appendChild(customOption);
+        }
+      };
+
+      // Handle workspace selection change
+      workspaceIriSelect.onchange = () => {
+        if (workspaceIriSelect.value === "__custom__") {
+          workspaceIriCustomInput.style.display = "";
+          workspaceIriCustomInput.focus();
+        } else {
+          workspaceIriCustomInput.style.display = "none";
+        }
+      };
+
+      // Handle endpoint change
+      endpointSelect.onchange = () => {
+        const selectedEndpoint = endpointSelect.value.trim();
+        if (selectedEndpoint) {
+          void populateWorkspaceOptions(selectedEndpoint);
+        } else {
+          workspaceIriSelect.innerHTML = "";
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = "Select endpoint first";
+          workspaceIriSelect.appendChild(placeholder);
+        }
+      };
+
+      // Initial load if endpoint is already selected
+      const initialEndpoint = endpointSelect.value.trim();
+      if (initialEndpoint) {
+        void populateWorkspaceOptions(initialEndpoint);
+      }
+
+      // Wrapper for workspace IRI selection
+      const workspaceIriWrapper = document.createElement("div");
+      workspaceIriWrapper.appendChild(workspaceIriSelect);
+      workspaceIriWrapper.appendChild(workspaceIriCustomInput);
 
       const defaultGraphInput = document.createElement("input");
       defaultGraphInput.type = "url";
@@ -471,17 +654,24 @@ export class WorkspaceSettingsForm {
 
       dynamic.appendChild(this.wrapField("SPARQL endpoint", endpointSelect));
       dynamic.appendChild(sparqlHelp);
-      dynamic.appendChild(this.wrapField("Workspace IRI", workspaceIriInput));
+      dynamic.appendChild(this.wrapField("Workspace IRI", workspaceIriWrapper));
       dynamic.appendChild(this.wrapField("Default graph", defaultGraphInput));
 
       (dynamic as any).__getConfig = (): WorkspaceConfig => {
+        let workspaceIri = "";
+        if (workspaceIriSelect.value === "__custom__") {
+          workspaceIri = workspaceIriCustomInput.value.trim();
+        } else {
+          workspaceIri = workspaceIriSelect.value.trim();
+        }
+
         return {
           id: existing?.id || newWorkspaceId(),
           type: "sparql",
           label: labelInput.value.trim(),
           description: descriptionInput.value.trim() || undefined,
           endpoint: endpointSelect.value.trim(),
-          workspaceIri: workspaceIriInput.value.trim(),
+          workspaceIri,
           defaultGraph: defaultGraphInput.value.trim() || undefined,
         };
       };
