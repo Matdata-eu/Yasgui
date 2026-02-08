@@ -535,7 +535,7 @@ export class Tab extends EventEmitter {
     if (!this.controlBarEl) return;
 
     this.orientationToggleButton = document.createElement("button");
-    this.orientationToggleButton.className = "tabContextButton orientationToggle";
+    this.orientationToggleButton.className = "tabContextButton orientationToggle desktopOnly";
     this.orientationToggleButton.setAttribute("aria-label", "Toggle layout orientation");
     this.orientationToggleButton.title = "Toggle layout orientation";
 
@@ -613,6 +613,10 @@ export class Tab extends EventEmitter {
 
   public getYasr() {
     return this.yasr;
+  }
+
+  public getCurrentOrientation() {
+    return this.currentOrientation;
   }
 
   private initTabSettingsMenu() {

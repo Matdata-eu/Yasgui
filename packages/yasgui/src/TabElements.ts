@@ -315,7 +315,7 @@ export class TabList {
     queryBrowserButton.className = "queryBrowserToggle";
     queryBrowserButton.setAttribute("aria-label", "Open query browser");
     queryBrowserButton.title = "Open query browser";
-    queryBrowserButton.innerHTML = '<i class="fas fa-bars"></i>';
+    queryBrowserButton.innerHTML = '<i class="fa-regular fa-file-lines"></i>';
     queryBrowserButton.addEventListener("click", () => {
       this.yasgui.queryBrowser.toggle(queryBrowserButton);
     });

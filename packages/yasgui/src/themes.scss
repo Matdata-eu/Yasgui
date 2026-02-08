@@ -232,16 +232,6 @@
       color: var(--yasgui-text-muted);
     }
   }
-
-  .clearEndpointBtn {
-    background-color: var(--yasgui-bg-secondary) !important;
-    border-color: var(--yasgui-border-color) !important;
-    color: var(--yasgui-button-text) !important;
-
-    &:hover {
-      background-color: var(--yasgui-bg-tertiary) !important;
-    }
-  }
 }
 
 // Yasqe (editor) theming

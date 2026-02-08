@@ -39,6 +39,9 @@ export default class TabSettingsModal {
   private prefixButton!: HTMLButtonElement;
   private prefixTextarea!: HTMLTextAreaElement;
   private autoCaptureCheckbox!: HTMLInputElement;
+  private hamburgerMenuButton!: HTMLButtonElement;
+  private hamburgerDropdown!: HTMLElement;
+  private isHamburgerOpen = false;
   private mouseDownOnOverlay = false;
   private handleKeyDown = (e: KeyboardEvent) => {
     if (e.key !== "Escape") return;
@@ -55,7 +58,7 @@ export default class TabSettingsModal {
   private init(controlBarEl: HTMLElement) {
     // Settings button
     this.settingsButton = document.createElement("button");
-    addClass(this.settingsButton, "tabContextButton");
+    addClass(this.settingsButton, "tabContextButton", "desktopOnly");
     this.settingsButton.setAttribute("aria-label", "Settings");
     this.settingsButton.title = "Settings";
     this.settingsButton.innerHTML = '<i class="fas fa-cog"></i>';
@@ -65,7 +68,7 @@ export default class TabSettingsModal {
     // Theme toggle button (if enabled)
     if (this.tab.yasgui.config.showThemeToggle) {
       this.themeToggleButton = document.createElement("button");
-      addClass(this.themeToggleButton, "tabContextButton", "themeToggle");
+      addClass(this.themeToggleButton, "tabContextButton", "themeToggle", "desktopOnly");
       this.themeToggleButton.setAttribute("aria-label", "Toggle between light and dark theme");
       this.themeToggleButton.title = "Toggle theme";
       this.themeToggleButton.innerHTML = this.getThemeToggleIcon();
@@ -81,11 +84,122 @@ export default class TabSettingsModal {
     this.prefixButton.setAttribute("aria-label", "Insert Prefixes");
     this.prefixButton.title = "Insert saved prefixes into query";
     this.prefixButton.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i>';
-    addClass(this.prefixButton, "tabContextButton", "prefixButton");
+    addClass(this.prefixButton, "tabContextButton", "prefixButton", "desktopOnly");
     controlBarEl.appendChild(this.prefixButton);
     this.prefixButton.onclick = () => this.insertPrefixesIntoQuery();
 
+    // Hamburger menu button and dropdown (mobile only)
+    const hamburgerContainer = document.createElement("div");
+    addClass(hamburgerContainer, "hamburgerContainer", "mobileOnly");
+
+    this.hamburgerMenuButton = document.createElement("button");
+    addClass(this.hamburgerMenuButton, "tabContextButton", "hamburgerMenuButton");
+    this.hamburgerMenuButton.setAttribute("aria-label", "Menu");
+    this.hamburgerMenuButton.title = "Open menu";
+    this.hamburgerMenuButton.innerHTML = '<i class="fas fa-bars"></i>';
+    this.hamburgerMenuButton.onclick = (e) => {
+      e.stopPropagation();
+      this.toggleHamburgerMenu();
+    };
+    hamburgerContainer.appendChild(this.hamburgerMenuButton);
+
+    // Create hamburger dropdown menu
+    this.createHamburgerDropdown(hamburgerContainer);
+
+    controlBarEl.appendChild(hamburgerContainer);
+
+    // Close hamburger menu when clicking outside
+    document.addEventListener("click", (e) => {
+      if (
+        this.isHamburgerOpen &&
+        !this.hamburgerDropdown.contains(e.target as Node) &&
+        e.target !== this.hamburgerMenuButton
+      ) {
+        this.closeHamburgerMenu();
+      }
+    });
+
     this.createModal();
+  }
+
+  private createHamburgerDropdown(hamburgerContainer: HTMLElement) {
+    this.hamburgerDropdown = document.createElement("div");
+    addClass(this.hamburgerDropdown, "hamburgerDropdown");
+    this.hamburgerDropdown.style.display = "none";
+
+    // Settings menu item
+    const settingsItem = document.createElement("button");
+    addClass(settingsItem, "hamburgerMenuItem");
+    settingsItem.innerHTML = '<i class="fas fa-cog"></i><span>Settings</span>';
+    settingsItem.onclick = () => {
+      this.open();
+      this.closeHamburgerMenu();
+    };
+    this.hamburgerDropdown.appendChild(settingsItem);
+
+    // Prefix menu item
+    const prefixItem = document.createElement("button");
+    addClass(prefixItem, "hamburgerMenuItem");
+    prefixItem.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i><span>Insert Prefixes</span>';
+    prefixItem.onclick = () => {
+      this.insertPrefixesIntoQuery();
+      this.closeHamburgerMenu();
+    };
+    this.hamburgerDropdown.appendChild(prefixItem);
+
+    // Theme toggle menu item (if enabled)
+    if (this.tab.yasgui.config.showThemeToggle) {
+      const themeItem = document.createElement("button");
+      addClass(themeItem, "hamburgerMenuItem", "themeMenuItem");
+      themeItem.innerHTML = this.getThemeToggleIcon() + "<span>Toggle Theme</span>";
+      themeItem.onclick = () => {
+        this.tab.yasgui.toggleTheme();
+        themeItem.innerHTML = this.getThemeToggleIcon() + "<span>Toggle Theme</span>";
+        // Keep menu open for theme toggle so user can see the change
+      };
+      this.hamburgerDropdown.appendChild(themeItem);
+    }
+
+    // Layout orientation menu item
+    const layoutItem = document.createElement("button");
+    addClass(layoutItem, "hamburgerMenuItem", "layoutMenuItem");
+    this.updateLayoutMenuItemContent(layoutItem);
+    layoutItem.onclick = () => {
+      this.tab.toggleOrientation();
+      this.updateLayoutMenuItemContent(layoutItem);
+      // Keep menu open for layout toggle so user can see the change
+    };
+    this.hamburgerDropdown.appendChild(layoutItem);
+
+    hamburgerContainer.appendChild(this.hamburgerDropdown);
+  }
+
+  private updateLayoutMenuItemContent(layoutItem: HTMLButtonElement) {
+    const orientation = this.tab.getCurrentOrientation();
+    const icon =
+      orientation === "vertical" ? '<i class="fas fa-grip-lines-vertical"></i>' : '<i class="fas fa-grip-lines"></i>';
+    const label = orientation === "vertical" ? "Horizontal Layout" : "Vertical Layout";
+    layoutItem.innerHTML = icon + "<span>" + label + "</span>";
+  }
+
+  private toggleHamburgerMenu() {
+    if (this.isHamburgerOpen) {
+      this.closeHamburgerMenu();
+    } else {
+      this.openHamburgerMenu();
+    }
+  }
+
+  private openHamburgerMenu() {
+    this.isHamburgerOpen = true;
+    this.hamburgerDropdown.style.display = "block";
+    addClass(this.hamburgerMenuButton, "active");
+  }
+
+  private closeHamburgerMenu() {
+    this.isHamburgerOpen = false;
+    this.hamburgerDropdown.style.display = "none";
+    removeClass(this.hamburgerMenuButton, "active");
   }
 
   private createModal() {

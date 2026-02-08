@@ -169,5 +169,6 @@
     flex-shrink: 0;
     max-height: 35px;
     gap: 2px;
+    position: relative; // For hamburger dropdown positioning
   }
 }

@@ -92,7 +92,7 @@ export class EndpointSelect extends EventEmitter {
     // Create clear button
     const clearBtn = document.createElement("button");
     clearBtn.title = "Clear endpoint";
-    addClass(clearBtn, "clearEndpointBtn");
+    addClass(clearBtn, "tabContextButton");
     clearBtn.innerText = "✖";
     clearBtn.addEventListener("click", () => {
       this.inputField.value = "";
