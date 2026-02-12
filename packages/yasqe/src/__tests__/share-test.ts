@@ -134,7 +134,7 @@ describe("Share Functionality", () => {
         '        "Accept" = "application/sparql-results+json"',
         "    }",
         '    ContentType = "application/x-www-form-urlencoded"',
-        '    Body = "query=$query"',
+        '    Body = "query=$([System.Net.WebUtility]::UrlEncode($query))"',
         '    OutFile = "sparql-generated.json"',
         "}",
         "",
@@ -145,7 +145,7 @@ describe("Share Functionality", () => {
       expect(psString).to.include('$query = @"');
       expect(psString).to.include('"@');
       expect(psString).to.include(query);
-      expect(psString).to.include('Body = "query=$query"');
+      expect(psString).to.include('Body = "query=$([System.Net.WebUtility]::UrlEncode($query))"');
       expect(psString).to.not.include('Body = "query=`$query"'); // Should NOT escape the variable
       expect(psString).to.include("sparql-generated");
     });

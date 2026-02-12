@@ -546,15 +546,16 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
     }
 
     // Build the body with the query variable and any other parameters
-    // Note: We don't escape the variable reference itself, only the other args
+    // The query must be URL-encoded for application/x-www-form-urlencoded
     let bodyExpression: string;
+    const urlEncodeExpr = `[System.Net.WebUtility]::UrlEncode($${queryParamName})`;
     if (queryParam && Object.keys(otherArgs).length > 0) {
       // Both query variable and other args
       const otherArgsString = queryString.stringify(otherArgs);
-      bodyExpression = `"${queryParamName}=$${queryParamName}&${escapePowerShellString(otherArgsString)}"`;
+      bodyExpression = `"${queryParamName}=$(${urlEncodeExpr})&${escapePowerShellString(otherArgsString)}"`;
     } else if (queryParam) {
-      // Only query variable
-      bodyExpression = `"${queryParamName}=$${queryParamName}"`;
+      // Only query variable - use subexpression for URL encoding
+      bodyExpression = `"${queryParamName}=$(${urlEncodeExpr})"`;
     } else {
       // Only other args (shouldn't happen, but handle it)
       const otherArgsString = queryString.stringify(otherArgs);
