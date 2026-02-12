@@ -105,7 +105,7 @@ describe("Share Functionality", () => {
         "    }",
         '    ContentType = "application/x-www-form-urlencoded"',
         '    Body = "query=SELECT"',
-        '    OutFile = "result.json"',
+        '    OutFile = "sparql-generated.json"',
         "}",
         "",
         "Invoke-WebRequest @params",
@@ -117,6 +117,36 @@ describe("Share Functionality", () => {
       expect(psString).to.include("Headers");
       expect(psString).to.include("OutFile");
       expect(psString).to.include("Accept");
+      expect(psString).to.include("sparql-generated");
+    });
+
+    it("should format PowerShell commands with here-string for query", () => {
+      const query = "SELECT * WHERE { ?s ?p ?o }";
+      const lines = [
+        '$query = @"',
+        query,
+        '"@',
+        "",
+        "$params = @{",
+        '    Uri = "https://example.com/sparql"',
+        '    Method = "Post"',
+        "    Headers = @{",
+        '        "Accept" = "application/sparql-results+json"',
+        "    }",
+        '    ContentType = "application/x-www-form-urlencoded"',
+        '    Body = "query=$query"',
+        '    OutFile = "sparql-generated.json"',
+        "}",
+        "",
+        "Invoke-WebRequest @params",
+      ];
+      const psString = lines.join("\n");
+
+      expect(psString).to.include('$query = @"');
+      expect(psString).to.include('"@');
+      expect(psString).to.include(query);
+      expect(psString).to.include('Body = "query=$query"');
+      expect(psString).to.include("sparql-generated");
     });
 
     it("should format wget commands with proper line breaks", () => {

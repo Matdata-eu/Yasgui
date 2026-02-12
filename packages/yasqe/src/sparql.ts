@@ -520,10 +520,42 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push(headersLines.join("\n"));
       lines.push("    }");
     }
-    lines.push(`    OutFile = "result.${fileExtension}"`);
+    lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   } else if (ajaxConfig.reqMethod === "POST") {
-    const body = queryString.stringify(ajaxConfig.args);
+    // Extract the query/update parameter and other parameters separately
+    const queryParam = ajaxConfig.args.query || ajaxConfig.args.update;
+    const otherArgs: RequestArgs = {};
+    for (const key in ajaxConfig.args) {
+      if (key !== "query" && key !== "update") {
+        otherArgs[key] = ajaxConfig.args[key];
+      }
+    }
+
+    // Determine the query parameter name
+    const queryParamName = ajaxConfig.args.query !== undefined ? "query" : "update";
+
+    // Build the query string using here-string for easy editing
+    if (queryParam) {
+      // Handle both string and string[] cases
+      const queryText = Array.isArray(queryParam) ? queryParam[0] : queryParam;
+      lines.push(`$${queryParamName} = @"`);
+      lines.push(queryText);
+      lines.push(`"@`);
+      lines.push("");
+    }
+
+    // Build the body with the query variable and any other parameters
+    const bodyParts: string[] = [];
+    if (queryParam) {
+      bodyParts.push(`${queryParamName}=$${queryParamName}`);
+    }
+    if (Object.keys(otherArgs).length > 0) {
+      const otherArgsString = queryString.stringify(otherArgs);
+      bodyParts.push(otherArgsString);
+    }
+    const body = bodyParts.join("&");
+
     lines.push("$params = @{");
     lines.push(`    Uri = "${escapePowerShellString(url)}"`);
     lines.push(`    Method = "Post"`);
@@ -534,7 +566,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
     }
     lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
     lines.push(`    Body = "${escapePowerShellString(body)}"`);
-    lines.push(`    OutFile = "result.${fileExtension}"`);
+    lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   } else {
     // Handle other methods (PUT, DELETE, etc.)
@@ -552,7 +584,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
       lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
     }
-    lines.push(`    OutFile = "result.${fileExtension}"`);
+    lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   }
 
