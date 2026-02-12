@@ -546,15 +546,20 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
     }
 
     // Build the body with the query variable and any other parameters
-    const bodyParts: string[] = [];
-    if (queryParam) {
-      bodyParts.push(`${queryParamName}=$${queryParamName}`);
-    }
-    if (Object.keys(otherArgs).length > 0) {
+    // Note: We don't escape the variable reference itself, only the other args
+    let bodyExpression: string;
+    if (queryParam && Object.keys(otherArgs).length > 0) {
+      // Both query variable and other args
       const otherArgsString = queryString.stringify(otherArgs);
-      bodyParts.push(otherArgsString);
+      bodyExpression = `"${queryParamName}=$${queryParamName}&${escapePowerShellString(otherArgsString)}"`;
+    } else if (queryParam) {
+      // Only query variable
+      bodyExpression = `"${queryParamName}=$${queryParamName}"`;
+    } else {
+      // Only other args (shouldn't happen, but handle it)
+      const otherArgsString = queryString.stringify(otherArgs);
+      bodyExpression = `"${escapePowerShellString(otherArgsString)}"`;
     }
-    const body = bodyParts.join("&");
 
     lines.push("$params = @{");
     lines.push(`    Uri = "${escapePowerShellString(url)}"`);
@@ -565,7 +570,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push("    }");
     }
     lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
-    lines.push(`    Body = "${escapePowerShellString(body)}"`);
+    lines.push(`    Body = ${bodyExpression}`);
     lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   } else {

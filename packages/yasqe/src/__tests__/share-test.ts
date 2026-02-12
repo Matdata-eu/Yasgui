@@ -146,6 +146,7 @@ describe("Share Functionality", () => {
       expect(psString).to.include('"@');
       expect(psString).to.include(query);
       expect(psString).to.include('Body = "query=$query"');
+      expect(psString).to.not.include('Body = "query=`$query"'); // Should NOT escape the variable
       expect(psString).to.include("sparql-generated");
     });
 
