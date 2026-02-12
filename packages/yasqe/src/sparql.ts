@@ -524,7 +524,10 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
     lines.push("}");
   } else if (ajaxConfig.reqMethod === "POST") {
     // Extract the query/update parameter and other parameters separately
-    const queryParam = ajaxConfig.args.query || ajaxConfig.args.update;
+    // Determine the query parameter name first (query takes precedence over update)
+    const queryParamName = ajaxConfig.args.query !== undefined ? "query" : "update";
+    const queryParam = ajaxConfig.args[queryParamName];
+
     const otherArgs: RequestArgs = {};
     for (const key in ajaxConfig.args) {
       if (key !== "query" && key !== "update") {
@@ -532,12 +535,9 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       }
     }
 
-    // Determine the query parameter name
-    const queryParamName = ajaxConfig.args.query !== undefined ? "query" : "update";
-
     // Build the query string using here-string for easy editing
     if (queryParam) {
-      // Handle both string and string[] cases
+      // Handle both string and string[] cases - use first element if array
       const queryText = Array.isArray(queryParam) ? queryParam[0] : queryParam;
       lines.push(`$${queryParamName} = @"`);
       lines.push(queryText);
