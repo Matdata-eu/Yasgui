@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PowerShell Share</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        #yasqe {
+            height: 300px;
+            border: 1px solid #ccc;
+            background: white;
+            margin-bottom: 20px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        button {
+            margin: 10px 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .validation {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f5e9;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+        }
+        .validation.fail {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        .validation h3 {
+            margin-top: 0;
+        }
+        .check {
+            margin: 5px 0;
+        }
+        .check.pass::before {
+            content: '✓ ';
+            color: green;
+            font-weight: bold;
+        }
+        .check.fail::before {
+            content: '✗ ';
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>PowerShell Share Format Test</h1>
+    <p>This page tests the new PowerShell share format with multi-line query and sparql-generated output file.</p>
+    
+    <div id="yasqe"></div>
+    <button id="testBtn">Generate PowerShell Command</button>
+    
+    <div id="output"></div>
+    <div id="validation"></div>
+
+    <script type="module">
+        import Yasqe from '../packages/yasqe/src/index.ts';
+        
+        // Initialize YASQE
+        const yasqe = new Yasqe(document.getElementById('yasqe'), {
+            value: `SELECT ?s ?p ?o WHERE {
+  ?s ?p ?o .
+  FILTER(?p = rdf:type)
+} 
+ORDER BY ?s DESC(?o)
+LIMIT 10`,
+            requestConfig: {
+                endpoint: 'https://dbpedia.org/sparql',
+                method: 'POST'
+            }
+        });
+
+        function testPowerShellShare() {
+            try {
+                const psCommand = yasqe.getAsPowerShellString();
+                const output = document.getElementById('output');
+                const validationDiv = document.getElementById('validation');
+                output.textContent = psCommand;
+
+                // Validation checks
+                const checks = [
+                    ['Contains $query or $update variable', /\$(query|update) = @"/g.test(psCommand)],
+                    ['Contains closing @"', /^"@$/gm.test(psCommand)],
+                    ['Contains actual query text (not encoded)', psCommand.includes('SELECT ?s ?p ?o WHERE')],
+                    ['Contains ORDER BY clause', psCommand.includes('ORDER BY')],
+                    ['Contains Body with variable reference', /Body = ".*\$(query|update).*"/g.test(psCommand)],
+                    ['Contains sparql-generated output file', psCommand.includes('sparql-generated')],
+                    ['Does NOT contain URL-encoded query', !psCommand.includes('SELECT%20')],
+                    ['Does NOT contain encoded equals', !psCommand.includes('%3D')],
+                ];
+
+                let validationHTML = '<h3>Validation Results:</h3>';
+                let allPassed = true;
+                checks.forEach(([name, passed]) => {
+                    validationHTML += `<div class="check ${passed ? 'pass' : 'fail'}">${name}</div>`;
+                    if (!passed) allPassed = false;
+                });
+
+                validationDiv.innerHTML = validationHTML;
+                validationDiv.className = allPassed ? 'validation pass' : 'validation fail';
+
+                if (allPassed) {
+                    output.style.borderColor = 'green';
+                    output.style.backgroundColor = '#f1f8f4';
+                } else {
+                    output.style.borderColor = 'red';
+                    output.style.backgroundColor = '#fff5f5';
+                }
+
+                console.log('\nGenerated PowerShell Command:');
+                console.log(psCommand);
+                console.log('\nValidation Results:');
+                checks.forEach(([name, passed]) => {
+                    console.log(`${passed ? '✓' : '✗'} ${name}`);
+                });
+            } catch (error) {
+                document.getElementById('output').textContent = 'Error: ' + error.message;
+                document.getElementById('validation').innerHTML = '<h3 class="fail">Error occurred!</h3><p>' + error.message + '</p>';
+                console.error(error);
+            }
+        }
+
+        // Setup button click handler
+        document.getElementById('testBtn').addEventListener('click', testPowerShellShare);
+
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            setTimeout(testPowerShellShare, 1000);
+        });
+    </script>
+</body>
+</html>
