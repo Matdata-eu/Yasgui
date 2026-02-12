@@ -1,0 +1,532 @@
+/**
+ * Enhanced Graph Plugin Styles
+ */
+
+// Tooltip (appended to document.body, so needs to be at top level)
+.graph-tooltip {
+  position: absolute;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  pointer-events: none;
+  z-index: 10000; // Very high to ensure it's above everything
+  max-width: 400px;
+  word-wrap: break-word;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  .tooltip-label {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .tooltip-iri {
+    font-size: 10px;
+    opacity: 0.8;
+    font-family: monospace;
+  }
+}
+
+// Dark theme tooltip (also at top level)
+[data-theme="dark"] {
+  .graph-tooltip {
+    background: rgba(50, 50, 50, 0.95);
+    color: #e0e0e0;
+  }
+}
+
+.yasr {
+  .yasr_results {
+    &.enhanced-graph {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      // Main graph container
+      .enhanced-graph-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      // SVG canvas (Phase 2)
+      svg {
+        width: 100%;
+        height: 100%;
+        flex: 1;
+        background: transparent;
+
+        // Node styles
+        .node {
+          cursor: pointer;
+          stroke: #fff;
+          stroke-width: 2px;
+
+          &:hover {
+            stroke-width: 3px;
+          }
+
+          &.fixed {
+            stroke: #ff6b6b;
+          }
+        }
+
+        // Link styles
+        .link {
+          stroke: #999;
+          stroke-opacity: 0.6;
+          stroke-width: 1.5px;
+
+          &:hover {
+            stroke-opacity: 1;
+            stroke-width: 2.5px;
+          }
+        }
+
+        // Arrowhead marker
+        marker {
+          fill: #999;
+        }
+
+        // Node labels
+        .node-label {
+          font-size: 12px;
+          pointer-events: none;
+          user-select: none;
+        }
+
+        // Predicate icons
+        .predicate-icon {
+          cursor: pointer;
+
+          &:hover {
+            opacity: 0.8;
+          }
+        }
+      }
+
+      // Placeholder info (Phase 1)
+      .graph-info {
+        padding: 40px;
+        text-align: center;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+
+        h3 {
+          margin-bottom: 20px;
+          font-size: 24px;
+          color: #333;
+        }
+
+        p {
+          margin: 10px 0;
+          font-size: 14px;
+          color: #666;
+        }
+
+        .coming-soon {
+          margin-top: 20px;
+          font-style: italic;
+          color: #999;
+        }
+      }
+
+      .no-data {
+        padding: 40px;
+        text-align: center;
+        font-size: 16px;
+        color: #999;
+      }
+
+      // Footer
+      .graph-footer {
+        position: absolute;
+        bottom: 8px;
+        right: 10px;
+        font-size: 10px;
+        color: #999;
+        z-index: 100;
+
+        a {
+          color: #337ab7;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
+      // Control panel (Phase 4)
+      .enhanced-graph-controls {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; // Allow clicks to pass through to graph
+        z-index: 1000; // Ensure controls are above graph
+
+        > * {
+          pointer-events: all; // But enable clicks on controls
+        }
+      }
+
+      .control-panel {
+        position: absolute; // Changed to absolute
+        width: 280px;
+        background: white;
+        border: 1px solid #d1d1d1;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1001;
+        top: 60px;
+        right: 10px;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+
+        &.hidden {
+          display: none;
+        }
+
+        .panel-header {
+          padding: 12px 16px;
+          background: #f5f5f5;
+          border-bottom: 1px solid #d1d1d1;
+          border-radius: 6px 6px 0 0;
+          cursor: move;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+          }
+
+          .close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+              color: #333;
+            }
+          }
+        }
+
+        .panel-content {
+          padding: 16px;
+          max-height: 500px;
+          overflow-y: auto;
+        }
+
+        .panel-section {
+          margin-bottom: 20px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          h5 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+          }
+
+          .slider-control {
+            margin-bottom: 12px;
+
+            label {
+              display: flex;
+              justify-content: space-between;
+              font-size: 12px;
+              color: #666;
+              margin-bottom: 6px;
+
+              .value {
+                font-weight: 600;
+                color: #337ab7;
+              }
+            }
+
+            input[type="range"] {
+              width: 100%;
+              height: 4px;
+              border-radius: 2px;
+              background: #d3d3d3;
+              outline: none;
+              appearance: none;
+
+              &::-webkit-slider-thumb {
+                appearance: none;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #337ab7;
+                cursor: pointer;
+
+                &:hover {
+                  background: #2868a0;
+                }
+              }
+
+              &::-moz-range-thumb {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #337ab7;
+                cursor: pointer;
+                border: none;
+
+                &:hover {
+                  background: #2868a0;
+                }
+              }
+            }
+          }
+
+          .filter-action-btn {
+            font-size: 11px;
+            padding: 4px 8px;
+            margin-bottom: 8px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.2s;
+
+            &:hover {
+              background: #e0e0e0;
+            }
+          }
+
+          .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            label {
+              display: flex;
+              align-items: center;
+              font-size: 12px;
+              color: #666;
+              cursor: pointer;
+
+              input[type="checkbox"] {
+                margin-right: 8px;
+              }
+
+              .color-indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                margin-right: 8px;
+                border: 1px solid #ccc;
+              }
+            }
+          }
+
+          .legend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            .legend-item {
+              display: flex;
+              align-items: center;
+              font-size: 12px;
+              color: #666;
+
+              .color-indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                margin-right: 8px;
+                border: 1px solid #ccc;
+              }
+            }
+          }
+        }
+      }
+
+      // Control toggle button
+      .control-toggle {
+        position: absolute; // Changed from fixed to absolute
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        background: white;
+        border: 1px solid #d1d1d1;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #f5f5f5;
+          box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        svg {
+          width: 20px;
+          height: 20px;
+          fill: #666;
+        }
+      }
+    }
+  }
+}
+
+// Dark theme support
+[data-theme="dark"] {
+  .yasr .yasr_results.enhanced-graph {
+    .graph-info {
+      h3 {
+        color: #e0e0e0;
+      }
+
+      p {
+        color: #aaa;
+      }
+
+      .coming-soon {
+        color: #777;
+      }
+    }
+
+    .no-data {
+      color: #aaa;
+    }
+
+    .graph-footer {
+      color: #777;
+
+      a {
+        color: #6cb3ff;
+      }
+    }
+
+    svg {
+      .node {
+        stroke: #333;
+      }
+
+      .node-label {
+        fill: #e0e0e0;
+      }
+    }
+
+    .control-panel {
+      background: #2d2d2d;
+      border-color: #555;
+      color: #e0e0e0;
+
+      .panel-header {
+        background: #3a3a3a;
+        border-color: #555;
+
+        h4 {
+          color: #e0e0e0;
+        }
+
+        .close-btn {
+          color: #aaa;
+
+          &:hover {
+            color: #e0e0e0;
+          }
+        }
+      }
+
+      .panel-section {
+        h5 {
+          color: #bbb;
+        }
+
+        label {
+          color: #aaa;
+        }
+
+        .checkbox-list label {
+          color: #aaa;
+        }
+
+        .legend-list .legend-item {
+          color: #aaa;
+        }
+      }
+    }
+
+    .control-toggle {
+      background: #2d2d2d;
+      border-color: #555;
+
+      &:hover {
+        background: #3a3a3a;
+      }
+
+      svg {
+        fill: #aaa;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .yasr .yasr_results.enhanced-graph {
+    .control-panel {
+      width: 90%;
+      max-width: 280px;
+      right: 5%;
+    }
+
+    .control-toggle {
+      width: 36px;
+      height: 36px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+}

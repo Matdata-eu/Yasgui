@@ -674,10 +674,12 @@ export function registerPlugin(name: string, plugin: typeof Plugin, enable = tru
 import * as YasrPluginBoolean from "./plugins/boolean";
 import * as YasrPluginResponse from "./plugins/response";
 import * as YasrPluginError from "./plugins/error";
+import * as YasrPluginEnhancedGraph from "./plugins/enhanced-graph";
 
 Yasr.registerPlugin("boolean", YasrPluginBoolean.default as any);
 Yasr.registerPlugin("response", YasrPluginResponse.default as any);
 Yasr.registerPlugin("error", YasrPluginError.default as any);
+Yasr.registerPlugin("enhanced-graph", YasrPluginEnhancedGraph.default as any);
 
 export type { Plugin, DownloadInfo } from "./plugins";
 
