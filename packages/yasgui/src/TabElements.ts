@@ -107,7 +107,7 @@ export class TabListEl {
     tabLinkEl.href = "#" + this.tabId;
     tabLinkEl.id = "tab-" + this.tabId; // use the id for the tabpanel which is tabId to set the actual tab id
     tabLinkEl.setAttribute("aria-controls", this.tabId); // respective tabPanel id
-    tabLinkEl.draggable = false; // Prevent default link dragging that interferes with text selection
+    // Note: draggable attribute removed - CSS user-select:none prevents text selection during drag
     tabLinkEl.addEventListener("blur", () => {
       if (!this.tabEl) return;
       if (this.tabEl.classList.contains("active")) {
@@ -131,6 +131,17 @@ export class TabListEl {
     tabLinkEl.addEventListener("click", (e) => {
       e.preventDefault();
       this.yasgui.selectTabId(this.tabId);
+    });
+
+    // Prevent anchor default drag behavior that interferes with SortableJS in some browsers
+    tabLinkEl.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    });
+    tabLinkEl.addEventListener("mousedown", (e) => {
+      // Only prevent default on middle/right click to avoid navigation
+      if (e.button !== 0) {
+        e.preventDefault();
+      }
     });
 
     //tab name
@@ -326,12 +337,15 @@ export class TabList {
     sortablejs.create(this._tabsListEl, {
       group: "tabList",
       animation: 100,
+      draggable: ".tab",
+      forceFallback: true,
+      fallbackTolerance: 3,
       onUpdate: (_ev: any) => {
         const tabs = this.deriveTabOrderFromEls();
         this.yasgui.emit("tabOrderChanged", this.yasgui, tabs);
         this.yasgui.persistentConfig.setTabOrder(tabs);
       },
-      filter: ".queryBrowserToggle, .addTab, input, .renaming",
+      filter: ".queryBrowserToggle, .addTab, input, .renaming, .closeTab",
       preventOnFilter: false,
       onMove: (ev: any, _origEv: any) => {
         return hasClass(ev.related, "tab");

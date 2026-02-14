@@ -94,6 +94,10 @@ $minTabHeight: 35px;
       position: relative;
       $activeColor: #337ab7;
       $hoverColor: color.adjust($activeColor, $lightness: 30%);
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
 
       // Distinguish managed-query tabs from legacy tabs via background.
       // Legacy tabs keep their current styling.
@@ -190,6 +194,19 @@ $minTabHeight: 35px;
         padding: 0px 24px 0px 30px;
         white-space: nowrap;
         overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-drag: none;
+
+        span {
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          pointer-events: none;
+        }
 
         &:hover {
           border-bottom-color: $hoverColor;
