@@ -520,10 +520,48 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push(headersLines.join("\n"));
       lines.push("    }");
     }
-    lines.push(`    OutFile = "result.${fileExtension}"`);
+    lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   } else if (ajaxConfig.reqMethod === "POST") {
-    const body = queryString.stringify(ajaxConfig.args);
+    // Extract the query/update parameter and other parameters separately
+    // Determine the query parameter name first (query takes precedence over update)
+    const queryParamName = ajaxConfig.args.query !== undefined ? "query" : "update";
+    const queryParam = ajaxConfig.args[queryParamName];
+
+    const otherArgs: RequestArgs = {};
+    for (const key in ajaxConfig.args) {
+      if (key !== "query" && key !== "update") {
+        otherArgs[key] = ajaxConfig.args[key];
+      }
+    }
+
+    // Build the query string using here-string for easy editing
+    if (queryParam) {
+      // Handle both string and string[] cases - use first element if array
+      const queryText = Array.isArray(queryParam) ? queryParam[0] : queryParam;
+      lines.push(`$${queryParamName} = @"`);
+      lines.push(queryText);
+      lines.push(`"@`);
+      lines.push("");
+    }
+
+    // Build the body with the query variable and any other parameters
+    // The query must be URL-encoded for application/x-www-form-urlencoded
+    let bodyExpression: string;
+    const urlEncodeExpr = `[System.Net.WebUtility]::UrlEncode($${queryParamName})`;
+    if (queryParam && Object.keys(otherArgs).length > 0) {
+      // Both query variable and other args
+      const otherArgsString = queryString.stringify(otherArgs);
+      bodyExpression = `"${queryParamName}=$(${urlEncodeExpr})&${escapePowerShellString(otherArgsString)}"`;
+    } else if (queryParam) {
+      // Only query variable - use subexpression for URL encoding
+      bodyExpression = `"${queryParamName}=$(${urlEncodeExpr})"`;
+    } else {
+      // Only other args (shouldn't happen, but handle it)
+      const otherArgsString = queryString.stringify(otherArgs);
+      bodyExpression = `"${escapePowerShellString(otherArgsString)}"`;
+    }
+
     lines.push("$params = @{");
     lines.push(`    Uri = "${escapePowerShellString(url)}"`);
     lines.push(`    Method = "Post"`);
@@ -533,8 +571,8 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push("    }");
     }
     lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
-    lines.push(`    Body = "${escapePowerShellString(body)}"`);
-    lines.push(`    OutFile = "result.${fileExtension}"`);
+    lines.push(`    Body = ${bodyExpression}`);
+    lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   } else {
     // Handle other methods (PUT, DELETE, etc.)
@@ -552,7 +590,7 @@ export function getAsPowerShellString(yasqe: Yasqe, _config?: Config["requestCon
       lines.push(`    ContentType = "application/x-www-form-urlencoded"`);
       lines.push(`    Body = "${body.replace(/"/g, '`"')}"`);
     }
-    lines.push(`    OutFile = "result.${fileExtension}"`);
+    lines.push(`    OutFile = "sparql-generated.${fileExtension}"`);
     lines.push("}");
   }
 
