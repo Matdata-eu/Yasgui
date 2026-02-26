@@ -675,8 +675,10 @@ export class Yasqe extends CodeMirror {
       this.hamburgerMenu.appendChild(shareItem);
     }
 
-    const saveItem = document.createElement("button");
-    saveItem.className = "yasqe_hamburgerMenuItem";
+    const saveItem = document.createElement("div");
+    saveItem.className = "yasqe_hamburgerMenuItem yasqe_hamburgerMenuParent";
+    saveItem.setAttribute("role", "button");
+    saveItem.setAttribute("tabindex", "0");
     const saveIconMenu = document.createElement("i");
     addClass(saveIconMenu, "fas");
     addClass(saveIconMenu, "fa-save");
@@ -685,9 +687,65 @@ export class Yasqe extends CodeMirror {
     const saveLabel = document.createElement("span");
     saveLabel.textContent = "Save";
     saveItem.appendChild(saveLabel);
-    saveItem.onclick = () => {
+    const saveChevron = document.createElement("i");
+    addClass(saveChevron, "fas");
+    addClass(saveChevron, "fa-chevron-right");
+    addClass(saveChevron, "yasqe_hamburgerMenuChevron");
+    saveChevron.setAttribute("aria-hidden", "true");
+    saveItem.appendChild(saveChevron);
+
+    // Save sub-menu
+    const saveSubMenu = document.createElement("div");
+    saveSubMenu.className = "yasqe_hamburgerSubMenu";
+
+    const saveManagedItem = document.createElement("button");
+    saveManagedItem.className = "yasqe_hamburgerMenuItem";
+    const saveManagedIcon = document.createElement("i");
+    addClass(saveManagedIcon, "fas");
+    addClass(saveManagedIcon, "fa-database");
+    saveManagedIcon.setAttribute("aria-hidden", "true");
+    saveManagedItem.appendChild(saveManagedIcon);
+    const saveManagedLabel = document.createElement("span");
+    saveManagedLabel.textContent = "Save as managed query";
+    saveManagedItem.appendChild(saveManagedLabel);
+    saveManagedItem.onclick = (e) => {
+      e.stopPropagation();
       this.closeHamburgerMenu();
       this.emit("saveManagedQuery");
+    };
+    saveSubMenu.appendChild(saveManagedItem);
+
+    const saveRqItem = document.createElement("button");
+    saveRqItem.className = "yasqe_hamburgerMenuItem";
+    const saveRqIcon = document.createElement("i");
+    addClass(saveRqIcon, "fas");
+    addClass(saveRqIcon, "fa-file-download");
+    saveRqIcon.setAttribute("aria-hidden", "true");
+    saveRqItem.appendChild(saveRqIcon);
+    const saveRqLabel = document.createElement("span");
+    saveRqLabel.textContent = "Save as .rq file";
+    saveRqItem.appendChild(saveRqLabel);
+    saveRqItem.onclick = (e) => {
+      e.stopPropagation();
+      this.closeHamburgerMenu();
+      this.emit("downloadRqFile");
+    };
+    saveSubMenu.appendChild(saveRqItem);
+
+    saveItem.appendChild(saveSubMenu);
+
+    const toggleSaveSubMenu = (e: Event) => {
+      e.stopPropagation();
+      const isOpen = saveSubMenu.classList.contains("active");
+      saveSubMenu.classList.toggle("active", !isOpen);
+      saveItem.classList.toggle("open", !isOpen);
+    };
+    saveItem.onclick = toggleSaveSubMenu;
+    saveItem.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleSaveSubMenu(e);
+      }
     };
     this.hamburgerMenu.appendChild(saveItem);
 
@@ -724,22 +782,6 @@ export class Yasqe extends CodeMirror {
       this.toggleFullscreen();
     };
     this.hamburgerMenu.appendChild(fullscreenItem);
-
-    const downloadRqItem = document.createElement("button");
-    downloadRqItem.className = "yasqe_hamburgerMenuItem";
-    const downloadRqIcon = document.createElement("i");
-    addClass(downloadRqIcon, "fas");
-    addClass(downloadRqIcon, "fa-file-download");
-    downloadRqIcon.setAttribute("aria-hidden", "true");
-    downloadRqItem.appendChild(downloadRqIcon);
-    const downloadRqLabel = document.createElement("span");
-    downloadRqLabel.textContent = "Save as .rq file";
-    downloadRqItem.appendChild(downloadRqLabel);
-    downloadRqItem.onclick = () => {
-      this.closeHamburgerMenu();
-      this.emit("downloadRqFile");
-    };
-    this.hamburgerMenu.appendChild(downloadRqItem);
 
     // Toggle hamburger menu
     this.hamburgerBtn.onclick = (e) => {
