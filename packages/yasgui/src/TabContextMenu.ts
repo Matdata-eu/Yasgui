@@ -14,7 +14,7 @@ export default class TabContextMenu {
   private contextEl!: HTMLElement;
   private newTabEl!: HTMLElement;
   private renameTabEl!: HTMLElement;
-  private copyTabEl!: HTMLElement;
+  private duplicateTabEl!: HTMLElement;
   private saveManagedQueryEl!: HTMLElement;
   private closeTabEl!: HTMLElement;
   private closeOtherTabsEl!: HTMLElement;
@@ -48,7 +48,7 @@ export default class TabContextMenu {
 
     this.renameTabEl = this.getMenuItemEl("Rename Tab");
 
-    this.copyTabEl = this.getMenuItemEl("Copy Tab");
+    this.duplicateTabEl = this.getMenuItemEl("Duplicate Tab");
 
     this.saveManagedQueryEl = this.getMenuItemEl("Save as managed query");
 
@@ -61,7 +61,7 @@ export default class TabContextMenu {
     // Add items to list
     dropDownList.appendChild(this.newTabEl);
     dropDownList.appendChild(this.renameTabEl);
-    dropDownList.appendChild(this.copyTabEl);
+    dropDownList.appendChild(this.duplicateTabEl);
     dropDownList.appendChild(this.saveManagedQueryEl);
     // Add divider
     dropDownList.appendChild(document.createElement("hr"));
@@ -101,8 +101,8 @@ export default class TabContextMenu {
     // Set rename functionality
     this.renameTabEl.onclick = () => currentTabEl.startRename();
 
-    // Copy tab functionality`
-    this.copyTabEl.onclick = () => {
+    // Duplicate tab functionality
+    this.duplicateTabEl.onclick = () => {
       if (!tab) return;
       const config = cloneDeep(tab.getPersistedJson());
       config.id = getRandomId();
