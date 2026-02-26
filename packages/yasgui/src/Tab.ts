@@ -175,6 +175,19 @@ export class Tab extends EventEmitter {
     return this.persistentJson.yasqe.value;
   }
 
+  public downloadAsRqFile() {
+    const query = this.getQueryTextForSave();
+    const tabName = this.name() || "query";
+    const filename = tabName.endsWith(".rq") || tabName.endsWith(".sparql") ? tabName : `${tabName}.rq`;
+    const blob = new Blob([query], { type: "application/sparql-query" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   public async saveManagedQueryOrSaveAsManagedQuery(): Promise<void> {
     const meta = this.getManagedQueryMetadata();
     if (!meta) {
@@ -1304,6 +1317,11 @@ export class Tab extends EventEmitter {
     // Hook up the save button to managed query save
     this.yasqe.on("saveManagedQuery", () => {
       void this.saveManagedQueryOrSaveAsManagedQuery();
+    });
+
+    // Hook up download as .rq file
+    this.yasqe.on("downloadRqFile", () => {
+      this.downloadAsRqFile();
     });
 
     // Show/hide save button based on workspace configuration

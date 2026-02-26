@@ -46,6 +46,10 @@ export interface Yasqe {
   off(eventName: "autocompletionClose", handler: (instance: Yasqe) => void): void;
   on(eventName: "resize", handler: (instance: Yasqe, newSize: string) => void): void;
   off(eventName: "resize", handler: (instance: Yasqe, newSize: string) => void): void;
+  on(eventName: "saveManagedQuery", handler: () => void): void;
+  off(eventName: "saveManagedQuery", handler: () => void): void;
+  on(eventName: "downloadRqFile", handler: () => void): void;
+  off(eventName: "downloadRqFile", handler: () => void): void;
   on(eventName: string, handler: () => void): void;
 }
 
@@ -720,6 +724,22 @@ export class Yasqe extends CodeMirror {
       this.toggleFullscreen();
     };
     this.hamburgerMenu.appendChild(fullscreenItem);
+
+    const downloadRqItem = document.createElement("button");
+    downloadRqItem.className = "yasqe_hamburgerMenuItem";
+    const downloadRqIcon = document.createElement("i");
+    addClass(downloadRqIcon, "fas");
+    addClass(downloadRqIcon, "fa-file-download");
+    downloadRqIcon.setAttribute("aria-hidden", "true");
+    downloadRqItem.appendChild(downloadRqIcon);
+    const downloadRqLabel = document.createElement("span");
+    downloadRqLabel.textContent = "Save as .rq file";
+    downloadRqItem.appendChild(downloadRqLabel);
+    downloadRqItem.onclick = () => {
+      this.closeHamburgerMenu();
+      this.emit("downloadRqFile");
+    };
+    this.hamburgerMenu.appendChild(downloadRqItem);
 
     // Toggle hamburger menu
     this.hamburgerBtn.onclick = (e) => {
