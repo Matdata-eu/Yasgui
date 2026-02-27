@@ -46,6 +46,10 @@ export interface Yasqe {
   off(eventName: "autocompletionClose", handler: (instance: Yasqe) => void): void;
   on(eventName: "resize", handler: (instance: Yasqe, newSize: string) => void): void;
   off(eventName: "resize", handler: (instance: Yasqe, newSize: string) => void): void;
+  on(eventName: "saveManagedQuery", handler: () => void): void;
+  off(eventName: "saveManagedQuery", handler: () => void): void;
+  on(eventName: "downloadRqFile", handler: () => void): void;
+  off(eventName: "downloadRqFile", handler: () => void): void;
   on(eventName: string, handler: () => void): void;
 }
 
@@ -59,7 +63,7 @@ export class Yasqe extends CodeMirror {
   private abortController: AbortController | undefined;
   private queryStatus: "valid" | "error" | undefined;
   private queryBtn: HTMLButtonElement | undefined;
-  private saveBtn: HTMLButtonElement | undefined;
+  private saveBtnWrapper: HTMLDivElement | undefined;
   private fullscreenBtn: HTMLButtonElement | undefined;
   private hamburgerBtn: HTMLButtonElement | undefined;
   private hamburgerMenu: HTMLDivElement | undefined;
@@ -570,24 +574,42 @@ export class Yasqe extends CodeMirror {
     }
 
     /**
-     * Draw save button (THIRD)
+     * Draw save buttons (THIRD)
      */
-    const saveBtn = document.createElement("button");
-    addClass(saveBtn, "yasqe_saveButton");
-    const saveIcon = document.createElement("i");
-    addClass(saveIcon, "fas");
-    addClass(saveIcon, "fa-save");
-    saveIcon.setAttribute("aria-hidden", "true");
-    saveBtn.appendChild(saveIcon);
-    saveBtn.onclick = () => {
-      // Call the managed query save function if available
+    const saveBtnWrapper = document.createElement("div");
+    addClass(saveBtnWrapper, "yasqe_saveWrapper");
+    saveBtnWrapper.style.display = "none"; // Hidden by default, shown when workspace is configured
+    this.saveBtnWrapper = saveBtnWrapper;
+
+    const saveManagedBtn = document.createElement("button");
+    addClass(saveManagedBtn, "yasqe_saveManagedButton");
+    const saveManagedIcon = document.createElement("i");
+    addClass(saveManagedIcon, "fas");
+    addClass(saveManagedIcon, "fa-database");
+    saveManagedIcon.setAttribute("aria-hidden", "true");
+    saveManagedBtn.appendChild(saveManagedIcon);
+    saveManagedBtn.title = "Save as managed query";
+    saveManagedBtn.setAttribute("aria-label", "Save as managed query");
+    saveManagedBtn.onclick = () => {
       this.emit("saveManagedQuery");
     };
-    saveBtn.title = "Save managed query (Ctrl+S)";
-    saveBtn.setAttribute("aria-label", "Save managed query");
-    saveBtn.style.display = "none"; // Hidden by default, shown when workspace is configured
-    this.saveBtn = saveBtn;
-    buttons.appendChild(saveBtn);
+    saveBtnWrapper.appendChild(saveManagedBtn);
+
+    const saveRqBtn = document.createElement("button");
+    addClass(saveRqBtn, "yasqe_saveRqButton");
+    const saveRqIcon = document.createElement("i");
+    addClass(saveRqIcon, "fas");
+    addClass(saveRqIcon, "fa-file-download");
+    saveRqIcon.setAttribute("aria-hidden", "true");
+    saveRqBtn.appendChild(saveRqIcon);
+    saveRqBtn.title = "Save as .rq file";
+    saveRqBtn.setAttribute("aria-label", "Save as .rq file");
+    saveRqBtn.onclick = () => {
+      this.emit("downloadRqFile");
+    };
+    saveBtnWrapper.appendChild(saveRqBtn);
+
+    buttons.appendChild(saveBtnWrapper);
 
     /**
      * Draw format btn (FOURTH)
@@ -671,21 +693,37 @@ export class Yasqe extends CodeMirror {
       this.hamburgerMenu.appendChild(shareItem);
     }
 
-    const saveItem = document.createElement("button");
-    saveItem.className = "yasqe_hamburgerMenuItem";
-    const saveIconMenu = document.createElement("i");
-    addClass(saveIconMenu, "fas");
-    addClass(saveIconMenu, "fa-save");
-    saveIconMenu.setAttribute("aria-hidden", "true");
-    saveItem.appendChild(saveIconMenu);
-    const saveLabel = document.createElement("span");
-    saveLabel.textContent = "Save";
-    saveItem.appendChild(saveLabel);
-    saveItem.onclick = () => {
+    const saveManagedItem = document.createElement("button");
+    saveManagedItem.className = "yasqe_hamburgerMenuItem";
+    const saveManagedIconMenu = document.createElement("i");
+    addClass(saveManagedIconMenu, "fas");
+    addClass(saveManagedIconMenu, "fa-database");
+    saveManagedIconMenu.setAttribute("aria-hidden", "true");
+    saveManagedItem.appendChild(saveManagedIconMenu);
+    const saveManagedLabel = document.createElement("span");
+    saveManagedLabel.textContent = "Save as managed query";
+    saveManagedItem.appendChild(saveManagedLabel);
+    saveManagedItem.onclick = () => {
       this.closeHamburgerMenu();
       this.emit("saveManagedQuery");
     };
-    this.hamburgerMenu.appendChild(saveItem);
+    this.hamburgerMenu.appendChild(saveManagedItem);
+
+    const saveRqItem = document.createElement("button");
+    saveRqItem.className = "yasqe_hamburgerMenuItem";
+    const saveRqIconMenu = document.createElement("i");
+    addClass(saveRqIconMenu, "fas");
+    addClass(saveRqIconMenu, "fa-file-download");
+    saveRqIconMenu.setAttribute("aria-hidden", "true");
+    saveRqItem.appendChild(saveRqIconMenu);
+    const saveRqLabel = document.createElement("span");
+    saveRqLabel.textContent = "Save as .rq file";
+    saveRqItem.appendChild(saveRqLabel);
+    saveRqItem.onclick = () => {
+      this.closeHamburgerMenu();
+      this.emit("downloadRqFile");
+    };
+    this.hamburgerMenu.appendChild(saveRqItem);
 
     if (this.config.showFormatButton) {
       const formatItem = document.createElement("button");
@@ -1553,8 +1591,8 @@ export class Yasqe extends CodeMirror {
   }
 
   public setSaveButtonVisible(visible: boolean) {
-    if (this.saveBtn) {
-      this.saveBtn.style.display = visible ? "inline-flex" : "none";
+    if (this.saveBtnWrapper) {
+      this.saveBtnWrapper.style.display = visible ? "inline-flex" : "none";
     }
   }
 
