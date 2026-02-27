@@ -16,6 +16,7 @@ export default class TabContextMenu {
   private renameTabEl!: HTMLElement;
   private copyTabEl!: HTMLElement;
   private saveManagedQueryEl!: HTMLElement;
+  private saveAsRqFileEl!: HTMLElement;
   private closeTabEl!: HTMLElement;
   private closeOtherTabsEl!: HTMLElement;
   private reOpenOldTab!: HTMLElement;
@@ -52,6 +53,8 @@ export default class TabContextMenu {
 
     this.saveManagedQueryEl = this.getMenuItemEl("Save as managed query");
 
+    this.saveAsRqFileEl = this.getMenuItemEl("Save as .rq file");
+
     this.closeTabEl = this.getMenuItemEl("Close Tab");
 
     this.closeOtherTabsEl = this.getMenuItemEl("Close other tabs");
@@ -63,6 +66,7 @@ export default class TabContextMenu {
     dropDownList.appendChild(this.renameTabEl);
     dropDownList.appendChild(this.copyTabEl);
     dropDownList.appendChild(this.saveManagedQueryEl);
+    dropDownList.appendChild(this.saveAsRqFileEl);
     // Add divider
     dropDownList.appendChild(document.createElement("hr"));
     dropDownList.appendChild(this.closeTabEl);
@@ -112,6 +116,12 @@ export default class TabContextMenu {
     this.saveManagedQueryEl.onclick = async () => {
       if (!tab) return;
       await tab.saveManagedQueryOrSaveAsManagedQuery();
+      this.closeConfigMenu();
+    };
+
+    this.saveAsRqFileEl.onclick = () => {
+      if (!tab) return;
+      tab.downloadAsRqFile();
       this.closeConfigMenu();
     };
 

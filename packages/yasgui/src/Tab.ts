@@ -175,6 +175,42 @@ export class Tab extends EventEmitter {
     return this.persistentJson.yasqe.value;
   }
 
+  public async downloadAsRqFile() {
+    const query = this.getQueryTextForSave();
+    const tabName = this.name() || "query";
+    const filename = tabName.endsWith(".rq") || tabName.endsWith(".sparql") ? tabName : `${tabName}.rq`;
+    const blob = new Blob([query], { type: "application/sparql-query" });
+
+    // Use File System Access API if available so the user can choose the save location
+    if ("showSaveFilePicker" in window) {
+      try {
+        const showSaveFilePicker = (
+          window as Window & { showSaveFilePicker: (...args: unknown[]) => Promise<FileSystemFileHandle> }
+        ).showSaveFilePicker;
+        const fileHandle = await showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: "SPARQL Query", accept: { "application/sparql-query": [".rq", ".sparql"] } }],
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      } catch (e: any) {
+        // User cancelled the picker – abort silently
+        if (e?.name === "AbortError") return;
+        // Other errors fall through to the legacy download below
+      }
+    }
+
+    // Fallback for browsers without File System Access API
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   public async saveManagedQueryOrSaveAsManagedQuery(): Promise<void> {
     const meta = this.getManagedQueryMetadata();
     if (!meta) {
@@ -1304,6 +1340,11 @@ export class Tab extends EventEmitter {
     // Hook up the save button to managed query save
     this.yasqe.on("saveManagedQuery", () => {
       void this.saveManagedQueryOrSaveAsManagedQuery();
+    });
+
+    // Hook up download as .rq file
+    this.yasqe.on("downloadRqFile", () => {
+      void this.downloadAsRqFile();
     });
 
     // Show/hide save button based on workspace configuration

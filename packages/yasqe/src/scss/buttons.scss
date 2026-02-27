@@ -293,25 +293,33 @@
       }
     }
 
-    .yasqe_saveButton {
+    .yasqe_saveWrapper {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      border: none;
-      background: none;
-      cursor: pointer;
-      padding: 6px;
+      vertical-align: middle;
       margin-left: 8px;
-      height: 36px;
-      width: 36px;
-      color: var(--yasgui-text-secondary, #505050);
 
-      i {
-        font-size: 20px;
-      }
+      .yasqe_saveManagedButton,
+      .yasqe_saveRqButton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 6px;
+        height: 36px;
+        width: 36px;
+        color: var(--yasgui-text-secondary, #505050);
 
-      &:hover {
-        color: #337ab7;
+        i {
+          font-size: 20px;
+        }
+
+        &:hover {
+          color: #337ab7;
+        }
       }
     }
 
@@ -441,7 +449,7 @@
   @media (max-width: 768px) {
     .yasqe_buttons {
       .yasqe_share,
-      .yasqe_saveButton,
+      .yasqe_saveWrapper,
       .yasqe_formatButton,
       .yasqe_fullscreenButton {
         display: none !important;
