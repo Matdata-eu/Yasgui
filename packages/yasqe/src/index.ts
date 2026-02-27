@@ -63,9 +63,7 @@ export class Yasqe extends CodeMirror {
   private abortController: AbortController | undefined;
   private queryStatus: "valid" | "error" | undefined;
   private queryBtn: HTMLButtonElement | undefined;
-  private saveBtn: HTMLButtonElement | undefined;
   private saveBtnWrapper: HTMLDivElement | undefined;
-  private saveDropdownClickHandler: ((e: MouseEvent) => void) | undefined;
   private fullscreenBtn: HTMLButtonElement | undefined;
   private hamburgerBtn: HTMLButtonElement | undefined;
   private hamburgerMenu: HTMLDivElement | undefined;
@@ -576,87 +574,40 @@ export class Yasqe extends CodeMirror {
     }
 
     /**
-     * Draw save button (THIRD)
+     * Draw save buttons (THIRD)
      */
     const saveBtnWrapper = document.createElement("div");
     addClass(saveBtnWrapper, "yasqe_saveWrapper");
     saveBtnWrapper.style.display = "none"; // Hidden by default, shown when workspace is configured
     this.saveBtnWrapper = saveBtnWrapper;
 
-    const saveBtn = document.createElement("button");
-    addClass(saveBtn, "yasqe_saveButton");
-    const saveIcon = document.createElement("i");
-    addClass(saveIcon, "fas");
-    addClass(saveIcon, "fa-save");
-    saveIcon.setAttribute("aria-hidden", "true");
-    saveBtn.appendChild(saveIcon);
-    saveBtn.title = "Save query";
-    saveBtn.setAttribute("aria-label", "Save query");
-    this.saveBtn = saveBtn;
-    saveBtnWrapper.appendChild(saveBtn);
-
-    const saveDropdown = document.createElement("div");
-    addClass(saveDropdown, "yasqe_saveDropdown");
-
     const saveManagedBtn = document.createElement("button");
-    addClass(saveManagedBtn, "yasqe_saveDropdownItem");
-    const saveManagedDropdownIcon = document.createElement("i");
-    addClass(saveManagedDropdownIcon, "fas");
-    addClass(saveManagedDropdownIcon, "fa-database");
-    saveManagedDropdownIcon.setAttribute("aria-hidden", "true");
-    saveManagedBtn.appendChild(saveManagedDropdownIcon);
-    const saveManagedSpan = document.createElement("span");
-    saveManagedSpan.textContent = "Save as managed query";
-    saveManagedBtn.appendChild(saveManagedSpan);
-    saveManagedBtn.onclick = (e) => {
-      e.stopPropagation();
-      saveDropdown.classList.remove("active");
-      saveBtn.setAttribute("aria-expanded", "false");
+    addClass(saveManagedBtn, "yasqe_saveManagedButton");
+    const saveManagedIcon = document.createElement("i");
+    addClass(saveManagedIcon, "fas");
+    addClass(saveManagedIcon, "fa-database");
+    saveManagedIcon.setAttribute("aria-hidden", "true");
+    saveManagedBtn.appendChild(saveManagedIcon);
+    saveManagedBtn.title = "Save as managed query";
+    saveManagedBtn.setAttribute("aria-label", "Save as managed query");
+    saveManagedBtn.onclick = () => {
       this.emit("saveManagedQuery");
     };
-    saveDropdown.appendChild(saveManagedBtn);
+    saveBtnWrapper.appendChild(saveManagedBtn);
 
     const saveRqBtn = document.createElement("button");
-    addClass(saveRqBtn, "yasqe_saveDropdownItem");
-    const saveRqDropdownIcon = document.createElement("i");
-    addClass(saveRqDropdownIcon, "fas");
-    addClass(saveRqDropdownIcon, "fa-file-download");
-    saveRqDropdownIcon.setAttribute("aria-hidden", "true");
-    saveRqBtn.appendChild(saveRqDropdownIcon);
-    const saveRqSpan = document.createElement("span");
-    saveRqSpan.textContent = "Save as .rq file";
-    saveRqBtn.appendChild(saveRqSpan);
-    saveRqBtn.onclick = (e) => {
-      e.stopPropagation();
-      saveDropdown.classList.remove("active");
-      saveBtn.setAttribute("aria-expanded", "false");
+    addClass(saveRqBtn, "yasqe_saveRqButton");
+    const saveRqIcon = document.createElement("i");
+    addClass(saveRqIcon, "fas");
+    addClass(saveRqIcon, "fa-file-download");
+    saveRqIcon.setAttribute("aria-hidden", "true");
+    saveRqBtn.appendChild(saveRqIcon);
+    saveRqBtn.title = "Save as .rq file";
+    saveRqBtn.setAttribute("aria-label", "Save as .rq file");
+    saveRqBtn.onclick = () => {
       this.emit("downloadRqFile");
     };
-    saveDropdown.appendChild(saveRqBtn);
-
-    saveBtnWrapper.appendChild(saveDropdown);
-
-    saveBtn.onclick = (e) => {
-      e.stopPropagation();
-      const isOpen = saveDropdown.classList.contains("active");
-      saveDropdown.classList.toggle("active", !isOpen);
-      saveBtn.setAttribute("aria-expanded", String(!isOpen));
-    };
-    saveBtn.setAttribute("aria-expanded", "false");
-    saveBtn.setAttribute("aria-haspopup", "true");
-
-    // Close save dropdown when clicking outside – registered only once
-    if (!this.saveDropdownClickHandler) {
-      this.saveDropdownClickHandler = (e: MouseEvent) => {
-        if (this.saveBtnWrapper && !this.saveBtnWrapper.contains(e.target as Node)) {
-          this.saveBtnWrapper.querySelector<HTMLDivElement>(".yasqe_saveDropdown")?.classList.remove("active");
-          this.saveBtnWrapper
-            .querySelector<HTMLButtonElement>(".yasqe_saveButton")
-            ?.setAttribute("aria-expanded", "false");
-        }
-      };
-      document.addEventListener("click", this.saveDropdownClickHandler);
-    }
+    saveBtnWrapper.appendChild(saveRqBtn);
 
     buttons.appendChild(saveBtnWrapper);
 
@@ -742,84 +693,37 @@ export class Yasqe extends CodeMirror {
       this.hamburgerMenu.appendChild(shareItem);
     }
 
-    const saveItem = document.createElement("div");
-    saveItem.className = "yasqe_hamburgerMenuParent";
-    saveItem.setAttribute("role", "button");
-    saveItem.setAttribute("tabindex", "0");
-
-    // Header row: icon + label + chevron
-    const saveItemRow = document.createElement("div");
-    saveItemRow.className = "yasqe_hamburgerMenuItem yasqe_hamburgerMenuParentRow";
-    const saveIconMenu = document.createElement("i");
-    addClass(saveIconMenu, "fas");
-    addClass(saveIconMenu, "fa-save");
-    saveIconMenu.setAttribute("aria-hidden", "true");
-    saveItemRow.appendChild(saveIconMenu);
-    const saveLabel = document.createElement("span");
-    saveLabel.textContent = "Save";
-    saveItemRow.appendChild(saveLabel);
-    const saveChevron = document.createElement("i");
-    addClass(saveChevron, "fas");
-    addClass(saveChevron, "fa-chevron-right");
-    addClass(saveChevron, "yasqe_hamburgerMenuChevron");
-    saveChevron.setAttribute("aria-hidden", "true");
-    saveItemRow.appendChild(saveChevron);
-    saveItem.appendChild(saveItemRow);
-
-    // Save sub-menu
-    const saveSubMenu = document.createElement("div");
-    saveSubMenu.className = "yasqe_hamburgerSubMenu";
-
     const saveManagedItem = document.createElement("button");
     saveManagedItem.className = "yasqe_hamburgerMenuItem";
-    const saveManagedIcon = document.createElement("i");
-    addClass(saveManagedIcon, "fas");
-    addClass(saveManagedIcon, "fa-database");
-    saveManagedIcon.setAttribute("aria-hidden", "true");
-    saveManagedItem.appendChild(saveManagedIcon);
+    const saveManagedIconMenu = document.createElement("i");
+    addClass(saveManagedIconMenu, "fas");
+    addClass(saveManagedIconMenu, "fa-database");
+    saveManagedIconMenu.setAttribute("aria-hidden", "true");
+    saveManagedItem.appendChild(saveManagedIconMenu);
     const saveManagedLabel = document.createElement("span");
     saveManagedLabel.textContent = "Save as managed query";
     saveManagedItem.appendChild(saveManagedLabel);
-    saveManagedItem.onclick = (e) => {
-      e.stopPropagation();
+    saveManagedItem.onclick = () => {
       this.closeHamburgerMenu();
       this.emit("saveManagedQuery");
     };
-    saveSubMenu.appendChild(saveManagedItem);
+    this.hamburgerMenu.appendChild(saveManagedItem);
 
     const saveRqItem = document.createElement("button");
     saveRqItem.className = "yasqe_hamburgerMenuItem";
-    const saveRqIcon = document.createElement("i");
-    addClass(saveRqIcon, "fas");
-    addClass(saveRqIcon, "fa-file-download");
-    saveRqIcon.setAttribute("aria-hidden", "true");
-    saveRqItem.appendChild(saveRqIcon);
+    const saveRqIconMenu = document.createElement("i");
+    addClass(saveRqIconMenu, "fas");
+    addClass(saveRqIconMenu, "fa-file-download");
+    saveRqIconMenu.setAttribute("aria-hidden", "true");
+    saveRqItem.appendChild(saveRqIconMenu);
     const saveRqLabel = document.createElement("span");
     saveRqLabel.textContent = "Save as .rq file";
     saveRqItem.appendChild(saveRqLabel);
-    saveRqItem.onclick = (e) => {
-      e.stopPropagation();
+    saveRqItem.onclick = () => {
       this.closeHamburgerMenu();
       this.emit("downloadRqFile");
     };
-    saveSubMenu.appendChild(saveRqItem);
-
-    saveItem.appendChild(saveSubMenu);
-
-    const toggleSaveSubMenu = (e: Event) => {
-      e.stopPropagation();
-      const isOpen = saveSubMenu.classList.contains("active");
-      saveSubMenu.classList.toggle("active", !isOpen);
-      saveItem.classList.toggle("open", !isOpen);
-    };
-    saveItem.onclick = toggleSaveSubMenu;
-    saveItem.onkeydown = (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleSaveSubMenu(e);
-      }
-    };
-    this.hamburgerMenu.appendChild(saveItem);
+    this.hamburgerMenu.appendChild(saveRqItem);
 
     if (this.config.showFormatButton) {
       const formatItem = document.createElement("button");

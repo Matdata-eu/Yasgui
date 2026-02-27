@@ -295,10 +295,13 @@
 
     .yasqe_saveWrapper {
       position: relative;
+      display: inline-flex;
       align-items: center;
+      vertical-align: middle;
       margin-left: 8px;
 
-      .yasqe_saveButton {
+      .yasqe_saveManagedButton,
+      .yasqe_saveRqButton {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -316,57 +319,6 @@
 
         &:hover {
           color: #337ab7;
-        }
-
-        &[aria-expanded="true"] {
-          color: #337ab7;
-        }
-      }
-
-      .yasqe_saveDropdown {
-        display: none;
-        position: absolute;
-        bottom: calc(100% + 4px);
-        right: 0;
-        background-color: var(--yasgui-bg-primary, #fff);
-        border: 1px solid var(--yasgui-border-color, #e3e3e3);
-        border-radius: 4px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        padding: 4px;
-        min-width: 200px;
-        z-index: 10000;
-
-        &.active {
-          display: block;
-        }
-
-        .yasqe_saveDropdownItem {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          width: 100%;
-          padding: 10px 12px;
-          border: none;
-          background: none;
-          text-align: left;
-          cursor: pointer;
-          font-size: 14px;
-          color: var(--yasgui-text-primary, #333);
-          border-radius: 2px;
-
-          i {
-            font-size: 16px;
-            width: 20px;
-            color: var(--yasgui-text-secondary, #505050);
-          }
-
-          &:hover {
-            background-color: var(--yasgui-bg-secondary, #f0f0f0);
-          }
-
-          &:active {
-            background-color: var(--yasgui-bg-tertiary, #e0e0e0);
-          }
         }
       }
     }
@@ -488,35 +440,6 @@
 
         &:active {
           background-color: var(--yasgui-bg-tertiary, #e0e0e0);
-        }
-      }
-
-      .yasqe_hamburgerMenuParent {
-        .yasqe_hamburgerMenuParentRow {
-          display: flex;
-          align-items: center;
-          width: 100%;
-
-          .yasqe_hamburgerMenuChevron {
-            margin-left: auto;
-            width: auto;
-            font-size: 12px;
-            transition: transform 0.15s ease;
-          }
-        }
-
-        &.open > .yasqe_hamburgerMenuParentRow > .yasqe_hamburgerMenuChevron {
-          transform: rotate(90deg);
-        }
-
-        .yasqe_hamburgerSubMenu {
-          display: none;
-          flex-direction: column;
-          padding-left: 12px;
-
-          &.active {
-            display: flex;
-          }
         }
       }
     }
