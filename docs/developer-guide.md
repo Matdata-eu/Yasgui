@@ -91,6 +91,7 @@ This comprehensive guide covers everything developers need to know to integrate,
         - [`draw(): void`](#draw-void)
         - [`selectPlugin(pluginName: string): void`](#selectpluginpluginname-string-void)
         - [`getPlugins(): { [name: string]: Plugin }`](#getplugins--name-string-plugin-)
+        - [`executeQuery(query: string, options?: PluginQueryOptions): Promise<any>`](#executequeryquery-string-options-pluginqueryoptions-promiseany)
         - [`download(filename?: string): void`](#downloadfilename-string-void)
   - [Events](#events)
     - [YASGUI Events](#yasgui-events)
@@ -2604,6 +2605,7 @@ for the full response object description.
 in-flight requests (e.g. when the user navigates away or triggers a new
 expansion before the previous one finishes).
 
+```typescript
 interface DownloadInfo {
   contentType: string;
   getData: () => string;
