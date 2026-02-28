@@ -41,6 +41,8 @@ export default class SaveManagedQueryModal {
   private saveBtn!: HTMLButtonElement;
   private cancelBtn!: HTMLButtonElement;
   private saveBtnOriginalText = "Save";
+  private titleEl!: HTMLHeadingElement;
+  private workspaceRowEl!: HTMLDivElement;
 
   private filenameTouched = false;
   private folderPickerOpen = false;
@@ -49,6 +51,8 @@ export default class SaveManagedQueryModal {
 
   private resolve?: (value: SaveManagedQueryModalResult) => void;
   private reject?: (reason?: unknown) => void;
+  private moveResolve?: (value: string | undefined) => void;
+  private isMoveMode = false;
 
   constructor(yasgui: Yasgui) {
     this.yasgui = yasgui;
@@ -65,6 +69,7 @@ export default class SaveManagedQueryModal {
 
     const titleEl = document.createElement("h2");
     titleEl.textContent = "Save as managed query";
+    this.titleEl = titleEl;
 
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
@@ -203,6 +208,7 @@ export default class SaveManagedQueryModal {
     this.messageEl.setAttribute("aria-label", "Save message");
 
     const workspaceRow = this.row("Workspace", this.workspaceSelectEl);
+    this.workspaceRowEl = workspaceRow;
     const folderRow = this.folderRow();
     this.nameRowEl = this.row("Name", this.nameEl);
     this.filenameRowEl = this.row("Filename", this.filenameEl);
@@ -343,9 +349,24 @@ export default class SaveManagedQueryModal {
     this.mouseDownOnOverlay = false;
     this.close();
     this.overlayEl.remove();
-    this.reject?.(new Error("cancelled"));
-    this.resolve = undefined;
-    this.reject = undefined;
+    if (this.isMoveMode) {
+      this.resetMoveMode();
+      const resolve = this.moveResolve;
+      this.moveResolve = undefined;
+      resolve?.(undefined);
+    } else {
+      this.reject?.(new Error("cancelled"));
+      this.resolve = undefined;
+      this.reject = undefined;
+    }
+  }
+
+  private resetMoveMode() {
+    this.isMoveMode = false;
+    this.titleEl.textContent = "Save as managed query";
+    this.saveBtn.textContent = "Save";
+    this.saveBtnOriginalText = "Save";
+    this.workspaceRowEl.style.display = "";
   }
 
   private setLoading(isLoading: boolean) {
@@ -371,6 +392,18 @@ export default class SaveManagedQueryModal {
   }
 
   private submit() {
+    if (this.isMoveMode) {
+      const folderPath = this.folderPathEl.value.trim();
+      this.mouseDownOnOverlay = false;
+      this.close();
+      this.overlayEl.remove();
+      this.resetMoveMode();
+      const resolve = this.moveResolve;
+      this.moveResolve = undefined;
+      resolve?.(folderPath);
+      return;
+    }
+
     const workspaceId = this.workspaceSelectEl.value;
     const name = this.nameEl.value.trim();
     const filename = this.filenameEl.value.trim();
@@ -569,5 +602,51 @@ export default class SaveManagedQueryModal {
     this.folderPathEl.value = this.folderBrowsePath;
     this.newFolderNameEl.value = "";
     void this.refreshFolderPicker();
+  }
+
+  /**
+   * Show a simplified modal containing only the folder picker, for moving an existing query.
+   * Resolves with the selected folder path (empty string = root), or `undefined` if cancelled.
+   */
+  public async showFolderPickerOnly(workspaceId: string, currentFolderPath: string): Promise<string | undefined> {
+    const workspaces = this.yasgui.persistentConfig.getWorkspaces();
+
+    this.workspaceSelectEl.innerHTML = "";
+    for (const w of workspaces) {
+      const opt = document.createElement("option");
+      opt.value = w.id;
+      opt.textContent = w.label;
+      this.workspaceSelectEl.appendChild(opt);
+    }
+    this.workspaceSelectEl.value = workspaceId;
+
+    // Hide rows not needed for a move operation.
+    this.workspaceRowEl.style.display = "none";
+    this.nameRowEl.style.display = "none";
+    this.filenameRowEl.style.display = "none";
+    this.messageRowEl.style.display = "none";
+
+    this.folderPathEl.value = currentFolderPath;
+    this.filenameTouched = false;
+    this.folderPickerOpen = false;
+    removeClass(this.folderPickerEl, "open");
+    this.folderBrowsePath = currentFolderPath;
+    this.folderPickerErrorEl.textContent = "";
+    this.folderPickerListEl.innerHTML = "";
+    this.mouseDownOnOverlay = false;
+
+    this.titleEl.textContent = "Move to folder";
+    this.saveBtn.textContent = "Move";
+    this.saveBtnOriginalText = "Move";
+
+    this.isMoveMode = true;
+
+    document.body.appendChild(this.overlayEl);
+    this.open();
+    this.folderPickerToggleEl.focus();
+
+    return new Promise<string | undefined>((resolve) => {
+      this.moveResolve = resolve;
+    });
   }
 }
