@@ -44,6 +44,7 @@ This comprehensive guide covers everything developers need to know to integrate,
       - [Bearer Token Authentication](#bearer-token-authentication)
       - [API Key Authentication](#api-key-authentication)
       - [Managing Endpoint Configurations](#managing-endpoint-configurations)
+      - [OAuth 2.0 Provider Examples](#oauth-20-provider-examples)
       - [Dynamic Authentication](#dynamic-authentication)
       - [Disabling Authentication](#disabling-authentication)
       - [TypeScript Support](#typescript-support)
@@ -106,10 +107,23 @@ This comprehensive guide covers everything developers need to know to integrate,
       - [Step 4: Add Styling](#step-4-add-styling)
     - [Plugin Example: Chart Plugin](#plugin-example-chart-plugin)
     - [Plugin Best Practices](#plugin-best-practices)
-    - [Executing Background Queries from a Plugin](#executing-background-queries-from-a-plugin)
     - [Theme Support for Plugins](#theme-support-for-plugins)
       - [Implementation Steps](#implementation-steps)
     - [Distributing Your Plugin](#distributing-your-plugin)
+  - [Using the Graph Plugin](#using-the-graph-plugin)
+    - [Installation](#installation-1)
+    - [Key Features](#key-features)
+    - [Configuration Options](#configuration-options)
+    - [Color Scheme](#color-scheme)
+    - [Node Icons and Images](#node-icons-and-images)
+    - [Predicate Icons](#predicate-icons)
+    - [API Reference](#api-reference-1)
+    - [Theme Integration](#theme-integration)
+    - [Performance Considerations](#performance-considerations)
+    - [Browser Requirements](#browser-requirements)
+    - [Example Queries](#example-queries)
+    - [Troubleshooting](#troubleshooting)
+    - [Repository](#repository)
   - [Contributing](#contributing)
     - [Getting Started](#getting-started)
     - [Project Structure](#project-structure)
@@ -1277,19 +1291,7 @@ const yasr = new Yasr(document.getElementById('yasr'), {
   plugins: {
     table: {
       priority: 10,
-      // Table plugin options (see @matdata/yasgui-table-plugin)
-      displayConfig: {
-        uriDisplayMode: 'abbreviated',  // 'full' | 'abbreviated'
-        showDatatypes: false,           // Show XSD datatype annotations
-        ellipsisMode: false,            // Truncate long cell content
-        smartFormatters: true,          // Auto-format by XSD type & variable name suffix
-        uriLinkPrefix: '',              // Prepend a URL prefix to every URI link
-      },
-      persistenceEnabled: true,
-      // Transform a URI into a custom href (overridden by user-set uriLinkPrefix)
-      uriHrefAdapter: (uri) => `https://browser.example.org/?uri=${encodeURIComponent(uri)}`,
-      // Transform an entire binding set before rendering (e.g. add computed columns)
-      bindingSetAdapter: (bindingSet) => bindingSet,
+      pageSize: 50
     },
     graph: {
       priority: 5
@@ -2861,96 +2863,6 @@ export default class ChartPlugin implements Plugin {
 7. **TypeScript**: Use TypeScript for better type safety
 8. **Testing**: Write unit tests for your plugin
 
-### Executing Background Queries from a Plugin
-
-Some plugins need to run additional SPARQL queries at runtime — for example, a graph-visualization plugin that expands a node on click by running a `DESCRIBE` or `CONSTRUCT` query.
-
-YASR provides a `executeQuery` method for exactly this purpose.  When YASR is embedded inside YASGUI, this method is automatically wired up to the current SPARQL endpoint (including any configured authentication).
-
-#### API
-
-```typescript
-// Execute a SPARQL query and receive the raw response
-yasr.executeQuery(query: string, options?: PluginQueryOptions): Promise<any>
-
-interface PluginQueryOptions {
-  /** Custom Accept header, e.g. "text/turtle" or "application/sparql-results+json" */
-  acceptHeader?: string;
-}
-```
-
-The returned Promise resolves to the raw response object (same format that `yasr.setResponse()` accepts).  The method rejects if no `executeQuery` callback was configured (e.g. when YASR is used standalone without YASGUI).
-
-#### Example: Graph Plugin Node Expansion
-
-```typescript
-import { Plugin } from '@matdata/yasr';
-
-export default class GraphPlugin implements Plugin {
-  private yasr: Yasr;
-  public priority = 10;
-  public label = 'Graph';
-
-  constructor(yasr: Yasr) {
-    this.yasr = yasr;
-  }
-
-  // ... other required methods ...
-
-  /**
-   * Called when the user clicks a node — runs a DESCRIBE query to
-   * fetch neighbours without replacing the existing Yasr results.
-   */
-  async expandNode(uri: string): Promise<void> {
-    const query = `DESCRIBE <${uri}>`;
-
-    try {
-      const response = await this.yasr.executeQuery(query, {
-        acceptHeader: 'text/turtle',
-      });
-      // Process `response` and update your graph visualization
-      this.addTriplesToGraph(response);
-    } catch (err) {
-      console.error('Background query failed:', err);
-    }
-  }
-
-  private addTriplesToGraph(response: any): void {
-    // Parse response and add new nodes/edges to the visualization
-  }
-
-  canHandleResults(): boolean { /* ... */ return false; }
-  draw(): void { /* ... */ }
-  getIcon(): Element | undefined { return undefined; }
-}
-```
-
-#### Standalone YASR Usage
-
-When YASR is used **without** YASGUI you must supply the `executeQuery` callback yourself:
-
-```typescript
-const yasr = new Yasr(element, {
-  executeQuery: async (query, options) => {
-    const response = await fetch('https://dbpedia.org/sparql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': options?.acceptHeader ?? 'application/sparql-results+json',
-      },
-      body: new URLSearchParams({ query }),
-    });
-    return {
-      ok: response.ok,
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-      content: await response.text(),
-    };
-  },
-});
-```
-
 ### Theme Support for Plugins
 
 YASGUI uses a centralized theme system that plugins should integrate with to provide a consistent user experience across light and dark modes.
@@ -3113,6 +3025,330 @@ import MyPlugin from 'yasr-my-plugin';
 
 Yasr.registerPlugin('MyPlugin', MyPlugin);
 ```
+
+---
+
+## Using the Graph Plugin
+
+The Graph Plugin is a specialized YASR plugin for visualizing SPARQL CONSTRUCT and DESCRIBE query results as interactive, force-directed graphs with advanced customization capabilities.
+
+### Installation
+
+**NPM:**
+
+```bash
+npm install @matdata/yasgui-graph-plugin
+```
+
+```javascript
+import Yasgui from '@matdata/yasgui';
+import GraphPlugin from '@matdata/yasgui-graph-plugin';
+
+Yasgui.Yasr.registerPlugin('Graph', GraphPlugin);
+
+const yasgui = new Yasgui(document.getElementById('yasgui'));
+```
+
+**CDN (UMD):**
+
+```html
+<!-- YASGUI -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@matdata/yasgui/build/yasgui.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@matdata/yasgui/build/yasgui.min.js"></script>
+
+<!-- Graph Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/@matdata/yasgui-graph-plugin/dist/yasgui-graph-plugin.min.js"></script>
+
+<script>
+  // Plugin auto-registers as 'graph'
+  const yasgui = new Yasgui(document.getElementById('yasgui'));
+</script>
+```
+
+### Key Features
+
+- **🔷 Interactive Force-Directed Layout**: Automatic physics-based node positioning
+- **🎨 Smart Color Coding**: Color-coded nodes by type (URIs, literals, blank nodes, classes)
+- **🖼️ Node Icons & Images**: Support for `schema:image` and `schema:icon` properties
+- **📦 Compact Mode**: Hide literal/class nodes and show info in tooltips
+- **🔍 Advanced Navigation**: Zoom, pan, and "Zoom to Fit" functionality
+- **✋ Drag & Drop**: Reorganize nodes with automatic pinning
+- **💬 Rich HTML Tooltips**: Detailed node/edge information on hover  
+- **🌓 Theme Support**: Automatic light/dark mode with dynamic color switching
+- **⚡ Performance**: Handles up to 1,000 nodes with <2s render time
+- **♿ Accessibility**: WCAG AA color contrast and keyboard navigation
+
+### Configuration Options
+
+The plugin provides extensive configuration through a settings panel (⚙ button). All settings are automatically persisted to localStorage.
+
+**Available Settings:**
+
+```typescript
+interface GraphPluginSettings {
+  compactMode: boolean;        // Hide literals and classes (default: false)
+  edgeStyle: 'curved' | 'straight';  // Edge appearance (default: 'curved')
+  predicateDisplay: 'label' | 'icon' | 'hidden';  // Predicate visibility (default: 'icon')
+  showLiterals: boolean;       // Include literal nodes (default: true)
+  showClasses: boolean;        // Include rdf:type object nodes (default: true)
+  showBlankNodes: boolean;     // Include blank nodes (default: true)
+  showLabels: boolean;         // Display node labels (default: true)
+  physics: boolean;            // Enable force-directed layout (default: true)
+  nodeSize: 'small' | 'medium' | 'large';  // Node radius (default: 'medium')
+}
+```
+
+**Programmatic Configuration:**
+
+```javascript
+class CustomGraphPlugin extends GraphPlugin {
+  constructor(yasr) {
+    super(yasr);
+    // Override defaults
+    this.settings.edgeStyle = 'straight';
+    this.settings.predicateDisplay = 'label';
+    this.settings.nodeSize = 'large';
+    this.settings.compactMode = true;
+  }
+}
+
+Yasgui.Yasr.registerPlugin('customGraph', CustomGraphPlugin);
+```
+
+### Color Scheme
+
+The plugin uses a semantic color scheme:
+
+| Color | Hex Code | Meaning | Example |
+|-------|----------|---------|---------|
+| Light Blue | #97C2FC | URI nodes | `ex:Person`, `ex:Alice` |
+| Light Green | #a6c8a6ff | Literal values | `"Alice"`, `"30"^^xsd:integer` |
+| Light Grey | #c5c5c5ff | Blank nodes | `_:b1`, `_:addr1` |
+| Orange | #e15b13ff | rdf:type objects (classes) | `ex:Person` in `ex:Alice rdf:type ex:Person` |
+
+Colors automatically adjust for dark mode with appropriate contrast ratios.
+
+### Node Icons and Images
+
+The plugin supports custom node visualization using standard Schema.org properties:
+
+**`schema:image` (https://schema.org/image):**
+- Accepts a URL literal or URI
+- Renders the node as a circular image
+- Image is loaded asynchronously
+
+**`schema:icon` (https://schema.org/icon):**
+- Accepts emoji or short text string
+- Displays as the node's label
+- Takes priority over `schema:image`
+
+**Compact Mode Inheritance:**
+
+In compact mode, when class nodes are hidden, resources inherit icons/images from their `rdf:type` class:
+
+1. Direct property on resource (highest priority)
+2. Property on `rdf:type` class
+3. Property on `rdfs:subClassOf` superclass (one hop)
+
+**Example:**
+
+```sparql
+CONSTRUCT {
+  ex:alice  schema:image <https://example.com/alice.png> .
+  ex:alice  rdf:type ex:Person .
+  ex:Person schema:icon "👤" .
+  ex:bob    rdf:type ex:Person .
+}
+WHERE {}
+```
+
+- `ex:alice`: Shows as circular image (direct `schema:image`)
+- `ex:bob`: In compact mode, inherits "👤" from `ex:Person` class
+- `ex:Person`: Hidden in compact mode
+
+### Predicate Icons
+
+When `predicateDisplay` is set to `'icon'`, common predicates display as compact symbols:
+
+**RDF/RDFS:**
+- `rdf:type` → `a`
+- `rdfs:label` → `lbl`
+- `rdfs:comment` → `cmt`
+- `rdfs:subClassOf` → `⊂`
+- `rdfs:subPropertyOf` → `⊆`
+
+**OWL:**
+- `owl:sameAs` → `≡`
+- `owl:equivalentClass` → `≅`
+- `owl:inverseOf` → `⇄`
+- `owl:disjointWith` → `≠`
+
+**SKOS:**
+- `skos:prefLabel` → `★`
+- `skos:altLabel` → `☆`
+- `skos:broader` → `↑`
+- `skos:narrower` → `↓`
+- `skos:related` → `↔`
+
+**Dublin Core / FOAF / Schema.org:**
+- `dcterms:title` → `ttl`
+- `dcterms:creator` → `by`
+- `foaf:knows` → `⟷`
+- `schema:name` → `nm`
+- And many more...
+
+See the [full list](https://github.com/Matdata-eu/yasgui-graph-plugin#predicate-icons) in the repository.
+
+### API Reference
+
+**Plugin Properties:**
+
+```typescript
+class GraphPlugin {
+  // Settings object (auto-persisted to localStorage)
+  settings: GraphPluginSettings;
+  
+  // vis-network instance
+  network: Network;
+  
+  // Current theme ('light' | 'dark')
+  theme: string;
+}
+```
+
+**Plugin Methods:**
+
+```typescript
+// Inherited from Plugin interface
+canHandleResults(): boolean;  // Returns true for CONSTRUCT/DESCRIBE
+draw(): Promise<void>;        // Renders the graph
+destroy(): void;              // Cleanup
+
+// Graph-specific
+updateColors(): void;         // Apply theme colors
+resetView(): void;            // Reset zoom/pan to fit all nodes
+```
+
+### Theme Integration
+
+The Graph Plugin fully integrates with YASGUI's theme system:
+
+1. **Automatic Detection**: Reads `data-theme` attribute from `document.documentElement`
+2. **Dynamic Updates**: Uses `MutationObserver` to detect theme changes
+3. **Smooth Transitions**: All color changes are animated
+4. **CSS Variables**: Leverages YASGUI's CSS custom properties
+
+**Theme-Aware Elements:**
+- Background canvas
+- Node fill and border colors
+- Edge colors
+- Tooltip backgrounds and text
+- Control button styling
+- Settings panel
+
+### Performance Considerations
+
+**Benchmarks:**
+- **< 500 nodes**: Excellent performance, smooth interactions
+- **500-1,000 nodes**: Good performance, slight delay on initial render
+- **> 1,000 nodes**: May experience lag; consider limiting results
+
+**Optimization Tips:**
+
+1. **Use LIMIT in Queries**: Restrict result size
+   ```sparql
+   CONSTRUCT { ?s ?p ?o }
+   WHERE { ?s ?p ?o }
+   LIMIT 500
+   ```
+
+2. **Disable Physics**: Turn off physics after initial layout for faster interactions
+
+3. **Use Compact Mode**: Reduces node count by hiding literals and classes
+
+4. **Filter Node Types**: Use "Show literals", "Show classes", and "Show blank nodes" toggles
+
+### Browser Requirements
+
+- **ES2018+ Support**: Uses modern JavaScript features
+- **Canvas API**: Required for vis-network rendering
+- **localStorage**: For settings persistence
+
+**Tested Browsers:**
+- Chrome/Edge (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+
+### Example Queries
+
+**Basic CONSTRUCT:**
+
+```sparql
+PREFIX ex: <http://example.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+CONSTRUCT {
+  ex:Alice rdf:type ex:Person .
+  ex:Alice ex:knows ex:Bob .
+  ex:Alice ex:name "Alice" .
+  ex:Bob rdf:type ex:Person .
+  ex:Bob ex:name "Bob" .
+}
+WHERE {}
+```
+
+**With Icons:**
+
+```sparql
+PREFIX ex: <http://example.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX schema: <https://schema.org/>
+
+CONSTRUCT {
+  ex:Alice rdf:type ex:Person .
+  ex:Person schema:icon "👤" .
+  ex:Alice ex:worksFor ex:Company .
+  ex:Company rdf:type ex:Organization .
+  ex:Organization schema:icon "🏢" .
+}
+WHERE {}
+```
+
+**DESCRIBE Query:**
+
+```sparql
+PREFIX ex: <http://example.org/>
+
+DESCRIBE ex:Alice ex:Bob
+```
+
+### Troubleshooting
+
+**Plugin tab not showing:**
+- Verify CONSTRUCT or DESCRIBE query type
+- Check browser console for errors
+- Ensure plugin is properly registered
+
+**Empty visualization:**
+- Confirm query returns triples (check "Response" or "Table" tab)
+- Verify RDF structure is valid
+- Check that node filter settings aren't hiding all nodes
+
+**Performance issues:**
+- Reduce result size with LIMIT clause
+- Disable physics simulation
+- Enable compact mode
+- Hide literal nodes if not needed
+
+**Icons/images not displaying:**
+- Verify `schema:image` URL is accessible (check CORS)
+- Ensure `schema:icon` values are valid emoji or short strings
+- Check browser console for image loading errors
+
+### Repository
+
+For complete documentation, examples, and source code, visit:
+**[https://github.com/Matdata-eu/yasgui-graph-plugin](https://github.com/Matdata-eu/yasgui-graph-plugin)**
 
 ---
 
@@ -3356,7 +3592,7 @@ Releases are managed using Changesets:
 - **User Guide**: See `docs/user-guide.md`
 - **SPARQL Specification**: [https://www.w3.org/TR/sparql11-query/](https://www.w3.org/TR/sparql11-query/)
 - **CodeMirror Documentation**: [https://codemirror.net/5/](https://codemirror.net/5/)
-- **Graph Plugin**: [https://github.com/Matdata-eu/yasgui-table-plugin](https://github.com/Matdata-eu/yasgui-table-plugin)
+- **Table Plugin**: [https://github.com/Matdata-eu/yasgui-table-plugin](https://github.com/Matdata-eu/yasgui-table-plugin)
 - **Graph Plugin**: [https://github.com/Matdata-eu/yasgui-graph-plugin](https://github.com/Matdata-eu/yasgui-graph-plugin)
 - **Geo Plugin**: [https://github.com/Thib-G/yasgui-geo-tg](https://github.com/Thib-G/yasgui-geo-tg)
 

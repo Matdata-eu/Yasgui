@@ -1308,12 +1308,6 @@ Displays SELECT query results in an interactive, high-performance table with adv
   - **Datatypes**: Show/hide datatype annotations on literals (e.g., `"42"^^xsd:integer`)
   - **Ellipsis Mode**: Truncate long cell content with "..." (hover for tooltip or click for modal)
   - **Fit Controls**: Fit table to data width or window width
-- **Smart Formatters**: Automatically format cell values based on XSD datatype or variable name suffix:
-  - `xsd:boolean` literals render as ✔ (true) or ✘ (false)
-  - Variable name suffixes trigger Tabulator-style formatters: `*stars` → star rating, `*percent` → progress bar, `*image` → inline image, `*color`/`*colour` → colour swatch, `*description` → multiline text
-  - Can be toggled on/off via the **Smart** toggle in the display controls (enabled by default)
-- **URI Link Prefix**: Set a custom URL prefix that is prepended to every URI link — useful for pointing all URIs to a faceted browser or external lookup tool
-- **Quick Reference**: A `?` icon in the toolbar opens an in-place quick reference card listing all features and keyboard shortcuts
 
 **Controls:**
 
@@ -1321,15 +1315,12 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - **URI Display**: Toggle between abbreviated (prefix:localName) and full URI display
 - **Datatypes**: Toggle visibility of datatype annotations on literal values
 - **Ellipsis**: Toggle content truncation for long values (hover shows tooltip)
-- **Smart**: Toggle smart formatters on/off (XSD datatype & variable-name formatters)
-- **Link Prefix**: Enter a URL prefix to be prepended to every URI link (e.g., `https://browser.example.org/?uri=`); clear the field to restore the default link behaviour
 - **Fit to Data**: Resize columns to show all content without truncation
 - **Fit to Window**: Resize columns proportionally to fill viewport width
 - **Copy as Markdown**: Copy entire table in Markdown format with visual confirmation
 - **Copy as CSV**: Copy entire table as comma-separated values with visual confirmation
 - **Copy as TSV**: Copy entire table as tab-delimited values with visual confirmation
 - **Download CSV**: Access via YASR's download button for CSV file export
-- **Quick Reference (?)**: Opens a modal with a concise overview of all available features
 
 **Best For:**
 
@@ -1338,7 +1329,6 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - Interactive data analysis with sorting and filtering
 - Sharing results in documentation (Markdown/CSV/TSV)
 - Extracting specific data subsets via cell selection
-- Datasets containing ratings, percentages, images, colours, or boolean flags (smart formatters)
 
 **Usage:**
 
@@ -1346,15 +1336,13 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - Table plugin activates automatically for SELECT results
 - Click column headers to sort (click again to reverse)
 - Type in search box to filter rows (highlights matches)
-- Hover over cells to see full content in tooltip; double-click to open a modal with the full value
+- Hover over cells to see full content in tooltip
 - Click and drag to select cell ranges, then Ctrl+C to copy
 - Use copy buttons to export entire table in different formats
-- Use fit controls to optimise column widths
-- Toggle URI/datatype/ellipsis/smart controls to customise the view
-- Enter a link prefix to redirect URI clicks to a custom browser or lookup tool
+- Use fit controls to optimize column widths
+- Toggle URI/datatype/ellipsis controls to customize view
 - Use YASR's download button for CSV file export
-- Preferences (column widths, sort state, display options, link prefix) are saved to localStorage
-- Click **?** in the toolbar for a quick overview of all features
+- Preferences (column widths, sort state, display options) are saved to localStorage
 
 **More Information:**
 Visit the [Table Plugin Repository](https://github.com/Matdata-eu/yasgui-table-plugin) for detailed documentation.
@@ -1411,37 +1399,116 @@ Shows the raw response from the SPARQL endpoint.
 
 ### Graph Plugin
 
-Visualizes RDF data as an interactive node-edge graph.
+Visualizes RDF data as an interactive node-edge graph with advanced customization options.
 
 **Features:**
 
-- Interactive force-directed graph layout
-- Zoom and pan navigation
-- Node and edge highlighting on hover
-- Clickable nodes to explore connections
-- Theme support (light/dark)
-- Export graph visualization
+- **🔷 Interactive Force-Directed Layout**: Automatic physics-based positioning with smooth animations
+- **🎨 Smart Color Coding**: 
+  - 🔵 Light Blue (#97C2FC) = URIs
+  - 🟢 Light Green (#a6c8a6ff) = Literals
+  - ⚪ Light Grey (#c5c5c5ff) = Blank nodes
+  - 🟠 Orange (#e15b13ff) = rdf:type objects (classes)
+- **🖼️ Node Icons & Images**: Display images or emoji icons on nodes via `schema:image` or `schema:icon` properties
+- **📦 Compact Mode**: Hide literal and class nodes; show rdf:type and datatype properties in enhanced tooltips instead
+- **🔍 Advanced Navigation**: 
+  - Mouse wheel zoom
+  - Drag to pan
+  - "Zoom to Fit" button to center the entire graph
+- **✋ Drag & Drop**: Reorganize nodes by dragging (nodes stay pinned after manual drag)
+- **💬 Rich HTML Tooltips**: Display node type, value, namespace, and datatype information on hover
+- **🌓 Theme Support**: Automatic light/dark mode detection with dynamic color switching
+- **⚡ High Performance**: Handles up to 1,000 nodes with <2s render time
+- **♿ Accessibility**: WCAG AA color contrast, keyboard navigation support
 
 **Best For:**
 
-- CONSTRUCT queries
-- DESCRIBE queries
+- CONSTRUCT queries returning RDF triples
+- DESCRIBE queries exploring resource relationships
 - Exploring RDF structure and relationships
 - Visualizing knowledge graphs
+- Understanding complex ontologies
 
-**Usage:**
+**Basic Usage:**
 
-- Execute a CONSTRUCT or DESCRIBE query
-- Select "Graph" from the plugin selector
-- Interact with nodes by clicking and dragging
-- Zoom with mouse wheel
-- Pan by dragging the background
+1. Execute a CONSTRUCT or DESCRIBE query
+2. Select "Graph" from the plugin selector
+3. Navigate:
+   - **Zoom**: Mouse wheel (scroll up = zoom in, scroll down = zoom out)
+   - **Pan**: Click and drag the background
+   - **Fit to View**: Click the "Zoom to Fit" button
+4. Interact:
+   - **Drag Nodes**: Click and drag any node to reposition it
+   - **Tooltips**: Hover over nodes/edges to see detailed information
 
-**Configuration:**
-Graph appearance is automatically themed to match YASGUI's current theme.
+**Configuration Settings:**
+
+Click the **⚙ Settings** button to access these options:
+
+| Setting | Options | Default | Description |
+|---------|---------|---------|-------------|
+| **Compact mode** | on / off | off | Hide literal and class nodes; show in tooltips instead |
+| **Arrow style** | Curved / Straight | Curved | Edge appearance between nodes |
+| **Predicate display** | Label / Icon / Hidden | Icon | Show full URI, compact symbol, or nothing on edges |
+| **Show literals** | on / off | on | Include/exclude literal value nodes |
+| **Show classes** | on / off | on | Include/exclude rdf:type object nodes |
+| **Show blank nodes** | on / off | on | Include/exclude blank nodes |
+| **Show node labels** | on / off | on | Display labels inside nodes |
+| **Enable physics** | on / off | on | Keep force-directed layout simulation running |
+| **Node size** | Small / Medium / Large | Medium | Set the radius of all nodes |
+
+**Predicate Icons:**
+
+When *Predicate display* is set to **Icon**, edges show compact symbols for common predicates:
+
+- **RDF/RDFS**: `a` (rdf:type), `lbl` (rdfs:label), `cmt` (rdfs:comment), `⊂` (rdfs:subClassOf), `⊆` (rdfs:subPropertyOf)
+- **OWL**: `≡` (owl:sameAs), `≅` (owl:equivalentClass), `⇄` (owl:inverseOf), `≠` (owl:disjointWith)
+- **SKOS**: `★` (skos:prefLabel), `☆` (skos:altLabel), `↑` (skos:broader), `↓` (skos:narrower), `↔` (skos:related)
+- **Dublin Core**: `ttl` (dcterms:title), `dsc` (dcterms:description), `crt` (dcterms:created), `by` (dcterms:creator)
+- **FOAF/Schema.org**: `nm` (name), `⟷` (foaf:knows), and more
+
+**Node Icons and Images:**
+
+Display custom icons or images on nodes using:
+
+- **`schema:image`** (`https://schema.org/image`): URL to image (renders as circular image)
+- **`schema:icon`** (`https://schema.org/icon`): Emoji or short string (displays as node label)
+
+**Example:**
+```sparql
+CONSTRUCT {
+  ex:alice schema:image <https://example.com/alice.png> .
+  ex:alice ex:knows ex:bob .
+  ex:Person schema:icon "👤" .
+  ex:alice rdf:type ex:Person .
+}
+WHERE {}
+```
+
+In compact mode, `ex:alice` will inherit the `👤` emoji from the `ex:Person` class.
+
+**Understanding Colors:**
+
+| Color | Meaning | Example |
+|-------|---------|---------|
+| 🔵 Light Blue | URI nodes | `ex:Person`, `ex:Alice` |
+| 🟢 Light Green | Literal values | `"Alice"`, `"30"^^xsd:integer` |
+| ⚪ Light Grey | Blank nodes | `_:b1`, `_:addr1` |
+| 🟠 Orange | rdf:type objects (classes) | `ex:Person` in `ex:Alice rdf:type ex:Person` |
+
+**Performance:**
+
+- Optimal performance: <500 nodes
+- Good performance: 500-1,000 nodes
+- For large graphs: Consider using LIMIT in your SPARQL query
+
+**Persistence:**
+
+All settings are automatically saved to localStorage and persist across browser sessions.
 
 **More Information:**
-Visit the [Graph Plugin Repository](https://github.com/Matdata-eu/yasgui-graph-plugin) for detailed documentation.
+
+Visit the [Graph Plugin Repository](https://github.com/Matdata-eu/yasgui-graph-plugin) for detailed documentation, examples, and troubleshooting.
 
 ### Geo Plugin
 
