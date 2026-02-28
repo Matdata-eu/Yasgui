@@ -3,7 +3,13 @@ import { addClass, removeClass, getAsValue } from "@matdata/yasgui-utils";
 import { TabListEl } from "./TabElements";
 import TabSettingsModal from "./TabSettingsModal";
 import { default as Yasqe, RequestConfig, PlainRequestConfig, PartialConfig as YasqeConfig } from "@matdata/yasqe";
-import { default as Yasr, Parser, Config as YasrConfig, PersistentConfig as YasrPersistentConfig } from "@matdata/yasr";
+import {
+  default as Yasr,
+  Parser,
+  Config as YasrConfig,
+  PersistentConfig as YasrPersistentConfig,
+  PluginQueryOptions as YasrPluginQueryOptions,
+} from "@matdata/yasr";
 import { mapValues, eq, mergeWith, words, deburr, invert } from "lodash-es";
 import * as shareLink from "./linkUtils";
 import EndpointSelect from "./endpointSelect";
@@ -1584,6 +1590,7 @@ WHERE {
         {
           customQuery: query,
           customAccept: "text/turtle",
+          silent: true,
         },
       );
 
@@ -1672,12 +1679,15 @@ WHERE {
         // Add default renderers to the end, to give our custom ones priority.
         ...(Yasr.defaults.errorRenderers || []),
       ],
-      executeQuery: async (query: string, options?: { acceptHeader?: string }) => {
+      executeQuery: async (query: string, options?: YasrPluginQueryOptions) => {
         if (!this.yasqe) throw new Error("No YASQE instance available");
-        return Yasqe.Sparql.executeQuery(this.yasqe, undefined, {
+        const response = await Yasqe.Sparql.executeQuery(this.yasqe, undefined, {
           customQuery: query,
           customAccept: options?.acceptHeader,
+          signal: options?.signal,
+          silent: true,
         });
+        return response;
       },
     };
     // Allow getDownloadFilName to be overwritten by the global config

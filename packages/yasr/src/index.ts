@@ -661,6 +661,8 @@ export type Prefixes = { [prefixLabel: string]: string };
 export interface PluginQueryOptions {
   /** Optional custom Accept header for the request (e.g. "text/turtle"). */
   acceptHeader?: string;
+  /** Optional abort signal for cancelling in-flight background queries. */
+  signal?: AbortSignal;
 }
 
 export interface PluginConfig {

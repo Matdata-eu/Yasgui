@@ -174,6 +174,13 @@ export function getAjaxConfig(
 export interface ExecuteQueryOptions {
   customQuery?: string;
   customAccept?: string;
+  /** Optional external abort signal, useful for plugin-driven background fetches. */
+  signal?: AbortSignal;
+  /**
+   * Execute without emitting Yasqe query lifecycle events.
+   * Useful for background/plugin-driven queries that should not update main UI state.
+   */
+  silent?: boolean;
 }
 
 export async function executeQuery(
@@ -182,13 +189,21 @@ export async function executeQuery(
   options?: ExecuteQueryOptions,
 ): Promise<any> {
   const queryStart = Date.now();
+  const silent = !!options?.silent;
   try {
-    yasqe.emit("queryBefore", yasqe, config);
+    if (!silent) yasqe.emit("queryBefore", yasqe, config);
     const populatedConfig = getAjaxConfig(yasqe, config);
     if (!populatedConfig) {
       return; // Nothing to query
     }
     const abortController = new AbortController();
+    if (options?.signal) {
+      if (options.signal.aborted) {
+        abortController.abort();
+      } else {
+        options.signal.addEventListener("abort", () => abortController.abort(), { once: true });
+      }
+    }
 
     // Use custom accept header if provided, otherwise use the default
     const acceptHeader = options?.customAccept || populatedConfig.accept;
@@ -256,17 +271,22 @@ export async function executeQuery(
       populatedConfig.url = url.toString();
     }
     const request = new Request(populatedConfig.url, fetchOptions);
-    yasqe.emit("query", request, abortController);
+    if (!silent) yasqe.emit("query", request, abortController);
     const response = await fetch(request);
 
     // Await the response content and merge with the `Response` object
+    const content = await response.text();
     const queryResponse = {
       ok: response.ok,
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
       type: response.type,
-      content: await response.text(),
+      content,
+      // Compatibility aliases for plugins that expect fetch-like or axios-like response objects.
+      data: content,
+      json: async () => JSON.parse(content),
+      text: async () => content,
     };
 
     if (!response.ok) {
@@ -278,8 +298,10 @@ export async function executeQuery(
       throw error;
     }
 
-    yasqe.emit("queryResponse", queryResponse, Date.now() - queryStart);
-    yasqe.emit("queryResults", queryResponse.content, Date.now() - queryStart);
+    if (!silent) {
+      yasqe.emit("queryResponse", queryResponse, Date.now() - queryStart);
+      yasqe.emit("queryResults", queryResponse.content, Date.now() - queryStart);
+    }
     return queryResponse;
   } catch (e) {
     if (e instanceof Error && e.message === "Aborted") {
@@ -292,12 +314,12 @@ export async function executeQuery(
         if (e.message.includes("Failed to fetch") || e.message.includes("NetworkError")) {
           enhancedError.message = `${e.message}. The server may have returned an error response (check browser dev tools), but CORS headers are preventing JavaScript from accessing it. Ensure the endpoint returns proper CORS headers even for error responses (Access-Control-Allow-Origin, etc.).`;
         }
-        yasqe.emit("queryResponse", enhancedError, Date.now() - queryStart);
+        if (!silent) yasqe.emit("queryResponse", enhancedError, Date.now() - queryStart);
       } else {
-        yasqe.emit("queryResponse", e, Date.now() - queryStart);
+        if (!silent) yasqe.emit("queryResponse", e, Date.now() - queryStart);
       }
     }
-    yasqe.emit("error", e);
+    if (!silent) yasqe.emit("error", e);
     throw e;
   }
 }

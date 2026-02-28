@@ -1277,8 +1277,21 @@ interface YasrConfig {
 
   // Error renderers
   errorRenderers?: ErrorRenderer[];
+
+  // Optional callback enabling plugins to execute background SPARQL queries
+  executeQuery?: (query: string, options?: PluginQueryOptions) => Promise<any>;
+}
+
+interface PluginQueryOptions {
+  // Custom Accept header for the request (e.g. "text/turtle", "application/sparql-results+json")
+  acceptHeader?: string;
+  // Abort signal for cancelling in-flight background queries
+  signal?: AbortSignal;
 }
 ```
+
+When YASR is used inside a Yasgui `Tab`, the `executeQuery` callback is automatically
+wired up. When using YASR standalone, you must provide your own implementation.
 
 #### YASR Example
 
@@ -2253,6 +2266,42 @@ const plugins = yasr.getPlugins();
 console.log('Available plugins:', Object.keys(plugins));
 ```
 
+##### `executeQuery(query: string, options?: PluginQueryOptions): Promise<any>`
+
+Execute a background SPARQL query on behalf of a plugin. This delegates to the
+`executeQuery` callback in the YASR configuration and returns the raw response
+without replacing the currently displayed results.
+
+The returned response object has the following shape:
+
+```typescript
+{
+  ok: boolean;          // true if HTTP status is 2xx
+  status: number;       // HTTP status code
+  statusText: string;   // HTTP status text
+  headers: Headers;     // Response headers
+  content: string;      // Raw response body
+  data: string;         // Alias for content
+  json(): Promise<any>; // Parse content as JSON
+  text(): Promise<string>; // Return content as string
+}
+```
+
+Plugins can use this to fetch additional data (e.g. expanding a node in a graph
+visualization) without interfering with the main query results.
+
+```javascript
+// Inside a plugin
+const response = await this.yasr.executeQuery(
+  'DESCRIBE <http://example.org/resource>',
+  { acceptHeader: 'text/turtle' }
+);
+const turtle = await response.text();
+```
+
+If no `executeQuery` callback is configured, the returned Promise rejects with
+an error.
+
 ##### `download(filename?: string): void`
 
 Download results using current plugin's download method.
@@ -2519,6 +2568,41 @@ interface Plugin<Options = any> {
   // Provide download functionality
   download?(filename?: string): DownloadInfo | undefined;
 }
+
+#### Background Queries from Plugins
+
+Plugins can execute additional SPARQL queries via `this.yasr.executeQuery()`
+without overwriting the currently displayed results. This is useful for
+interactive features like expanding a node in a graph visualization.
+
+The query runs in **silent mode** — no YASQE lifecycle events (`queryBefore`,
+`queryResponse`, etc.) are emitted and `yasr.setResponse()` is not called, so
+the visible results remain unchanged.
+
+```typescript
+// Example: fetch additional data when a user interacts with a result
+async expandNode(uri: string): Promise<void> {
+  const controller = new AbortController();
+
+  const response = await this.yasr.executeQuery(
+    `DESCRIBE <${uri}>`,
+    {
+      acceptHeader: 'text/turtle',
+      signal: controller.signal,
+    }
+  );
+
+  const body = await response.text();
+  // … parse and merge into the current visualization
+}
+```
+
+**Response shape** — see [`executeQuery()` method](#executequeryquery-string-options-pluginqueryoptions-promiseany)
+for the full response object description.
+
+**Cancellation** — pass an `AbortSignal` via `options.signal` to cancel
+in-flight requests (e.g. when the user navigates away or triggers a new
+expansion before the previous one finishes).
 
 interface DownloadInfo {
   contentType: string;
