@@ -1276,7 +1276,19 @@ const yasr = new Yasr(document.getElementById('yasr'), {
   plugins: {
     table: {
       priority: 10,
-      pageSize: 50
+      // Table plugin options (see @matdata/yasgui-table-plugin)
+      displayConfig: {
+        uriDisplayMode: 'abbreviated',  // 'full' | 'abbreviated'
+        showDatatypes: false,           // Show XSD datatype annotations
+        ellipsisMode: false,            // Truncate long cell content
+        smartFormatters: true,          // Auto-format by XSD type & variable name suffix
+        uriLinkPrefix: '',              // Prepend a URL prefix to every URI link
+      },
+      persistenceEnabled: true,
+      // Transform a URI into a custom href (overridden by user-set uriLinkPrefix)
+      uriHrefAdapter: (uri) => `https://browser.example.org/?uri=${encodeURIComponent(uri)}`,
+      // Transform an entire binding set before rendering (e.g. add computed columns)
+      bindingSetAdapter: (bindingSet) => bindingSet,
     },
     graph: {
       priority: 5

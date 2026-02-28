@@ -1308,6 +1308,12 @@ Displays SELECT query results in an interactive, high-performance table with adv
   - **Datatypes**: Show/hide datatype annotations on literals (e.g., `"42"^^xsd:integer`)
   - **Ellipsis Mode**: Truncate long cell content with "..." (hover for tooltip or click for modal)
   - **Fit Controls**: Fit table to data width or window width
+- **Smart Formatters**: Automatically format cell values based on XSD datatype or variable name suffix:
+  - `xsd:boolean` literals render as ✔ (true) or ✘ (false)
+  - Variable name suffixes trigger Tabulator-style formatters: `*stars` → star rating, `*percent` → progress bar, `*image` → inline image, `*color`/`*colour` → colour swatch, `*description` → multiline text
+  - Can be toggled on/off via the **Smart** toggle in the display controls (enabled by default)
+- **URI Link Prefix**: Set a custom URL prefix that is prepended to every URI link — useful for pointing all URIs to a faceted browser or external lookup tool
+- **Quick Reference**: A `?` icon in the toolbar opens an in-place quick reference card listing all features and keyboard shortcuts
 
 **Controls:**
 
@@ -1315,12 +1321,15 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - **URI Display**: Toggle between abbreviated (prefix:localName) and full URI display
 - **Datatypes**: Toggle visibility of datatype annotations on literal values
 - **Ellipsis**: Toggle content truncation for long values (hover shows tooltip)
+- **Smart**: Toggle smart formatters on/off (XSD datatype & variable-name formatters)
+- **Link Prefix**: Enter a URL prefix to be prepended to every URI link (e.g., `https://browser.example.org/?uri=`); clear the field to restore the default link behaviour
 - **Fit to Data**: Resize columns to show all content without truncation
 - **Fit to Window**: Resize columns proportionally to fill viewport width
 - **Copy as Markdown**: Copy entire table in Markdown format with visual confirmation
 - **Copy as CSV**: Copy entire table as comma-separated values with visual confirmation
 - **Copy as TSV**: Copy entire table as tab-delimited values with visual confirmation
 - **Download CSV**: Access via YASR's download button for CSV file export
+- **Quick Reference (?)**: Opens a modal with a concise overview of all available features
 
 **Best For:**
 
@@ -1329,6 +1338,7 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - Interactive data analysis with sorting and filtering
 - Sharing results in documentation (Markdown/CSV/TSV)
 - Extracting specific data subsets via cell selection
+- Datasets containing ratings, percentages, images, colours, or boolean flags (smart formatters)
 
 **Usage:**
 
@@ -1336,13 +1346,15 @@ Displays SELECT query results in an interactive, high-performance table with adv
 - Table plugin activates automatically for SELECT results
 - Click column headers to sort (click again to reverse)
 - Type in search box to filter rows (highlights matches)
-- Hover over cells to see full content in tooltip
+- Hover over cells to see full content in tooltip; double-click to open a modal with the full value
 - Click and drag to select cell ranges, then Ctrl+C to copy
 - Use copy buttons to export entire table in different formats
-- Use fit controls to optimize column widths
-- Toggle URI/datatype/ellipsis controls to customize view
+- Use fit controls to optimise column widths
+- Toggle URI/datatype/ellipsis/smart controls to customise the view
+- Enter a link prefix to redirect URI clicks to a custom browser or lookup tool
 - Use YASR's download button for CSV file export
-- Preferences (column widths, sort state, display options) are saved to localStorage
+- Preferences (column widths, sort state, display options, link prefix) are saved to localStorage
+- Click **?** in the toolbar for a quick overview of all features
 
 **More Information:**
 Visit the [Table Plugin Repository](https://github.com/Matdata-eu/yasgui-table-plugin) for detailed documentation.
