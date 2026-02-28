@@ -36,6 +36,10 @@
     - [Settings Modal](#settings-modal)
     - [SPARQL Endpoints Management](#sparql-endpoints-management)
     - [Managed Queries and Workspaces](#managed-queries-and-workspaces)
+      - [Workspaces](#workspaces)
+        - [SPARQL workspaces](#sparql-workspaces)
+        - [Git based workspaces](#git-based-workspaces)
+      - [Managed queries](#managed-queries)
     - [Query History and Persistence](#query-history-and-persistence)
     - [Share Queries](#share-queries)
   - [Plugins](#plugins)
@@ -1418,7 +1422,6 @@ Visualizes RDF data as an interactive node-edge graph with advanced customizatio
 - **✋ Drag & Drop**: Reorganize nodes by dragging (nodes stay pinned after manual drag)
 - **💬 Rich HTML Tooltips**: Display node type, value, namespace, and datatype information on hover
 - **🌓 Theme Support**: Automatic light/dark mode detection with dynamic color switching
-- **⚡ High Performance**: Handles up to 1,000 nodes with <2s render time
 - **♿ Accessibility**: WCAG AA color contrast, keyboard navigation support
 
 **Best For:**
@@ -1498,7 +1501,6 @@ In compact mode, `ex:alice` will inherit the `👤` emoji from the `ex:Person` c
 
 **Performance:**
 
-- Optimal performance: <500 nodes
 - Good performance: 500-1,000 nodes
 - For large graphs: Consider using LIMIT in your SPARQL query
 

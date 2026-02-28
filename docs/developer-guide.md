@@ -3075,7 +3075,6 @@ const yasgui = new Yasgui(document.getElementById('yasgui'));
 - **✋ Drag & Drop**: Reorganize nodes with automatic pinning
 - **💬 Rich HTML Tooltips**: Detailed node/edge information on hover  
 - **🌓 Theme Support**: Automatic light/dark mode with dynamic color switching
-- **⚡ Performance**: Handles up to 1,000 nodes with <2s render time
 - **♿ Accessibility**: WCAG AA color contrast and keyboard navigation
 
 ### Configuration Options
