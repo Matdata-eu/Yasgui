@@ -24,6 +24,12 @@ export interface WorkspaceBackend {
   renameQuery?(queryId: string, newLabel: string): Promise<void>;
 
   /**
+   * Optional: Move a query to a different folder.
+   * Returns the new query ID (may differ from the original for Git backends where the ID encodes the path).
+   */
+  moveQuery?(queryId: string, newFolderId: string): Promise<string>;
+
+  /**
    * Optional: Delete a query and its version history.
    * Implementations may not support this (e.g., some Git provider clients).
    */

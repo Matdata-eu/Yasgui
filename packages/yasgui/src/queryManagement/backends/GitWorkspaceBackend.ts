@@ -69,6 +69,25 @@ export default class GitWorkspaceBackend implements WorkspaceBackend {
     return this.client.deleteQuery(this.config, _queryId);
   }
 
+  async moveQuery(queryId: string, newFolderId: string): Promise<string> {
+    if (!this.client) throw this.missingClientError();
+
+    const parts = queryId.split("/").filter(Boolean);
+    const filename = parts[parts.length - 1] || queryId;
+    const folder = newFolderId.replace(/^\/+|\/+$/g, "");
+
+    const newPath = folder ? `${folder}/${filename}` : filename;
+    if (newPath === queryId) return queryId;
+
+    const read = await this.client.readQuery(this.config, queryId);
+    await this.client.writeQuery(this.config, newPath, read.queryText, {
+      message: `Move ${filename} to ${folder || "(root)"}`,
+    });
+    await this.client.deleteQuery(this.config, queryId);
+
+    return newPath;
+  }
+
   async renameQuery(queryId: string, newLabel: string): Promise<void> {
     if (!this.client) throw this.missingClientError();
 

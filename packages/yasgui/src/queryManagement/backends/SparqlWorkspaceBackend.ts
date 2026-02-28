@@ -422,6 +422,75 @@ WHERE  { OPTIONAL { ${iri(mqIri)} rdfs:label ?oldLabel . } }
     await this.sparqlUpdate(update);
   }
 
+  async moveQuery(queryId: string, newFolderId: string): Promise<string> {
+    const mqIriValue = this.resolveManagedQueryIri(queryId);
+    const workspaceIri = this.config.workspaceIri;
+    const folder = (newFolderId || "").replace(/^\/+|\/+$/g, "");
+
+    const newContainerIriValue = folder ? mintFolderIri(workspaceIri, folder) : workspaceIri;
+
+    // Fetch the current container to detect no-ops.
+    const currentContainerIriValue = await (async () => {
+      const q = `
+PREFIX yasgui:  <https://matdata.eu/ns/yasgui#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?container WHERE {
+  ${iri(mqIriValue)} a yasgui:ManagedQuery ;
+    dcterms:isPartOf ?container .
+}
+LIMIT 1`;
+      const res = await this.sparqlQuery<SparqlJsonResults>(q);
+      const row = this.getBindings(res)[0];
+      const container = row?.container?.value;
+      if (!container) throw new WorkspaceBackendError("NOT_FOUND", "Query not found");
+      return container;
+    })();
+
+    if (currentContainerIriValue === newContainerIriValue) return queryId;
+
+    // Ensure each ancestor folder exists in the store.
+    if (folder) {
+      const parts = splitPath(folder);
+      const folderTriples: string[] = [];
+      for (let i = 0; i < parts.length; i++) {
+        const subPath = parts.slice(0, i + 1).join("/");
+        const folderIriValue = mintFolderIri(workspaceIri, subPath);
+        const folderLabel = parts[i];
+        folderTriples.push(`${iri(folderIriValue)} a <https://matdata.eu/ns/yasgui#WorkspaceFolder> ;`);
+        folderTriples.push(`  <http://www.w3.org/2004/02/skos/core#inScheme> ${iri(workspaceIri)} ;`);
+        folderTriples.push(`  <http://www.w3.org/2000/01/rdf-schema#label> ${sparqlStringLiteral(folderLabel)} .`);
+
+        if (i > 0) {
+          const parentPath = parts.slice(0, i).join("/");
+          const parentIri = mintFolderIri(workspaceIri, parentPath);
+          folderTriples.push(
+            `${iri(folderIriValue)} <http://www.w3.org/2004/02/skos/core#broader> ${iri(parentIri)} .`,
+          );
+        }
+      }
+      await this.sparqlUpdate(`
+PREFIX yasgui: <https://matdata.eu/ns/yasgui#>
+
+INSERT DATA {
+  ${iri(workspaceIri)} a yasgui:Workspace .
+  ${folderTriples.join("\n  ")}
+}
+`);
+    }
+
+    // Update dcterms:isPartOf to point to the new container.
+    await this.sparqlUpdate(`
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+DELETE { ${iri(mqIriValue)} dcterms:isPartOf ${iri(currentContainerIriValue)} . }
+INSERT { ${iri(mqIriValue)} dcterms:isPartOf ${iri(newContainerIriValue)} . }
+WHERE  { ${iri(mqIriValue)} dcterms:isPartOf ${iri(currentContainerIriValue)} . }
+`);
+
+    return queryId;
+  }
+
   async deleteQuery(queryId: string): Promise<void> {
     const mqIri = this.resolveManagedQueryIri(queryId);
     const update = `

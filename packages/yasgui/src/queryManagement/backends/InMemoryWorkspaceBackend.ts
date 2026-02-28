@@ -152,6 +152,23 @@ export default class InMemoryWorkspaceBackend implements WorkspaceBackend {
     return { queryText: found.queryText, versionTag: found.id };
   }
 
+  async moveQuery(queryId: string, newFolderId: string): Promise<string> {
+    const versions = this.versionsByQueryId.get(queryId);
+    if (!versions || versions.length === 0) throw new WorkspaceBackendError("NOT_FOUND", "Query not found");
+
+    const filename = basename(queryId);
+    const folder = normalizeFolderId(newFolderId);
+    const newId = folder ? `${folder}/${filename}` : filename;
+    if (newId === queryId) return queryId;
+
+    if (this.versionsByQueryId.has(newId))
+      throw new WorkspaceBackendError("CONFLICT", "A query already exists at this path");
+
+    this.versionsByQueryId.delete(queryId);
+    this.versionsByQueryId.set(newId, versions);
+    return newId;
+  }
+
   async renameQuery(queryId: string, newLabel: string): Promise<void> {
     const trimmed = newLabel.trim();
     if (!trimmed) throw new WorkspaceBackendError("UNKNOWN", "New name is required");

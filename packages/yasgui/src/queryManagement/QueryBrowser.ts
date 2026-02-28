@@ -8,6 +8,7 @@ import { getEndpointToAutoSwitch } from "./openManagedQuery";
 import { hashQueryText } from "./textHash";
 import type { BackendType, VersionRef, ManagedTabMetadata } from "./types";
 import { normalizeQueryFilename } from "./normalizeQueryFilename";
+import SaveManagedQueryModal from "./SaveManagedQueryModal";
 
 import "./QueryBrowser.scss";
 
@@ -47,6 +48,7 @@ export default class QueryBrowser {
   private lastRenderedSignature: string | undefined;
 
   private lastPointerPos: { x: number; y: number } | undefined;
+  private folderPickerModal?: SaveManagedQueryModal;
 
   private entrySignature(entry: FolderEntry): string {
     const parent = entry.parentId || "";
@@ -710,6 +712,76 @@ export default class QueryBrowser {
         }
       });
       actions.appendChild(renameBtn);
+    }
+
+    if (backend.moveQuery) {
+      const moveBtn = document.createElement("button");
+      moveBtn.type = "button";
+      addClass(moveBtn, "yasgui-query-browser__action");
+      moveBtn.textContent = "Move";
+      moveBtn.setAttribute("aria-label", `Move ${entry.label} to a different folder`);
+      moveBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentFolderPath = entry.parentId || "";
+        if (!this.folderPickerModal) this.folderPickerModal = new SaveManagedQueryModal(this.yasgui);
+        const newFolderPath = await this.folderPickerModal.showFolderPickerOnly(
+          this.selectedWorkspaceId!,
+          currentFolderPath,
+        );
+        if (newFolderPath === undefined) return;
+        if (newFolderPath === currentFolderPath) return;
+
+        // Show loading state
+        const originalText = moveBtn.textContent;
+        moveBtn.disabled = true;
+        moveBtn.textContent = "Moving…";
+        addClass(moveBtn, "loading");
+
+        try {
+          const newQueryId = await backend.moveQuery!(entry.id, newFolderPath);
+
+          // For git workspaces: update any already-open managed tabs referencing the old path.
+          if (backend.type === "git" && newQueryId !== entry.id) {
+            for (const tab of Object.values(this.yasgui._tabs)) {
+              const meta = (tab as any).getManagedQueryMetadata?.() as ManagedTabMetadata | undefined;
+              if (!meta) continue;
+              if (meta.backendType !== "git") continue;
+              if (meta.workspaceId !== this.selectedWorkspaceId) continue;
+              const currentPath = (meta.queryRef as any)?.path as string | undefined;
+              if (currentPath !== entry.id) continue;
+
+              try {
+                const read = await backend.readQuery(newQueryId);
+                const lastSavedTextHash = hashQueryText(read.queryText);
+                const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
+
+                (tab as any).setManagedQueryMetadata?.({
+                  ...meta,
+                  queryRef: { ...(meta.queryRef as any), path: newQueryId },
+                  lastSavedTextHash,
+                  lastSavedVersionRef,
+                });
+              } catch {
+                // Best-effort: if refreshing metadata fails, the Query Browser still reflects the move.
+              }
+            }
+          }
+
+          this.queryPreviewById.delete(entry.id);
+          this.folderEntriesById.clear();
+          this.invalidateRenderCache();
+          await this.refresh();
+        } catch (err) {
+          // Restore button state on error
+          moveBtn.disabled = false;
+          moveBtn.textContent = originalText || "Move";
+          removeClass(moveBtn, "loading");
+          window.alert(asWorkspaceBackendError(err).message);
+        }
+      });
+      actions.appendChild(moveBtn);
     }
 
     if (backend.deleteQuery) {
