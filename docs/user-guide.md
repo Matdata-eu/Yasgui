@@ -1408,6 +1408,7 @@ Visualizes RDF data as an interactive node-edge graph with advanced customizatio
 **Features:**
 
 - **🔷 Interactive Force-Directed Layout**: Automatic physics-based positioning with smooth animations
+- **� Node Expansion**: Double-click any URI node to fetch and merge related triples via DESCRIBE queries
 - **🎨 Smart Color Coding**: 
   - 🔵 Light Blue (#97C2FC) = URIs
   - 🟢 Light Green (#a6c8a6ff) = Literals
@@ -1498,6 +1499,19 @@ In compact mode, `ex:alice` will inherit the `👤` emoji from the `ex:Person` c
 | 🟢 Light Green | Literal values | `"Alice"`, `"30"^^xsd:integer` |
 | ⚪ Light Grey | Blank nodes | `_:b1`, `_:addr1` |
 | 🟠 Orange | rdf:type objects (classes) | `ex:Person` in `ex:Alice rdf:type ex:Person` |
+
+**Double click expansion:**
+
+The graph plugin supports **interactive node expansion** via double-clicking. This allows you to progressively explore RDF graphs by fetching additional triples for any URI node without redrawing the entire graph.
+
+How It Works:
+
+1. **Double-click a blue URI node** in the graph
+2. The node's border turns **orange and thickens** (loading state)
+3. A `DESCRIBE <uri>` query is sent to the SPARQL endpoint
+4. **New triples are merged** into the existing graph
+5. Node's border returns to normal width with **thicker border (3px) to indicate expansion**
+6. Graph layout and zoom level are **preserved**
 
 **Performance:**
 
