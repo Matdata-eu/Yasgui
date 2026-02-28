@@ -106,6 +106,7 @@ This comprehensive guide covers everything developers need to know to integrate,
       - [Step 4: Add Styling](#step-4-add-styling)
     - [Plugin Example: Chart Plugin](#plugin-example-chart-plugin)
     - [Plugin Best Practices](#plugin-best-practices)
+    - [Executing Background Queries from a Plugin](#executing-background-queries-from-a-plugin)
     - [Theme Support for Plugins](#theme-support-for-plugins)
       - [Implementation Steps](#implementation-steps)
     - [Distributing Your Plugin](#distributing-your-plugin)
@@ -2847,6 +2848,96 @@ export default class ChartPlugin implements Plugin {
 6. **Documentation**: Provide clear documentation and examples
 7. **TypeScript**: Use TypeScript for better type safety
 8. **Testing**: Write unit tests for your plugin
+
+### Executing Background Queries from a Plugin
+
+Some plugins need to run additional SPARQL queries at runtime — for example, a graph-visualization plugin that expands a node on click by running a `DESCRIBE` or `CONSTRUCT` query.
+
+YASR provides a `executeQuery` method for exactly this purpose.  When YASR is embedded inside YASGUI, this method is automatically wired up to the current SPARQL endpoint (including any configured authentication).
+
+#### API
+
+```typescript
+// Execute a SPARQL query and receive the raw response
+yasr.executeQuery(query: string, options?: PluginQueryOptions): Promise<any>
+
+interface PluginQueryOptions {
+  /** Custom Accept header, e.g. "text/turtle" or "application/sparql-results+json" */
+  acceptHeader?: string;
+}
+```
+
+The returned Promise resolves to the raw response object (same format that `yasr.setResponse()` accepts).  The method rejects if no `executeQuery` callback was configured (e.g. when YASR is used standalone without YASGUI).
+
+#### Example: Graph Plugin Node Expansion
+
+```typescript
+import { Plugin } from '@matdata/yasr';
+
+export default class GraphPlugin implements Plugin {
+  private yasr: Yasr;
+  public priority = 10;
+  public label = 'Graph';
+
+  constructor(yasr: Yasr) {
+    this.yasr = yasr;
+  }
+
+  // ... other required methods ...
+
+  /**
+   * Called when the user clicks a node — runs a DESCRIBE query to
+   * fetch neighbours without replacing the existing Yasr results.
+   */
+  async expandNode(uri: string): Promise<void> {
+    const query = `DESCRIBE <${uri}>`;
+
+    try {
+      const response = await this.yasr.executeQuery(query, {
+        acceptHeader: 'text/turtle',
+      });
+      // Process `response` and update your graph visualization
+      this.addTriplesToGraph(response);
+    } catch (err) {
+      console.error('Background query failed:', err);
+    }
+  }
+
+  private addTriplesToGraph(response: any): void {
+    // Parse response and add new nodes/edges to the visualization
+  }
+
+  canHandleResults(): boolean { /* ... */ return false; }
+  draw(): void { /* ... */ }
+  getIcon(): Element | undefined { return undefined; }
+}
+```
+
+#### Standalone YASR Usage
+
+When YASR is used **without** YASGUI you must supply the `executeQuery` callback yourself:
+
+```typescript
+const yasr = new Yasr(element, {
+  executeQuery: async (query, options) => {
+    const response = await fetch('https://dbpedia.org/sparql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': options?.acceptHeader ?? 'application/sparql-results+json',
+      },
+      body: new URLSearchParams({ query }),
+    });
+    return {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      content: await response.text(),
+    };
+  },
+});
+```
 
 ### Theme Support for Plugins
 

@@ -1672,6 +1672,13 @@ WHERE {
         // Add default renderers to the end, to give our custom ones priority.
         ...(Yasr.defaults.errorRenderers || []),
       ],
+      executeQuery: async (query: string, options?: { acceptHeader?: string }) => {
+        if (!this.yasqe) throw new Error("No YASQE instance available");
+        return Yasqe.Sparql.executeQuery(this.yasqe, undefined, {
+          customQuery: query,
+          customAccept: options?.acceptHeader,
+        });
+      },
     };
     // Allow getDownloadFilName to be overwritten by the global config
     if (yasrConf.getDownloadFileName === undefined) {

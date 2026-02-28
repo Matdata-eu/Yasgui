@@ -601,6 +601,25 @@ export class Yasr extends EventEmitter {
     this.storeResponse();
   }
 
+  /**
+   * Execute a background SPARQL query from within a plugin.
+   *
+   * This delegates to the `executeQuery` callback supplied in the Yasr
+   * configuration (typically wired up by the Yasgui `Tab`).  The raw
+   * response is returned so the calling plugin can process it without
+   * replacing the current result display.
+   *
+   * @param query    The SPARQL query string to execute.
+   * @param options  Optional execution options (e.g. a custom Accept header).
+   * @returns A Promise that resolves to the raw query response.
+   */
+  public executeQuery(query: string, options?: PluginQueryOptions): Promise<any> {
+    if (this.config.executeQuery) {
+      return this.config.executeQuery(query, options);
+    }
+    return Promise.reject(new Error("No executeQuery handler configured on this Yasr instance"));
+  }
+
   private initializePlugins() {
     for (const plugin in this.config.plugins) {
       if (!this.config.plugins[plugin]) continue; //falsy value, so assuming it should be disabled
@@ -635,6 +654,15 @@ export class Yasr extends EventEmitter {
 }
 
 export type Prefixes = { [prefixLabel: string]: string };
+
+/**
+ * Options for executing a background query from a plugin.
+ */
+export interface PluginQueryOptions {
+  /** Optional custom Accept header for the request (e.g. "text/turtle"). */
+  acceptHeader?: string;
+}
+
 export interface PluginConfig {
   dynamicConfig?: any;
   staticConfig?: any;
@@ -660,6 +688,18 @@ export interface Config {
    * overwrite or explicitly call previously added or default ones.
    */
   errorRenderers?: ((error: Parser.ErrorSummary) => Promise<HTMLElement | undefined>)[];
+
+  /**
+   * Optional callback that allows plugins to execute a background SPARQL query.
+   * When set (e.g. by the Yasgui Tab), plugins can call `yasr.executeQuery(queryString)`
+   * to run an arbitrary query and receive the raw response, independently of the
+   * main query editor.
+   *
+   * @param query  The SPARQL query string to execute.
+   * @param options  Optional execution options (e.g. a custom Accept header).
+   * @returns A Promise that resolves to the raw query response.
+   */
+  executeQuery?: (query: string, options?: PluginQueryOptions) => Promise<any>;
 }
 
 export function registerPlugin(name: string, plugin: typeof Plugin, enable = true) {
