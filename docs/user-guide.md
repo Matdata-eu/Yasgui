@@ -983,7 +983,7 @@ This feature is designed for **power users** who want to:
 1. Open **Settings** (⚙) for a tab
 2. Go to the **Workspaces** tab
 3. Add one or more workspaces (Git or SPARQL) and choose a **Default workspace**
-4. (Optional) Click **Validate access** to test the configuration
+4. (Optional) Click **Validate access** to test the configuration and show how many managed queries are already saved in that workspace
 
 Note: the recommended type of workspace is SPARQL. It is more feature rich (allows to save endpoints and descriptions) and is much faster. The Git based workspace uses HTTP calls to the Git provider API, several calls are required to read/write queries, which makes it slower.
 
