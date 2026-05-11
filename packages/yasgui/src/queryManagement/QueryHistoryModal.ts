@@ -144,15 +144,15 @@ export default class QueryHistoryModal {
       if (e.target === this.overlayEl && this.mouseDownOnOverlay) this.close();
       this.mouseDownOnOverlay = false;
     });
-
-    document.addEventListener("keydown", (e) => {
-      if (!this.overlayEl.classList.contains("open")) return;
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        this.close();
-      }
-    });
   }
+
+  /** Bound keydown handler stored so it can be removed on close. */
+  private readonly onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      this.close();
+    }
+  };
 
   /**
    * Show the history modal for the given managed query.
@@ -187,6 +187,7 @@ export default class QueryHistoryModal {
 
     document.body.appendChild(this.overlayEl);
     addClass(this.overlayEl, "open");
+    document.addEventListener("keydown", this.onKeyDown);
 
     void this.loadVersions();
 
@@ -196,6 +197,7 @@ export default class QueryHistoryModal {
   }
 
   private close() {
+    document.removeEventListener("keydown", this.onKeyDown);
     removeClass(this.overlayEl, "open");
     this.overlayEl.remove();
     const resolve = this.resolve;
@@ -337,10 +339,8 @@ export default class QueryHistoryModal {
   }
 
   private formatDate(isoDate: string): string {
-    try {
-      return new Date(isoDate).toLocaleString();
-    } catch {
-      return isoDate;
-    }
+    const d = new Date(isoDate);
+    if (isNaN(d.getTime())) return isoDate;
+    return d.toLocaleString();
   }
 }
