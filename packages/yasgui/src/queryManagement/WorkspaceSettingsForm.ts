@@ -4,6 +4,7 @@ import { addClass } from "@matdata/yasgui-utils";
 import { validateWorkspaceConfig } from "./validateWorkspaceConfig";
 import { getWorkspaceBackend } from "./backends/getWorkspaceBackend";
 import { asWorkspaceBackendError } from "./backends/errors";
+import { countManagedQueries } from "./countManagedQueries";
 
 export interface WorkspaceSettingsFormOptions {
   persistentConfig: PersistentConfig;
@@ -202,7 +203,9 @@ ORDER BY ?workspace`;
           status.textContent = "Validating…";
           const backend = getWorkspaceBackend(workspace, { persistentConfig: this.options.persistentConfig });
           await backend.validateAccess();
-          status.textContent = "✓ Access OK";
+          const queryCount = await countManagedQueries(backend);
+          const queryLabel = queryCount === 1 ? "query" : "queries";
+          status.textContent = `✓ Access OK (${queryCount} saved managed ${queryLabel})`;
         } catch (e) {
           const err = asWorkspaceBackendError(e);
           status.textContent = err.message;
