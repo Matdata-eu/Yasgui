@@ -2058,6 +2058,19 @@ export default class TabSettingsModal {
           { keys: ["Esc"], description: "Exit fullscreen mode" },
         ],
       },
+      {
+        category: "YASGUI Tabs",
+        shortcuts: [
+          {
+            keys: ["Ctrl+Alt+Tab", "Cmd+Alt+Tab"],
+            description: "Switch to previously used YASGUI tab",
+          },
+          {
+            keys: ["Ctrl+Alt+Shift+Tab", "Cmd+Alt+Shift+Tab"],
+            description: "Switch to next YASGUI tab in recently used order",
+          },
+        ],
+      },
     ];
 
     shortcutsData.forEach((section) => {

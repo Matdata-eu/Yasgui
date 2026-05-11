@@ -436,6 +436,13 @@ export class Tab extends EventEmitter {
   private handleKeyDown = (event: KeyboardEvent) => {
     if (event.defaultPrevented) return;
 
+    const isTabSwitchShortcut = (event.ctrlKey || event.metaKey) && event.altKey && event.key === "Tab";
+    if (isTabSwitchShortcut) {
+      event.preventDefault();
+      this.yasgui.selectRecentlyUsedTab(event.shiftKey ? "forward" : "backward");
+      return;
+    }
+
     const saveModalOpen = !!document.querySelector(".saveManagedQueryModalOverlay.open");
     if (!saveModalOpen) {
       const isSaveShortcut =
