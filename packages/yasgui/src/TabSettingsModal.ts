@@ -848,7 +848,12 @@ export default class TabSettingsModal {
 
   private renderEndpointsList(container: HTMLElement) {
     container.innerHTML = "";
-    const configs = this.tab.yasgui.persistentConfig.getEndpointConfigs();
+    const configs = [...this.tab.yasgui.persistentConfig.getEndpointConfigs()];
+    configs.sort((a, b) => {
+      const aKey = (a.label || a.endpoint).toLowerCase();
+      const bKey = (b.label || b.endpoint).toLowerCase();
+      return aKey.localeCompare(bKey);
+    });
 
     // Create table (even if empty, we'll show add form)
     const table = document.createElement("table");
