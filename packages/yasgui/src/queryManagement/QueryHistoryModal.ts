@@ -340,7 +340,7 @@ export default class QueryHistoryModal {
 
   private formatDate(isoDate: string): string {
     const d = new Date(isoDate);
-    if (isNaN(d.getTime())) return isoDate;
+    if (isNaN(d.getTime())) return "Unknown date";
     return d.toLocaleString();
   }
 }
