@@ -359,14 +359,14 @@ ORDER BY ?workspace`;
     const typeSelect = document.createElement("select");
     typeSelect.setAttribute("aria-label", "Workspace type");
     addClass(typeSelect, "settingsSelect");
-    const optGit = document.createElement("option");
-    optGit.value = "git";
-    optGit.textContent = "Git";
     const optSparql = document.createElement("option");
     optSparql.value = "sparql";
     optSparql.textContent = "SPARQL";
-    typeSelect.appendChild(optGit);
+    const optGit = document.createElement("option");
+    optGit.value = "git";
+    optGit.textContent = "Git";
     typeSelect.appendChild(optSparql);
+    typeSelect.appendChild(optGit);
 
     if (existing) {
       typeSelect.value = existing.type;
