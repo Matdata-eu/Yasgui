@@ -795,4 +795,9 @@ LIMIT 1`;
       description: row.description?.value,
     };
   }
+
+  getQueryUri(queryId: string): string | undefined {
+    // In a SPARQL workspace the queryId is the managed-query IRI itself.
+    return queryId || undefined;
+  }
 }

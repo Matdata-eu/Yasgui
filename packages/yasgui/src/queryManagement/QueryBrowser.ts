@@ -50,6 +50,9 @@ export default class QueryBrowser {
   private lastPointerPos: { x: number; y: number } | undefined;
   private folderPickerModal?: SaveManagedQueryModal;
 
+  private queryContextMenuEl?: HTMLElement;
+  private queryContextMenuCleanup?: () => void;
+
   private entrySignature(entry: FolderEntry): string {
     const parent = entry.parentId || "";
     // Include label + parent so renames/moves force a re-render.
@@ -235,6 +238,7 @@ export default class QueryBrowser {
     removeClass(this.rootEl, "open");
     this.rootEl.setAttribute("aria-hidden", "true");
     this.rootEl.style.display = "none";
+    this.closeQueryContextMenu();
 
     if (this.openerEl) {
       this.openerEl.focus();
@@ -571,22 +575,367 @@ export default class QueryBrowser {
     tab.setManagedQueryMetadata(managedMetadata);
   }
 
-  private addQueryRowActions(row: HTMLElement, backend: ReturnType<typeof getWorkspaceBackend>, entry: FolderEntry) {
-    const actions = document.createElement("span");
-    addClass(actions, "yasgui-query-browser__actions");
+  private closeQueryContextMenu() {
+    if (this.queryContextMenuEl) {
+      this.queryContextMenuEl.remove();
+      this.queryContextMenuEl = undefined;
+    }
+    if (this.queryContextMenuCleanup) {
+      this.queryContextMenuCleanup();
+      this.queryContextMenuCleanup = undefined;
+    }
+  }
 
-    if (entry.kind === "folder") {
-      if (backend.renameFolder) {
-        const renameBtn = document.createElement("button");
-        renameBtn.type = "button";
-        addClass(renameBtn, "yasgui-query-browser__action");
-        renameBtn.textContent = "Rename";
-        renameBtn.setAttribute("aria-label", `Rename folder ${entry.label}`);
-        renameBtn.addEventListener("click", async (e) => {
+  private startInlineRename(row: HTMLElement, currentLabel: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      const labelEl = row.querySelector<HTMLElement>(".yasgui-query-browser__tree-label");
+      if (!labelEl) {
+        resolve(null);
+        return;
+      }
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = currentLabel;
+      addClass(input, "yasgui-query-browser__rename-input");
+
+      let settled = false;
+      const finish = (value: string | null) => {
+        if (settled) return;
+        settled = true;
+        input.remove();
+        labelEl.style.display = "";
+        resolve(value);
+      };
+
+      input.addEventListener("click", (e) => e.stopPropagation());
+      input.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
           e.preventDefault();
-          e.stopPropagation();
+          finish(input.value.trim() || null);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          finish(null);
+        }
+      });
+      input.addEventListener("blur", () => finish(null));
 
-          const next = window.prompt("Rename folder", entry.label);
+      labelEl.style.display = "none";
+      labelEl.insertAdjacentElement("afterend", input);
+      input.focus();
+      input.select();
+    });
+  }
+
+  private showInlineConfirm(row: HTMLElement, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const savedChildren = Array.from(row.childNodes);
+      while (row.firstChild) row.removeChild(row.firstChild);
+
+      const confirmEl = document.createElement("span");
+      addClass(confirmEl, "yasgui-query-browser__inline-confirm");
+      confirmEl.textContent = message;
+      confirmEl.addEventListener("click", (e) => e.stopPropagation());
+
+      const yes = document.createElement("button");
+      yes.type = "button";
+      yes.textContent = "Yes";
+      addClass(yes, "yasgui-query-browser__inline-confirm-btn");
+      addClass(yes, "yasgui-query-browser__inline-confirm-btn--danger");
+
+      const no = document.createElement("button");
+      no.type = "button";
+      no.textContent = "No";
+      addClass(no, "yasgui-query-browser__inline-confirm-btn");
+
+      let settled = false;
+      const finish = (value: boolean) => {
+        if (settled) return;
+        settled = true;
+        while (row.firstChild) row.removeChild(row.firstChild);
+        for (const child of savedChildren) row.appendChild(child);
+        resolve(value);
+      };
+
+      yes.addEventListener("click", (e) => {
+        e.stopPropagation();
+        finish(true);
+      });
+      no.addEventListener("click", (e) => {
+        e.stopPropagation();
+        finish(false);
+      });
+
+      row.appendChild(confirmEl);
+      row.appendChild(document.createTextNode(" "));
+      row.appendChild(yes);
+      row.appendChild(document.createTextNode(" "));
+      row.appendChild(no);
+      no.focus();
+    });
+  }
+
+  private openQueryContextMenu(
+    event: MouseEvent,
+    backend: ReturnType<typeof getWorkspaceBackend>,
+    entry: FolderEntry,
+    row: HTMLElement,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.closeQueryContextMenu();
+
+    const menu = document.createElement("ul");
+    addClass(menu, "yasgui-query-browser__context-menu");
+
+    const makeItem = (label: string, handler: () => void | Promise<void>, isDanger = false) => {
+      const li = document.createElement("li");
+      addClass(li, "yasgui-query-browser__context-menu-item");
+      if (isDanger) addClass(li, "yasgui-query-browser__context-menu-item--danger");
+      li.textContent = label;
+      li.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        this.closeQueryContextMenu();
+        await handler();
+      });
+      return li;
+    };
+
+    // Copy URI
+    if (backend.getQueryUri) {
+      const uri = backend.getQueryUri(entry.id);
+      if (uri) {
+        menu.appendChild(
+          makeItem("Copy URI", async () => {
+            try {
+              await navigator.clipboard.writeText(uri);
+            } catch {
+              window.prompt("Copy this URI:", uri);
+            }
+          }),
+        );
+      }
+    }
+
+    // Rename
+    if (backend.renameQuery) {
+      const renameQuery = backend.renameQuery.bind(backend);
+      menu.appendChild(
+        makeItem("Rename", async () => {
+          const next = await this.startInlineRename(row, entry.label);
+          if (!next) return;
+          const trimmed = next.trim();
+          if (!trimmed || trimmed === entry.label) return;
+
+          const gitRenameInfo = (() => {
+            if (backend.type !== "git") return undefined;
+            const parts = entry.id.split("/").filter(Boolean);
+            parts.pop();
+            const folderPrefix = parts.join("/");
+            const safe = trimmed.replace(/[\\/]/g, "-");
+            const newFilename = normalizeQueryFilename(safe);
+            const newPath = folderPrefix ? `${folderPrefix}/${newFilename}` : newFilename;
+            return { oldPath: entry.id, newPath };
+          })();
+
+          try {
+            await renameQuery(entry.id, trimmed);
+
+            if (gitRenameInfo && gitRenameInfo.newPath && gitRenameInfo.oldPath) {
+              for (const tab of Object.values(this.yasgui._tabs)) {
+                const meta = (tab as any).getManagedQueryMetadata?.() as ManagedTabMetadata | undefined;
+                if (!meta) continue;
+                if (meta.backendType !== "git") continue;
+                if (meta.workspaceId !== this.selectedWorkspaceId) continue;
+                const currentPath = (meta.queryRef as any)?.path as string | undefined;
+                if (currentPath !== gitRenameInfo.oldPath) continue;
+
+                try {
+                  const read = await backend.readQuery(gitRenameInfo.newPath);
+                  const lastSavedTextHash = hashQueryText(read.queryText);
+                  const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
+
+                  (tab as any).setManagedQueryMetadata?.({
+                    ...meta,
+                    queryRef: { ...(meta.queryRef as any), path: gitRenameInfo.newPath },
+                    lastSavedTextHash,
+                    lastSavedVersionRef,
+                  });
+                  (tab as any).setName?.(trimmed);
+                } catch {
+                  // Best-effort: if refreshing metadata fails, the Query Browser still reflects the rename.
+                }
+              }
+            }
+
+            this.queryPreviewById.delete(entry.id);
+            this.folderEntriesById.clear();
+            this.invalidateRenderCache();
+            await this.refresh();
+          } catch (err) {
+            this.setStatus(asWorkspaceBackendError(err).message);
+          }
+        }),
+      );
+    }
+
+    // Move
+    if (backend.moveQuery) {
+      const moveQuery = backend.moveQuery.bind(backend);
+      menu.appendChild(
+        makeItem("Move", async () => {
+          const currentFolderPath = entry.parentId || "";
+          if (!this.folderPickerModal) this.folderPickerModal = new SaveManagedQueryModal(this.yasgui);
+          const newFolderPath = await this.folderPickerModal.showFolderPickerOnly(
+            this.selectedWorkspaceId!,
+            currentFolderPath,
+          );
+          if (newFolderPath === undefined) return;
+          if (newFolderPath === currentFolderPath) return;
+
+          try {
+            const newQueryId = await moveQuery(entry.id, newFolderPath);
+
+            if (backend.type === "git" && newQueryId !== entry.id) {
+              for (const tab of Object.values(this.yasgui._tabs)) {
+                const meta = (tab as any).getManagedQueryMetadata?.() as ManagedTabMetadata | undefined;
+                if (!meta) continue;
+                if (meta.backendType !== "git") continue;
+                if (meta.workspaceId !== this.selectedWorkspaceId) continue;
+                const currentPath = (meta.queryRef as any)?.path as string | undefined;
+                if (currentPath !== entry.id) continue;
+
+                try {
+                  const read = await backend.readQuery(newQueryId);
+                  const lastSavedTextHash = hashQueryText(read.queryText);
+                  const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
+
+                  (tab as any).setManagedQueryMetadata?.({
+                    ...meta,
+                    queryRef: { ...(meta.queryRef as any), path: newQueryId },
+                    lastSavedTextHash,
+                    lastSavedVersionRef,
+                  });
+                } catch {
+                  // Best-effort: if refreshing metadata fails, the Query Browser still reflects the move.
+                }
+              }
+            }
+
+            this.queryPreviewById.delete(entry.id);
+            this.folderEntriesById.clear();
+            this.invalidateRenderCache();
+            await this.refresh();
+          } catch (err) {
+            this.setStatus(asWorkspaceBackendError(err).message);
+          }
+        }),
+      );
+    }
+
+    // Delete
+    if (backend.deleteQuery) {
+      const deleteQuery = backend.deleteQuery.bind(backend);
+      menu.appendChild(
+        makeItem(
+          "Delete",
+          async () => {
+            const ok = await this.showInlineConfirm(row, `Delete '${entry.label}'?`);
+            if (!ok) return;
+
+            try {
+              await deleteQuery(entry.id);
+              this.queryPreviewById.delete(entry.id);
+              this.folderEntriesById.clear();
+              this.invalidateRenderCache();
+              await this.refresh();
+            } catch (err) {
+              this.setStatus(asWorkspaceBackendError(err).message);
+            }
+          },
+          true,
+        ),
+      );
+    }
+
+    if (!menu.childElementCount) return;
+
+    this.rootEl.appendChild(menu);
+    this.queryContextMenuEl = menu;
+
+    // Position near the cursor, clamping to the viewport.
+    const VIEWPORT_PADDING = 4;
+    menu.style.position = "fixed";
+    menu.style.zIndex = "10001";
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+    requestAnimationFrame(() => {
+      const rect = menu.getBoundingClientRect();
+      if (rect.right > window.innerWidth - VIEWPORT_PADDING) {
+        menu.style.left = `${Math.max(VIEWPORT_PADDING, event.clientX - rect.width)}px`;
+      }
+      if (rect.bottom > window.innerHeight - VIEWPORT_PADDING) {
+        menu.style.top = `${Math.max(VIEWPORT_PADDING, event.clientY - rect.height)}px`;
+      }
+    });
+
+    const onOutsideClick = (e: MouseEvent) => {
+      if (!this.queryContextMenuEl) return;
+      if (!menu.contains(e.target as Node)) this.closeQueryContextMenu();
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        this.closeQueryContextMenu();
+      }
+    };
+
+    // Use requestAnimationFrame to defer listener registration past the current event cycle,
+    // ensuring the contextmenu event that opened the menu is not immediately caught.
+    requestAnimationFrame(() => {
+      document.addEventListener("click", onOutsideClick);
+      document.addEventListener("keydown", onEsc);
+    });
+
+    this.queryContextMenuCleanup = () => {
+      document.removeEventListener("click", onOutsideClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }
+
+  private openFolderContextMenu(
+    event: MouseEvent,
+    backend: ReturnType<typeof getWorkspaceBackend>,
+    entry: FolderEntry,
+    row: HTMLElement,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.closeQueryContextMenu();
+
+    const menu = document.createElement("ul");
+    addClass(menu, "yasgui-query-browser__context-menu");
+
+    const makeItem = (label: string, handler: () => void | Promise<void>, isDanger = false) => {
+      const li = document.createElement("li");
+      addClass(li, "yasgui-query-browser__context-menu-item");
+      if (isDanger) addClass(li, "yasgui-query-browser__context-menu-item--danger");
+      li.textContent = label;
+      li.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        this.closeQueryContextMenu();
+        await handler();
+      });
+      return li;
+    };
+
+    if (backend.renameFolder) {
+      menu.appendChild(
+        makeItem("Rename", async () => {
+          const next = await this.startInlineRename(row, entry.label);
           if (!next) return;
           const trimmed = next.trim();
           if (!trimmed || trimmed === entry.label) return;
@@ -597,232 +946,88 @@ export default class QueryBrowser {
             this.invalidateRenderCache();
             await this.refresh();
           } catch (err) {
-            window.alert(asWorkspaceBackendError(err).message);
+            this.setStatus(asWorkspaceBackendError(err).message);
           }
-        });
-        actions.appendChild(renameBtn);
+        }),
+      );
+    }
+
+    if (backend.deleteFolder) {
+      menu.appendChild(
+        makeItem(
+          "Delete",
+          async () => {
+            const ok = await this.showInlineConfirm(row, `Delete folder '${entry.label}' and everything inside it?`);
+            if (!ok) return;
+
+            try {
+              await backend.deleteFolder!(entry.id);
+              this.folderEntriesById.clear();
+              this.invalidateRenderCache();
+              await this.refresh();
+            } catch (err) {
+              this.setStatus(asWorkspaceBackendError(err).message);
+            }
+          },
+          true,
+        ),
+      );
+    }
+
+    if (!menu.childElementCount) return;
+
+    this.rootEl.appendChild(menu);
+    this.queryContextMenuEl = menu;
+
+    const VIEWPORT_PADDING = 4;
+    menu.style.position = "fixed";
+    menu.style.zIndex = "10001";
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+    requestAnimationFrame(() => {
+      const rect = menu.getBoundingClientRect();
+      if (rect.right > window.innerWidth - VIEWPORT_PADDING) {
+        menu.style.left = `${Math.max(VIEWPORT_PADDING, event.clientX - rect.width)}px`;
       }
-
-      if (backend.deleteFolder) {
-        const deleteBtn = document.createElement("button");
-        deleteBtn.type = "button";
-        addClass(deleteBtn, "yasgui-query-browser__action");
-        addClass(deleteBtn, "yasgui-query-browser__action--danger");
-        deleteBtn.textContent = "Delete";
-        deleteBtn.setAttribute("aria-label", `Delete folder ${entry.label}`);
-        deleteBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          const ok = window.confirm(`Delete folder '${entry.label}' and everything inside it? This cannot be undone.`);
-          if (!ok) return;
-
-          try {
-            await backend.deleteFolder!(entry.id);
-            this.folderEntriesById.clear();
-            this.invalidateRenderCache();
-            await this.refresh();
-          } catch (err) {
-            window.alert(asWorkspaceBackendError(err).message);
-          }
-        });
-        actions.appendChild(deleteBtn);
+      if (rect.bottom > window.innerHeight - VIEWPORT_PADDING) {
+        menu.style.top = `${Math.max(VIEWPORT_PADDING, event.clientY - rect.height)}px`;
       }
+    });
 
-      if (actions.childElementCount > 0) row.appendChild(actions);
+    const onOutsideClick = (e: MouseEvent) => {
+      if (!this.queryContextMenuEl) return;
+      if (!menu.contains(e.target as Node)) this.closeQueryContextMenu();
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        this.closeQueryContextMenu();
+      }
+    };
+
+    requestAnimationFrame(() => {
+      document.addEventListener("click", onOutsideClick);
+      document.addEventListener("keydown", onEsc);
+    });
+
+    this.queryContextMenuCleanup = () => {
+      document.removeEventListener("click", onOutsideClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }
+
+  private addQueryRowActions(row: HTMLElement, backend: ReturnType<typeof getWorkspaceBackend>, entry: FolderEntry) {
+    if (entry.kind === "folder") {
+      row.addEventListener("contextmenu", (e) => this.openFolderContextMenu(e, backend, entry, row), {
+        passive: false,
+      });
       return;
     }
 
     if (entry.kind !== "query") return;
 
-    if (backend.renameQuery) {
-      const renameBtn = document.createElement("button");
-      renameBtn.type = "button";
-      addClass(renameBtn, "yasgui-query-browser__action");
-      renameBtn.textContent = "Rename";
-      renameBtn.setAttribute("aria-label", `Rename ${entry.label}`);
-      renameBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const next = window.prompt("Rename query", entry.label);
-        if (!next) return;
-        const trimmed = next.trim();
-        if (!trimmed || trimmed === entry.label) return;
-
-        // For git workspaces we can deterministically compute the new path, so we can
-        // also update any already-open managed tabs that reference this query.
-        const gitRenameInfo = (() => {
-          if (backend.type !== "git") return undefined;
-          const parts = entry.id.split("/").filter(Boolean);
-          parts.pop();
-          const folderPrefix = parts.join("/");
-          const safe = trimmed.replace(/[\\/]/g, "-");
-          const newFilename = normalizeQueryFilename(safe);
-          const newPath = folderPrefix ? `${folderPrefix}/${newFilename}` : newFilename;
-          return { oldPath: entry.id, newPath };
-        })();
-
-        // Show loading state
-        const originalText = renameBtn.textContent;
-        renameBtn.disabled = true;
-        renameBtn.textContent = "Renaming…";
-        addClass(renameBtn, "loading");
-
-        try {
-          await backend.renameQuery!(entry.id, trimmed);
-
-          if (gitRenameInfo && gitRenameInfo.newPath && gitRenameInfo.oldPath) {
-            for (const tab of Object.values(this.yasgui._tabs)) {
-              const meta = (tab as any).getManagedQueryMetadata?.() as ManagedTabMetadata | undefined;
-              if (!meta) continue;
-              if (meta.backendType !== "git") continue;
-              if (meta.workspaceId !== this.selectedWorkspaceId) continue;
-              const currentPath = (meta.queryRef as any)?.path as string | undefined;
-              if (currentPath !== gitRenameInfo.oldPath) continue;
-
-              try {
-                const read = await backend.readQuery(gitRenameInfo.newPath);
-                const lastSavedTextHash = hashQueryText(read.queryText);
-                const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
-
-                (tab as any).setManagedQueryMetadata?.({
-                  ...meta,
-                  queryRef: { ...(meta.queryRef as any), path: gitRenameInfo.newPath },
-                  lastSavedTextHash,
-                  lastSavedVersionRef,
-                });
-                (tab as any).setName?.(trimmed);
-              } catch {
-                // Best-effort: if refreshing metadata fails, the Query Browser still reflects the rename.
-              }
-            }
-          }
-
-          this.queryPreviewById.delete(entry.id);
-          this.folderEntriesById.clear();
-          this.invalidateRenderCache();
-          await this.refresh();
-        } catch (err) {
-          // Restore button state on error
-          renameBtn.disabled = false;
-          renameBtn.textContent = originalText || "Rename";
-          removeClass(renameBtn, "loading");
-          window.alert(asWorkspaceBackendError(err).message);
-        }
-      });
-      actions.appendChild(renameBtn);
-    }
-
-    if (backend.moveQuery) {
-      const moveBtn = document.createElement("button");
-      moveBtn.type = "button";
-      addClass(moveBtn, "yasgui-query-browser__action");
-      moveBtn.textContent = "Move";
-      moveBtn.setAttribute("aria-label", `Move ${entry.label} to a different folder`);
-      moveBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const currentFolderPath = entry.parentId || "";
-        if (!this.folderPickerModal) this.folderPickerModal = new SaveManagedQueryModal(this.yasgui);
-        const newFolderPath = await this.folderPickerModal.showFolderPickerOnly(
-          this.selectedWorkspaceId!,
-          currentFolderPath,
-        );
-        if (newFolderPath === undefined) return;
-        if (newFolderPath === currentFolderPath) return;
-
-        // Show loading state
-        const originalText = moveBtn.textContent;
-        moveBtn.disabled = true;
-        moveBtn.textContent = "Moving…";
-        addClass(moveBtn, "loading");
-
-        try {
-          const newQueryId = await backend.moveQuery!(entry.id, newFolderPath);
-
-          // For git workspaces: update any already-open managed tabs referencing the old path.
-          if (backend.type === "git" && newQueryId !== entry.id) {
-            for (const tab of Object.values(this.yasgui._tabs)) {
-              const meta = (tab as any).getManagedQueryMetadata?.() as ManagedTabMetadata | undefined;
-              if (!meta) continue;
-              if (meta.backendType !== "git") continue;
-              if (meta.workspaceId !== this.selectedWorkspaceId) continue;
-              const currentPath = (meta.queryRef as any)?.path as string | undefined;
-              if (currentPath !== entry.id) continue;
-
-              try {
-                const read = await backend.readQuery(newQueryId);
-                const lastSavedTextHash = hashQueryText(read.queryText);
-                const lastSavedVersionRef = this.versionRefFromVersionTag("git", read.versionTag);
-
-                (tab as any).setManagedQueryMetadata?.({
-                  ...meta,
-                  queryRef: { ...(meta.queryRef as any), path: newQueryId },
-                  lastSavedTextHash,
-                  lastSavedVersionRef,
-                });
-              } catch {
-                // Best-effort: if refreshing metadata fails, the Query Browser still reflects the move.
-              }
-            }
-          }
-
-          this.queryPreviewById.delete(entry.id);
-          this.folderEntriesById.clear();
-          this.invalidateRenderCache();
-          await this.refresh();
-        } catch (err) {
-          // Restore button state on error
-          moveBtn.disabled = false;
-          moveBtn.textContent = originalText || "Move";
-          removeClass(moveBtn, "loading");
-          window.alert(asWorkspaceBackendError(err).message);
-        }
-      });
-      actions.appendChild(moveBtn);
-    }
-
-    if (backend.deleteQuery) {
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      addClass(deleteBtn, "yasgui-query-browser__action");
-      addClass(deleteBtn, "yasgui-query-browser__action--danger");
-      deleteBtn.textContent = "Delete";
-      deleteBtn.setAttribute("aria-label", `Delete ${entry.label}`);
-      deleteBtn.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const ok = window.confirm(`Delete '${entry.label}'? This cannot be undone.`);
-        if (!ok) return;
-
-        // Show loading state
-        const originalText = deleteBtn.textContent;
-        deleteBtn.disabled = true;
-        deleteBtn.textContent = "Deleting…";
-        addClass(deleteBtn, "loading");
-
-        try {
-          await backend.deleteQuery!(entry.id);
-          this.queryPreviewById.delete(entry.id);
-          this.folderEntriesById.clear();
-          this.invalidateRenderCache();
-          await this.refresh();
-        } catch (err) {
-          // Restore button state on error
-          deleteBtn.disabled = false;
-          deleteBtn.textContent = originalText || "Delete";
-          removeClass(deleteBtn, "loading");
-          window.alert(asWorkspaceBackendError(err).message);
-        }
-      });
-      actions.appendChild(deleteBtn);
-    }
-
-    if (actions.childElementCount > 0) {
-      row.appendChild(actions);
-    }
+    // Query actions are shown in a right-click context menu to preserve space for the query name.
+    row.addEventListener("contextmenu", (e) => this.openQueryContextMenu(e, backend, entry, row), { passive: false });
   }
 
   private renderFlatEntries(backend: ReturnType<typeof getWorkspaceBackend>, entries: FolderEntry[]) {

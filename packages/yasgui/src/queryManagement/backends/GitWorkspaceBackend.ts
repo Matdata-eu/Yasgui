@@ -2,6 +2,7 @@ import type { GitWorkspaceConfig, FolderEntry, ReadResult, VersionInfo, WriteQue
 import type { WorkspaceBackend } from "./WorkspaceBackend";
 import { WorkspaceBackendError } from "./errors";
 import { normalizeQueryFilename } from "../normalizeQueryFilename";
+import { parseGitRemote } from "./gitRemote";
 
 export interface GitProviderClient {
   validateAccess(config: GitWorkspaceConfig): Promise<void>;
@@ -111,5 +112,43 @@ export default class GitWorkspaceBackend implements WorkspaceBackend {
     });
 
     await this.client.deleteQuery(this.config, queryId);
+  }
+
+  getQueryUri(queryId: string): string | undefined {
+    try {
+      const { host, repoPath } = parseGitRemote(this.config.remoteUrl);
+      const parts = repoPath.split("/").filter(Boolean);
+      const [owner, repoName] = parts;
+      if (!owner || !repoName) return undefined;
+
+      const filePath = [this.config.rootPath, queryId].filter(Boolean).join("/");
+      const branch = this.config.branch?.trim() || "HEAD";
+      const provider = this.config.provider;
+
+      const isGithub =
+        provider === "github" ||
+        ((!provider || provider === "auto") &&
+          (host === "github.com" || (host.includes("github") && !host.includes("gitlab"))));
+      if (isGithub) {
+        return `https://${host}/${owner}/${repoName}/blob/${encodeURIComponent(branch)}/${filePath}`;
+      }
+
+      const isGitlab =
+        provider === "gitlab" ||
+        ((!provider || provider === "auto") && (host === "gitlab.com" || host.includes("gitlab")));
+      if (isGitlab) {
+        return `https://${host}/${repoPath}/-/blob/${encodeURIComponent(branch)}/${filePath}`;
+      }
+
+      const isBitbucket = provider === "bitbucket" || ((!provider || provider === "auto") && host === "bitbucket.org");
+      if (isBitbucket) {
+        return `https://bitbucket.org/${owner}/${repoName}/src/${encodeURIComponent(branch)}/${filePath}`;
+      }
+
+      // Gitea (and other self-hosted providers)
+      return `https://${host}/${owner}/${repoName}/src/branch/${encodeURIComponent(branch)}/${filePath}`;
+    } catch {
+      return undefined;
+    }
   }
 }

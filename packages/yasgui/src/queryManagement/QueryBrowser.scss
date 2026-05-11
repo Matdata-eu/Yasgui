@@ -325,6 +325,91 @@
       white-space: nowrap;
     }
 
+    &__context-menu {
+      position: fixed;
+      z-index: 10001;
+      list-style: none;
+      padding: 4px 0;
+      margin: 0;
+      min-width: 140px;
+      background: var(--yasgui-bg-primary, white);
+      border: 1px solid var(--yasgui-border-color, #e0e0e0);
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &__context-menu-item {
+      padding: 7px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--yasgui-text-primary, #000);
+      font-size: 13px;
+      line-height: 1.4;
+
+      &:hover {
+        background: var(--yasgui-bg-secondary, #f5f5f5);
+        color: var(--yasgui-button-hover, #000);
+      }
+
+      &--danger {
+        color: var(--yasgui-error-color, #c00);
+
+        &:hover {
+          background: var(--yasgui-bg-secondary, #f5f5f5);
+          color: var(--yasgui-error-color, #c00);
+        }
+      }
+    }
+
+    &__rename-input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      font-size: 13px;
+      color: var(--yasgui-text-primary, #000);
+      background: var(--yasgui-bg-primary, white);
+      border: 1px solid var(--yasgui-accent-color, #337ab7);
+      border-radius: 3px;
+      padding: 1px 4px;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(51, 122, 183, 0.25);
+    }
+
+    &__inline-confirm {
+      flex: 1;
+      font-size: 13px;
+      color: var(--yasgui-text-primary, #000);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &__inline-confirm-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid var(--yasgui-border-color, #e0e0e0);
+      border-radius: 3px;
+      padding: 1px 8px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--yasgui-text-primary, #000);
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--yasgui-bg-secondary, #f5f5f5);
+      }
+
+      &--danger {
+        color: var(--yasgui-error-color, #c00);
+        border-color: var(--yasgui-error-color, #c00);
+
+        &:hover {
+          background: rgba(204, 0, 0, 0.08);
+        }
+      }
+    }
+
     &__tree-meta {
       padding: 4px 8px;
       font-size: 13px;

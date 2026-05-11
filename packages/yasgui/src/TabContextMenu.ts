@@ -3,6 +3,8 @@ import { default as Yasgui, getRandomId } from "./";
 import Tab from "./Tab";
 import { TabListEl } from "./TabElements";
 import { cloneDeep } from "lodash-es";
+import { getWorkspaceBackend } from "./queryManagement/backends/getWorkspaceBackend";
+import type { GitQueryRef, SparqlQueryRef } from "./queryManagement/types";
 import "./TabContextMenu.scss";
 export interface TabContextConfig {
   name: string;
@@ -17,6 +19,7 @@ export default class TabContextMenu {
   private duplicateTabEl!: HTMLElement;
   private saveManagedQueryEl!: HTMLElement;
   private saveAsRqFileEl!: HTMLElement;
+  private copyManagedQueryUriEl!: HTMLElement;
   private closeTabEl!: HTMLElement;
   private closeOtherTabsEl!: HTMLElement;
   private reOpenOldTab!: HTMLElement;
@@ -55,6 +58,8 @@ export default class TabContextMenu {
 
     this.saveAsRqFileEl = this.getMenuItemEl("Save as .rq file");
 
+    this.copyManagedQueryUriEl = this.getMenuItemEl("Copy URI");
+
     this.closeTabEl = this.getMenuItemEl("Close Tab");
 
     this.closeOtherTabsEl = this.getMenuItemEl("Close other tabs");
@@ -67,6 +72,7 @@ export default class TabContextMenu {
     dropDownList.appendChild(this.duplicateTabEl);
     dropDownList.appendChild(this.saveManagedQueryEl);
     dropDownList.appendChild(this.saveAsRqFileEl);
+    dropDownList.appendChild(this.copyManagedQueryUriEl);
     // Add divider
     dropDownList.appendChild(document.createElement("hr"));
     dropDownList.appendChild(this.closeTabEl);
@@ -124,6 +130,42 @@ export default class TabContextMenu {
       tab.downloadAsRqFile();
       this.closeConfigMenu();
     };
+
+    // Copy URI for managed query tabs
+    const meta = tab?.getManagedQueryMetadata();
+    if (meta) {
+      const workspaceConfig = this.yasgui.persistentConfig?.getWorkspaces().find((w) => w.id === meta.workspaceId);
+      if (workspaceConfig) {
+        const queryId =
+          meta.backendType === "git"
+            ? (meta.queryRef as GitQueryRef).path
+            : (meta.queryRef as SparqlQueryRef).managedQueryIri;
+        if (queryId) {
+          const backend = getWorkspaceBackend(workspaceConfig, {
+            persistentConfig: this.yasgui.persistentConfig,
+          });
+          const uri = backend.getQueryUri?.(queryId);
+          if (uri) {
+            this.copyManagedQueryUriEl.onclick = async () => {
+              try {
+                await navigator.clipboard.writeText(uri);
+              } catch {
+                window.prompt("Copy this URI:", uri);
+              }
+              this.closeConfigMenu();
+            };
+          } else {
+            addClass(this.copyManagedQueryUriEl, "disabled");
+          }
+        } else {
+          addClass(this.copyManagedQueryUriEl, "disabled");
+        }
+      } else {
+        addClass(this.copyManagedQueryUriEl, "disabled");
+      }
+    } else {
+      addClass(this.copyManagedQueryUriEl, "disabled");
+    }
 
     // Close tab functionality
     this.closeTabEl.onclick = () => tab?.close();
