@@ -13,6 +13,7 @@ import { addClass, removeClass } from "@matdata/yasgui-utils";
 import GeoPlugin from "yasgui-geo-tg";
 import GraphPlugin from "@matdata/yasgui-graph-plugin";
 import TablePlugin from "@matdata/yasgui-table-plugin";
+import { moveTabIdToFront, removeTabId } from "./tabNavigationHistory";
 import "@matdata/yasgui-graph-plugin/dist/yasgui-graph-plugin.min.css";
 import "@matdata/yasgui-table-plugin/dist/yasgui-table-plugin.min.css";
 import { ThemeManager, Theme } from "./ThemeManager";
@@ -155,6 +156,9 @@ export class Yasgui extends EventEmitter {
   public persistentConfig: PersistentConfig;
   public themeManager: ThemeManager;
   public queryBrowser: QueryBrowser;
+  private recentTabIds: string[] = [];
+  private navigationSnapshot: string[] | null = null;
+  private navigationCursor = 0;
   public static Tab = Tab;
   constructor(parent: HTMLElement, config: PartialConfig) {
     super();
@@ -185,6 +189,9 @@ export class Yasgui extends EventEmitter {
     this.tabPanelsEl = document.createElement("div");
 
     this.queryBrowser = new QueryBrowser(this);
+    this.on("tabClose", (_yasgui, tab) => {
+      this.removeTabFromRecentHistory(tab.getId());
+    });
 
     this.rootEl.appendChild(this.tabElements.drawTabsList());
     this.rootEl.appendChild(this.tabPanelsEl);
@@ -227,6 +234,7 @@ export class Yasgui extends EventEmitter {
       const newTab = this.addTab(true);
       this.persistentConfig.setActive(newTab.getId());
       this.emit("tabChange", this, newTab);
+      this.recordTabInRecentHistory(newTab.getId());
     } else {
       for (const tabId of tabs) {
         this._tabs[tabId] = new Tab(this, this.persistentConfig.getTab(tabId));
@@ -237,6 +245,7 @@ export class Yasgui extends EventEmitter {
       const activeTabId = this.persistentConfig.getActiveId();
       if (activeTabId) {
         this.markTabSelected(activeTabId);
+        this.recordTabInRecentHistory(activeTabId);
         if (executeIdAfterInit && executeIdAfterInit === activeTabId) {
           (this.getTab(activeTabId) as Tab).query().catch(() => {});
         }
@@ -300,12 +309,52 @@ export class Yasgui extends EventEmitter {
     const tab = this.getTab();
     if (tab && tab.getId() !== tabId) {
       if (this.markTabSelected(tabId)) {
+        this.recordTabInRecentHistory(tabId);
         //emit
         this.emit("tabSelect", this, tabId);
         this.persistentConfig.setActive(tabId);
       }
     }
     return tab;
+  }
+  private recordTabInRecentHistory(tabId: string) {
+    // Any non-navigation selection commits the navigation and ends navigation mode.
+    this.navigationSnapshot = null;
+    this.recentTabIds = moveTabIdToFront(this.recentTabIds, tabId);
+  }
+  private removeTabFromRecentHistory(tabId: string) {
+    this.recentTabIds = removeTabId(this.recentTabIds, tabId);
+  }
+  public selectRecentlyUsedTab(direction: "backward" | "forward" = "backward"): void {
+    const activeTab = this.getTab();
+    if (!activeTab) return;
+    const activeTabId = activeTab.getId();
+
+    // Initialize (or re-initialize) the navigation snapshot when starting a new navigation
+    // sequence or when the active tab no longer matches the cursor position.
+    // Snapshotting the history order lets repeated presses cycle through all tabs
+    // instead of ping-ponging between the two most-recently-used ones.
+    if (this.navigationSnapshot === null || this.navigationSnapshot[this.navigationCursor] !== activeTabId) {
+      this.navigationSnapshot = [...this.recentTabIds];
+      const activeIdx = this.navigationSnapshot.indexOf(activeTabId);
+      this.navigationCursor = activeIdx >= 0 ? activeIdx : 0;
+    }
+
+    if (direction === "backward") {
+      this.navigationCursor = Math.min(this.navigationCursor + 1, this.navigationSnapshot.length - 1);
+    } else {
+      this.navigationCursor = Math.max(this.navigationCursor - 1, 0);
+    }
+
+    const nextTabId = this.navigationSnapshot[this.navigationCursor];
+    if (!nextTabId || nextTabId === activeTabId) return;
+
+    // Select the tab without updating recentTabIds. The history is committed when the
+    // user performs any non-navigation action that calls recordTabInRecentHistory.
+    if (this.markTabSelected(nextTabId)) {
+      this.emit("tabSelect", this, nextTabId);
+      this.persistentConfig.setActive(nextTabId);
+    }
   }
   /**
    * Checks if two persistent tab configuration are the same based.
@@ -417,6 +466,7 @@ export class Yasgui extends EventEmitter {
     if (setActive) {
       this.persistentConfig.setActive(tabId);
       this._tabs[tabId].show();
+      this.recordTabInRecentHistory(tabId);
     }
     return this._tabs[tabId];
   }

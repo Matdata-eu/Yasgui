@@ -1653,6 +1653,13 @@ Master YASGUI with these keyboard shortcuts for faster querying.
 | `F9`     | Switch between YASQE and YASR fullscreen |
 | `Esc`    | Exit fullscreen mode                     |
 
+### YASGUI Tabs
+
+| Shortcut                                 | Action                                        |
+| ---------------------------------------- | --------------------------------------------- |
+| `Ctrl+Alt+Tab` / `Cmd+Alt+Tab`           | Switch to previously used YASGUI tab          |
+| `Ctrl+Alt+Shift+Tab` / `Cmd+Alt+Shift+Tab` | Switch to next tab in recently used order   |
+
 ### General Editor
 
 | Shortcut           | Action            |
