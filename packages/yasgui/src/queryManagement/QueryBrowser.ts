@@ -635,6 +635,33 @@ export default class QueryBrowser {
 
     if (entry.kind !== "query") return;
 
+    if (backend.getQueryUri) {
+      const uri = backend.getQueryUri(entry.id);
+      if (uri) {
+        const copyUriBtn = document.createElement("button");
+        copyUriBtn.type = "button";
+        addClass(copyUriBtn, "yasgui-query-browser__action");
+        copyUriBtn.textContent = "Copy URI";
+        copyUriBtn.setAttribute("aria-label", `Copy URI for ${entry.label}`);
+        copyUriBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          try {
+            await navigator.clipboard.writeText(uri);
+            const originalText = copyUriBtn.textContent;
+            copyUriBtn.textContent = "Copied!";
+            setTimeout(() => {
+              copyUriBtn.textContent = originalText;
+            }, 1500);
+          } catch {
+            window.prompt("Copy this URI:", uri);
+          }
+        });
+        actions.appendChild(copyUriBtn);
+      }
+    }
+
     if (backend.renameQuery) {
       const renameBtn = document.createElement("button");
       renameBtn.type = "button";

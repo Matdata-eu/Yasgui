@@ -44,4 +44,12 @@ export interface WorkspaceBackend {
    * Optional: Delete a folder and everything inside it (recursive).
    */
   deleteFolder?(folderId: string): Promise<void>;
+
+  /**
+   * Optional: Return a URI for the given query.
+   * - For SPARQL workspaces this is the managed-query IRI stored in the triplestore.
+   * - For git workspaces this is the browser-accessible URL to the file in the repository.
+   * Returns `undefined` when no meaningful URI can be determined.
+   */
+  getQueryUri?(queryId: string): string | undefined;
 }

@@ -1179,6 +1179,13 @@ The token must have access to the specific repository you're configuring as a wo
 - Use the tab context menu action **Save as managed query**
 - Saving the same query text does not create a new version; changing text creates a new version
 
+**Copy URI of a managed query:**
+
+- In the **Query Browser**: use the **Copy URI** action button next to any query to copy its URI to the clipboard
+- In the **tab context menu** (right-click a tab): use **Copy URI** when the tab is linked to a managed query
+- For SPARQL workspaces the URI is the managed-query IRI stored in the triplestore
+- For Git workspaces the URI is the browser-accessible link to the file in the repository (GitHub/GitLab/Bitbucket/Gitea)
+
 **Credentials:**
 
 - Tokens are stored locally, not saved together with the managed query and are not re-displayed after entry
