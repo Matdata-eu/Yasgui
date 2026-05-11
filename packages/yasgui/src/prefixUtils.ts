@@ -8,13 +8,13 @@ export function deduplicatePrefixes(prefixText: string): string {
     if (!trimmed) continue;
 
     // Allow an empty prefix label so the default prefix form `PREFIX : <...>` is
-    // deduplicated together with named prefixes.
-    const match = trimmed.match(/^\s*PREFIX\s+([^:\s]*):\s*<(.+)>\s*$/i);
+    // deduplicated together with named prefixes, while keeping the original
+    // word-character restriction for named labels.
+    const match = trimmed.match(/^\s*PREFIX\s+(\w*):\s*<(.+)>\s*$/i);
     if (match) {
       const label = match[1].toLowerCase();
-      const deduplicationKey = label || ":";
-      if (!seen.has(deduplicationKey)) {
-        seen.set(deduplicationKey, trimmed);
+      if (!seen.has(label)) {
+        seen.set(label, trimmed);
         result.push(trimmed);
       }
     } else {
