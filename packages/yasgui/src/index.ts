@@ -321,15 +321,13 @@ export class Yasgui extends EventEmitter {
   private removeTabFromRecentHistory(tabId: string) {
     this.recentTabIds = removeTabId(this.recentTabIds, tabId);
   }
-  public selectRecentlyUsedTab(direction: "backward" | "forward" = "backward") {
+  public selectRecentlyUsedTab(direction: "backward" | "forward" = "backward"): void {
     const activeTab = this.getTab();
     if (!activeTab) return;
     const activeTabId = activeTab.getId();
-    this.recordTabInRecentHistory(activeTabId);
-    const existingRecentTabIds = this.recentTabIds.filter((id) => !!this._tabs[id]);
-    const nextTabId = getRecentlyUsedTabId(existingRecentTabIds, activeTabId, direction);
-    if (!nextTabId) return activeTab;
-    return this.selectTabId(nextTabId);
+    const nextTabId = getRecentlyUsedTabId(this.recentTabIds, activeTabId, direction);
+    if (!nextTabId) return;
+    this.selectTabId(nextTabId);
   }
   /**
    * Checks if two persistent tab configuration are the same based.
