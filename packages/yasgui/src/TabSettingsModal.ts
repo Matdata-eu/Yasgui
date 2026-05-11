@@ -5,6 +5,7 @@ import * as ConfigExportImport from "./ConfigExportImport";
 import { VERSION } from "./version";
 import * as OAuth2Utils from "./OAuth2Utils";
 import PersistentConfig from "./PersistentConfig";
+import { deduplicatePrefixes } from "./prefixUtils";
 import { WorkspaceSettingsForm } from "./queryManagement/WorkspaceSettingsForm";
 
 const AcceptOptionsMap: { key: string; value: string }[] = [
@@ -1687,7 +1688,7 @@ export default class TabSettingsModal {
     const autoCapture = this.autoCaptureCheckbox.checked;
 
     // Parse and deduplicate prefixes
-    const deduplicated = this.deduplicatePrefixes(prefixText);
+    const deduplicated = deduplicatePrefixes(prefixText);
     this.tab.yasgui.persistentConfig.setPrefixes(deduplicated);
     this.tab.yasgui.persistentConfig.setAutoCaptureEnabled(autoCapture);
 
@@ -1798,32 +1799,6 @@ export default class TabSettingsModal {
     this.close();
   }
 
-  private deduplicatePrefixes(prefixText: string): string {
-    const lines = prefixText.split("\n");
-    const seen = new Map<string, string>();
-    const result: string[] = [];
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-
-      // Extract prefix label from line
-      const match = trimmed.match(/^\s*PREFIX\s+(\w+):\s*<(.+)>\s*$/i);
-      if (match) {
-        const label = match[1].toLowerCase();
-        if (!seen.has(label)) {
-          seen.set(label, trimmed);
-          result.push(trimmed);
-        }
-      } else {
-        // Keep non-prefix lines as-is
-        result.push(trimmed);
-      }
-    }
-
-    return result.join("\n");
-  }
-
   private insertPrefixesIntoQuery() {
     const yasqe = this.tab.getYasqe();
     if (!yasqe) return;
@@ -1885,7 +1860,7 @@ export default class TabSettingsModal {
     // Merge with existing prefixes
     const existingPrefixes = this.tab.yasgui.persistentConfig.getPrefixes();
     const combined = existingPrefixes + "\n" + newPrefixLines.join("\n");
-    const deduplicated = this.deduplicatePrefixes(combined);
+    const deduplicated = deduplicatePrefixes(combined);
 
     this.tab.yasgui.persistentConfig.setPrefixes(deduplicated);
   }
