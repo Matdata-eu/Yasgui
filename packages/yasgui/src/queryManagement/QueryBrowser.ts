@@ -626,6 +626,7 @@ export default class QueryBrowser {
 
     // Rename
     if (backend.renameQuery) {
+      const renameQuery = backend.renameQuery.bind(backend);
       menu.appendChild(
         makeItem("Rename", async () => {
           const next = window.prompt("Rename query", entry.label);
@@ -645,7 +646,7 @@ export default class QueryBrowser {
           })();
 
           try {
-            await backend.renameQuery!(entry.id, trimmed);
+            await renameQuery(entry.id, trimmed);
 
             if (gitRenameInfo && gitRenameInfo.newPath && gitRenameInfo.oldPath) {
               for (const tab of Object.values(this.yasgui._tabs)) {
@@ -687,6 +688,7 @@ export default class QueryBrowser {
 
     // Move
     if (backend.moveQuery) {
+      const moveQuery = backend.moveQuery.bind(backend);
       menu.appendChild(
         makeItem("Move", async () => {
           const currentFolderPath = entry.parentId || "";
@@ -699,7 +701,7 @@ export default class QueryBrowser {
           if (newFolderPath === currentFolderPath) return;
 
           try {
-            const newQueryId = await backend.moveQuery!(entry.id, newFolderPath);
+            const newQueryId = await moveQuery(entry.id, newFolderPath);
 
             if (backend.type === "git" && newQueryId !== entry.id) {
               for (const tab of Object.values(this.yasgui._tabs)) {
@@ -740,6 +742,7 @@ export default class QueryBrowser {
 
     // Delete
     if (backend.deleteQuery) {
+      const deleteQuery = backend.deleteQuery.bind(backend);
       menu.appendChild(
         makeItem(
           "Delete",
@@ -748,7 +751,7 @@ export default class QueryBrowser {
             if (!ok) return;
 
             try {
-              await backend.deleteQuery!(entry.id);
+              await deleteQuery(entry.id);
               this.queryPreviewById.delete(entry.id);
               this.folderEntriesById.clear();
               this.invalidateRenderCache();
@@ -768,19 +771,21 @@ export default class QueryBrowser {
     this.queryContextMenuEl = menu;
 
     // Position near the cursor, clamping to the viewport.
+    const VIEWPORT_PADDING = 4;
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
     requestAnimationFrame(() => {
       const rect = menu.getBoundingClientRect();
-      if (rect.right > window.innerWidth - 4) {
-        menu.style.left = `${Math.max(4, event.clientX - rect.width)}px`;
+      if (rect.right > window.innerWidth - VIEWPORT_PADDING) {
+        menu.style.left = `${Math.max(VIEWPORT_PADDING, event.clientX - rect.width)}px`;
       }
-      if (rect.bottom > window.innerHeight - 4) {
-        menu.style.top = `${Math.max(4, event.clientY - rect.height)}px`;
+      if (rect.bottom > window.innerHeight - VIEWPORT_PADDING) {
+        menu.style.top = `${Math.max(VIEWPORT_PADDING, event.clientY - rect.height)}px`;
       }
     });
 
     const onOutsideClick = (e: MouseEvent) => {
+      if (!this.queryContextMenuEl) return;
       if (!menu.contains(e.target as Node)) this.closeQueryContextMenu();
     };
     const onEsc = (e: KeyboardEvent) => {
@@ -790,11 +795,12 @@ export default class QueryBrowser {
       }
     };
 
-    // Defer so the current click that opened the menu is not immediately caught.
-    setTimeout(() => {
+    // Use requestAnimationFrame to defer listener registration past the current event cycle,
+    // ensuring the contextmenu event that opened the menu is not immediately caught.
+    requestAnimationFrame(() => {
       document.addEventListener("click", onOutsideClick);
       document.addEventListener("keydown", onEsc);
-    }, 0);
+    });
 
     this.queryContextMenuCleanup = () => {
       document.removeEventListener("click", onOutsideClick);
