@@ -9,6 +9,7 @@ import { hashQueryText } from "./textHash";
 import type { BackendType, VersionRef, ManagedTabMetadata } from "./types";
 import { normalizeQueryFilename } from "./normalizeQueryFilename";
 import SaveManagedQueryModal from "./SaveManagedQueryModal";
+import QueryHistoryModal from "./QueryHistoryModal";
 
 import "./QueryBrowser.scss";
 
@@ -52,6 +53,8 @@ export default class QueryBrowser {
 
   private queryContextMenuEl?: HTMLElement;
   private queryContextMenuCleanup?: () => void;
+
+  private queryHistoryModal?: QueryHistoryModal;
 
   private entrySignature(entry: FolderEntry): string {
     const parent = entry.parentId || "";
@@ -718,6 +721,14 @@ export default class QueryBrowser {
         );
       }
     }
+
+    // History
+    menu.appendChild(
+      makeItem("History", async () => {
+        if (!this.queryHistoryModal) this.queryHistoryModal = new QueryHistoryModal(this.yasgui);
+        await this.queryHistoryModal.show(this.selectedWorkspaceId!, backend, backend.type, entry.id, entry.label);
+      }),
+    );
 
     // Rename
     if (backend.renameQuery) {

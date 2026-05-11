@@ -1186,6 +1186,13 @@ The token must have access to the specific repository you're configuring as a wo
 - For SPARQL workspaces the URI is the managed-query IRI stored in the triplestore
 - For Git workspaces the URI is the browser-accessible link to the file in the repository (GitHub/GitLab/Bitbucket/Gitea)
 
+**View version history of a managed query:**
+
+- In the **Query Browser**: right-click any query and choose **History**
+- A dialog opens listing all saved versions of that query (newest first), each showing its date, author, and save message
+- Click a version in the list to preview its SPARQL text on the right side of the dialog
+- Click **Open in tab** to open the selected historical version in a new tab linked to the managed query; from there you can edit and re-save it to create a new version
+
 **Credentials:**
 
 - Tokens are stored locally, not saved together with the managed query and are not re-displayed after entry
