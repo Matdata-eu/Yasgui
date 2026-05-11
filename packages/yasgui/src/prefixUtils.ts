@@ -1,6 +1,6 @@
 export function deduplicatePrefixes(prefixText: string): string {
   const lines = prefixText.split("\n");
-  const seen = new Map<string, string>();
+  const seen = new Set<string>();
   const result: string[] = [];
 
   for (const line of lines) {
@@ -10,11 +10,11 @@ export function deduplicatePrefixes(prefixText: string): string {
     // Allow an empty prefix label so the default prefix form `PREFIX : <...>` is
     // deduplicated together with named prefixes, while keeping the original
     // word-character restriction for named labels.
-    const match = trimmed.match(/^\s*PREFIX\s+(\w*):\s*<(.+)>\s*$/i);
+    const match = trimmed.match(/^\s*PREFIX\s+(\w*):\s*<([^>]+)>\s*$/i);
     if (match) {
       const label = match[1].toLowerCase();
       if (!seen.has(label)) {
-        seen.set(label, trimmed);
+        seen.add(label);
         result.push(trimmed);
       }
     } else {
