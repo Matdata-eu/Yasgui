@@ -436,10 +436,12 @@ export class Tab extends EventEmitter {
   private handleKeyDown = (event: KeyboardEvent) => {
     if (event.defaultPrevented) return;
 
-    const isTabSwitchShortcut = (event.ctrlKey || event.metaKey) && event.altKey && event.key === "Tab";
+    // Ctrl+, → backward (less recently used), Ctrl+Alt+, → forward (more recently used)
+    // Ctrl+Tab / Ctrl+Shift+Tab cannot be used: the browser intercepts them before keydown fires
+    const isTabSwitchShortcut = (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === ",";
     if (isTabSwitchShortcut) {
       event.preventDefault();
-      this.yasgui.selectRecentlyUsedTab(event.shiftKey ? "forward" : "backward");
+      this.yasgui.selectRecentlyUsedTab(event.altKey ? "forward" : "backward");
       return;
     }
 
