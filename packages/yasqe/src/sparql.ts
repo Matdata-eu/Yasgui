@@ -251,8 +251,9 @@ export async function executeQuery(
 
     // Use custom query if provided, otherwise use the args from config
     if (options?.customQuery) {
-      const queryArg = getQueryParameterName(populatedConfig.args);
-      searchParams.append(queryArg, options.customQuery);
+      // A custom query is always a SPARQL read query (CONSTRUCT/DESCRIBE/SELECT/ASK),
+      // never an update — always use the "query" parameter regardless of editor mode.
+      searchParams.append("query", options.customQuery);
 
       // Add other args except the query/update parameter
       appendArgsToParams(populatedConfig.args, ["query", "update"]);
