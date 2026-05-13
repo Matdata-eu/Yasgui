@@ -97,7 +97,7 @@ export default class TabSettingsModal {
     this.mapButton.innerHTML = '<i class="fas fa-map-location-dot"></i>';
     addClass(this.mapButton, "tabContextButton", "desktopOnly");
     controlBarEl.appendChild(this.mapButton);
-    this.mapButton.onclick = () => this.openMapWidget();
+    this.mapButton.onclick = (event: MouseEvent) => this.openMapWidget(event);
 
     // Hamburger menu button and dropdown (mobile only)
     const hamburgerContainer = document.createElement("div");
@@ -161,8 +161,8 @@ export default class TabSettingsModal {
     const mapItem = document.createElement("button");
     addClass(mapItem, "hamburgerMenuItem");
     mapItem.innerHTML = '<i class="fas fa-map-location-dot"></i><span>Open map</span>';
-    mapItem.onclick = () => {
-      this.openMapWidget();
+    mapItem.onclick = (event) => {
+      this.openMapWidget(event);
       this.closeHamburgerMenu();
     };
     this.hamburgerDropdown.appendChild(mapItem);
@@ -1865,10 +1865,11 @@ export default class TabSettingsModal {
     yasqe.focus();
   }
 
-  private openMapWidget() {
+  private openMapWidget(event?: MouseEvent) {
     const yasqe = this.tab.getYasqe();
     if (!yasqe) return;
-    yasqe.toggleMapWidget();
+    const anchorPoint = event ? { x: event.clientX, y: event.clientY } : undefined;
+    yasqe.toggleMapWidget(anchorPoint);
   }
 
   public capturePrefixesFromQuery() {

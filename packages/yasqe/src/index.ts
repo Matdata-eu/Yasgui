@@ -647,8 +647,8 @@ export class Yasqe extends CodeMirror {
       addClass(mapIcon, "fa-map-location-dot");
       mapIcon.setAttribute("aria-hidden", "true");
       this.mapBtn.appendChild(mapIcon);
-      this.mapBtn.onclick = () => {
-        this.toggleMapPopup(buttons);
+      this.mapBtn.onclick = (event: MouseEvent) => {
+        this.toggleMapPopup(buttons, { x: event.clientX, y: event.clientY });
       };
       this.mapBtn.title = "Open map";
       this.mapBtn.setAttribute("aria-label", "Open map");
@@ -779,9 +779,9 @@ export class Yasqe extends CodeMirror {
       const mapLabel = document.createElement("span");
       mapLabel.textContent = "Open map";
       mapItem.appendChild(mapLabel);
-      mapItem.onclick = () => {
+      mapItem.onclick = (event: MouseEvent) => {
         this.closeHamburgerMenu();
-        this.toggleMapPopup(buttons);
+        this.toggleMapPopup(buttons, { x: event.clientX, y: event.clientY });
       };
       this.hamburgerMenu.appendChild(mapItem);
     }
@@ -837,15 +837,15 @@ export class Yasqe extends CodeMirror {
     removeClass(this.hamburgerMenu, "active");
     this.hamburgerBtn.setAttribute("aria-expanded", "false");
   }
-  private toggleMapPopup(buttons: HTMLDivElement) {
+  private toggleMapPopup(buttons: HTMLDivElement, anchorPoint?: { x: number; y: number }) {
     if (this.mapPopup) {
       this.closeMapPopupHandler?.();
       return;
     }
-    this.createMapPopup(buttons);
+    this.createMapPopup(buttons, anchorPoint);
   }
 
-  private createMapPopup(buttons: HTMLDivElement) {
+  private createMapPopup(buttons: HTMLDivElement, anchorPoint?: { x: number; y: number }) {
     this.mapPopup = document.createElement("div");
     this.mapPopup.className = "yasqe_mapPopup";
     buttons.appendChild(this.mapPopup);
@@ -914,10 +914,13 @@ export class Yasqe extends CodeMirror {
       zoomControl: true,
       attributionControl: true,
     }).setView([51.505, -0.09], 2);
+    map.getContainer().style.cursor = "crosshair";
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
+    L.DomEvent.disableClickPropagation(geometryControls);
+    L.DomEvent.disableScrollPropagation(geometryControls);
 
     const updatePreview = () => {
       const wkt = coordinatesToWkt(geometryType, coordinates);
@@ -971,7 +974,9 @@ export class Yasqe extends CodeMirror {
       addClass(icon, iconClass);
       icon.setAttribute("aria-hidden", "true");
       button.appendChild(icon);
-      button.onclick = () => {
+      button.onclick = (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
         if (geometryType === type) return;
         geometryType = type;
         coordinates = [];
@@ -1043,19 +1048,35 @@ export class Yasqe extends CodeMirror {
 
     const positionPopup = () => {
       if (!this.mapPopup) return;
-      const buttonsRect = buttons.getBoundingClientRect();
+      const popupWidth = this.mapPopup.offsetWidth || this.mapPopup.scrollWidth || 520;
       const popupHeight = this.mapPopup.offsetHeight || this.mapPopup.scrollHeight || this.mapPopup.clientHeight;
-      const spaceAbove = buttonsRect.top;
-      if (spaceAbove >= popupHeight + 20) {
-        this.mapPopup.style.bottom = (buttons.clientHeight || 46) + "px";
-        this.mapPopup.style.top = "auto";
-        this.mapPopup.style.right = "0px";
-      } else {
-        this.mapPopup.style.position = "fixed";
-        this.mapPopup.style.bottom = "auto";
-        this.mapPopup.style.top = "20px";
-        this.mapPopup.style.right = "20px";
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      this.mapPopup.style.position = "fixed";
+      this.mapPopup.style.bottom = "auto";
+
+      if (anchorPoint) {
+        const padding = 20;
+        let left = anchorPoint.x + 12;
+        let top = anchorPoint.y + 12;
+        if (left + popupWidth > viewportWidth - padding) {
+          left = Math.max(padding, anchorPoint.x - popupWidth - 12);
+        }
+        if (top + popupHeight > viewportHeight - padding) {
+          top = Math.max(padding, anchorPoint.y - popupHeight - 12);
+        }
+        this.mapPopup.style.left = `${Math.max(padding, left)}px`;
+        this.mapPopup.style.top = `${Math.max(padding, top)}px`;
+        this.mapPopup.style.right = "auto";
+        return;
       }
+
+      const buttonsRect = buttons.getBoundingClientRect();
+      const fallbackLeft = Math.min(viewportWidth - popupWidth - 20, Math.max(20, buttonsRect.right - popupWidth));
+      this.mapPopup.style.left = `${Math.max(20, fallbackLeft)}px`;
+      this.mapPopup.style.top = "20px";
+      this.mapPopup.style.right = "auto";
     };
 
     if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
@@ -1073,10 +1094,10 @@ export class Yasqe extends CodeMirror {
     redrawGeometry();
   }
 
-  public toggleMapWidget() {
+  public toggleMapWidget(anchorPoint?: { x: number; y: number }) {
     const buttons = this.getWrapperElement().querySelector(".yasqe_buttons");
     if (!buttons || !(buttons instanceof HTMLDivElement)) return;
-    this.toggleMapPopup(buttons);
+    this.toggleMapPopup(buttons, anchorPoint);
   }
 
   public toggleFullscreen() {

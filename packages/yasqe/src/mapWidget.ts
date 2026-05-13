@@ -1,4 +1,5 @@
 export type WktGeometryType = "POINT" | "LINESTRING" | "POLYGON";
+const GEO_WKT_LITERAL_DATATYPE = "<http://www.opengis.net/ont/geosparql#wktLiteral>";
 
 export interface WktCoordinate {
   lat: number;
@@ -48,5 +49,5 @@ export function coordinatesToWkt(geometryType: WktGeometryType, coordinates: Wkt
 }
 
 export function wrapWktLiteral(wkt: string) {
-  return `"${wkt}"^^wktLiteral`;
+  return `"${wkt}"^^${GEO_WKT_LITERAL_DATATYPE}`;
 }

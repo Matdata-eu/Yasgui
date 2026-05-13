@@ -45,7 +45,9 @@ describe("WKT map widget utilities", () => {
     expect(wkt).to.equal(undefined);
   });
 
-  it("wraps generated WKT as a typed literal using ^^wktLiteral", () => {
-    expect(wrapWktLiteral("POINT(4.1 52.1)")).to.equal('"POINT(4.1 52.1)"^^wktLiteral');
+  it("wraps generated WKT as a typed literal using geo:wktLiteral datatype IRI", () => {
+    expect(wrapWktLiteral("POINT(4.1 52.1)")).to.equal(
+      '"POINT(4.1 52.1)"^^<http://www.opengis.net/ont/geosparql#wktLiteral>',
+    );
   });
 });
