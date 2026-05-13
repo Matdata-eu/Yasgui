@@ -336,9 +336,14 @@
         border-radius: 4px;
 
         .leaflet-container,
-        .leaflet-pane,
-        .leaflet-interactive {
-          cursor: crosshair !important;
+        .leaflet-container .leaflet-tile-pane,
+        .leaflet-container .leaflet-overlay-pane {
+          cursor: crosshair;
+        }
+
+        .leaflet-control-container,
+        .leaflet-control-container * {
+          cursor: pointer;
         }
       }
 

@@ -903,7 +903,7 @@ export class Yasqe extends CodeMirror {
     let coordinates: WktCoordinate[] = [];
     let marker: L.Marker | undefined;
     let shape: L.Polyline | L.Polygon | undefined;
-    let geometryButtons: Record<WktGeometryType, HTMLButtonElement>;
+    const geometryButtons: Partial<Record<WktGeometryType, HTMLButtonElement>> = {};
 
     const getMapAccentColor = () => {
       const accent = getComputedStyle(this.rootEl).getPropertyValue("--yasgui-accent-color").trim();
@@ -951,8 +951,9 @@ export class Yasqe extends CodeMirror {
     };
 
     const updateGeometryButtons = () => {
-      for (const type of Object.keys(geometryButtons) as WktGeometryType[]) {
+      for (const type of ["POINT", "LINESTRING", "POLYGON"] as WktGeometryType[]) {
         const button = geometryButtons[type];
+        if (!button) continue;
         button.classList.toggle("active", type === geometryType);
         button.setAttribute("aria-pressed", type === geometryType ? "true" : "false");
       }
@@ -981,11 +982,9 @@ export class Yasqe extends CodeMirror {
       return button;
     };
 
-    geometryButtons = {
-      POINT: createGeometryButton("POINT", "fa-location-dot", "Point"),
-      LINESTRING: createGeometryButton("LINESTRING", "fa-slash", "LineString"),
-      POLYGON: createGeometryButton("POLYGON", "fa-draw-polygon", "Polygon"),
-    };
+    geometryButtons.POINT = createGeometryButton("POINT", "fa-location-dot", "Point");
+    geometryButtons.LINESTRING = createGeometryButton("LINESTRING", "fa-slash", "LineString");
+    geometryButtons.POLYGON = createGeometryButton("POLYGON", "fa-draw-polygon", "Polygon");
     updateGeometryButtons();
 
     const closePopup = () => {
