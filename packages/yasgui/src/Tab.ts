@@ -1287,6 +1287,7 @@ export class Tab extends EventEmitter {
       createShareableLink: () => this.getShareableLink(),
       // Use global showSnippetsBar setting if it exists
       showSnippetsBar: this.yasgui.config.showSnippetsBar !== false,
+      showMapButton: false,
       requestConfig: () => {
         const processedReqConfig: YasguiRequestConfig = {
           //setting defaults

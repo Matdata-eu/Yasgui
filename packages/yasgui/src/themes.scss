@@ -292,6 +292,48 @@
         border-color: var(--yasgui-border-color);
       }
     }
+
+    .yasqe_mapPopup {
+      background-color: var(--yasgui-bg-primary);
+      border-color: var(--yasgui-border-color);
+      color: var(--yasgui-text-primary);
+
+      .yasqe_mapPopup_map {
+        border-color: var(--yasgui-border-color);
+      }
+
+      .yasqe_mapPopup_geometryBtn {
+        background-color: var(--yasgui-bg-primary);
+        color: var(--yasgui-text-primary);
+        border-color: var(--yasgui-border-color);
+
+        &:hover {
+          background-color: var(--yasgui-bg-secondary);
+        }
+
+        &.active {
+          background-color: var(--yasgui-accent-color);
+          color: var(--yasgui-bg-primary);
+        }
+      }
+
+      .yasqe_mapPopup_preview {
+        background-color: var(--yasgui-bg-secondary);
+        color: var(--yasgui-text-primary);
+        border-color: var(--yasgui-border-color);
+      }
+
+      .leaflet-control-zoom a,
+      .leaflet-control-attribution {
+        background-color: var(--yasgui-bg-primary);
+        color: var(--yasgui-text-primary);
+        border-color: var(--yasgui-border-color);
+      }
+
+      .leaflet-control-zoom a:hover {
+        background-color: var(--yasgui-bg-secondary);
+      }
+    }
   }
 
   .yasqe_btn {
