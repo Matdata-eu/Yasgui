@@ -32,7 +32,12 @@ export function coordinatesToWkt(geometryType: WktGeometryType, coordinates: Wkt
     return `LINESTRING(${formatCoordinates(coordinates)})`;
   }
 
+  if (geometryType !== "POLYGON") return undefined;
   if (coordinates.length < 3) return undefined;
+  const uniqueCoordinates = new Set(
+    coordinates.map((coord) => `${normalizeCoordinate(coord.lng)} ${normalizeCoordinate(coord.lat)}`),
+  );
+  if (uniqueCoordinates.size < 3) return undefined;
 
   const polygonCoordinates = coordinates.slice();
   if (!sameCoordinate(polygonCoordinates[0], polygonCoordinates[polygonCoordinates.length - 1])) {

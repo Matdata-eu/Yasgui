@@ -781,7 +781,7 @@ export class Yasqe extends CodeMirror {
       mapItem.appendChild(mapLabel);
       mapItem.onclick = () => {
         this.closeHamburgerMenu();
-        this.mapBtn?.click();
+        this.toggleMapPopup(buttons);
       };
       this.hamburgerMenu.appendChild(mapItem);
     }
@@ -977,11 +977,11 @@ export class Yasqe extends CodeMirror {
     };
 
     map.on("click", (event: L.LeafletMouseEvent) => {
-      const point: WktCoordinate = { lat: event.latlng.lat, lng: event.latlng.lng };
+      const coordinate: WktCoordinate = { lat: event.latlng.lat, lng: event.latlng.lng };
       if (geometryType === "POINT") {
-        coordinates = [point];
+        coordinates = [coordinate];
       } else {
-        coordinates.push(point);
+        coordinates.push(coordinate);
       }
       redrawGeometry();
     });
@@ -1012,7 +1012,7 @@ export class Yasqe extends CodeMirror {
     const positionPopup = () => {
       if (!this.mapPopup) return;
       const buttonsRect = buttons.getBoundingClientRect();
-      const popupHeight = this.mapPopup.offsetHeight || 500;
+      const popupHeight = this.mapPopup.offsetHeight || this.mapPopup.scrollHeight || this.mapPopup.clientHeight;
       const spaceAbove = buttonsRect.top;
       if (spaceAbove >= popupHeight + 20) {
         this.mapPopup.style.bottom = (buttons.clientHeight || 46) + "px";

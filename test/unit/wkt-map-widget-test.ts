@@ -35,4 +35,13 @@ describe("WKT map widget utilities", () => {
     ]);
     expect(wkt).to.equal("POLYGON((4.1 52.1, 4.2 52.2, 4.3 52.1, 4.1 52.1))");
   });
+
+  it("returns undefined for degenerate polygons with fewer than 3 distinct coordinates", () => {
+    const wkt = coordinatesToWkt("POLYGON", [
+      { lng: 4.1, lat: 52.1 },
+      { lng: 4.2, lat: 52.2 },
+      { lng: 4.1, lat: 52.1 },
+    ]);
+    expect(wkt).to.equal(undefined);
+  });
 });
