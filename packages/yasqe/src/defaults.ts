@@ -135,6 +135,7 @@ SELECT * WHERE {
     queryingDisabled: undefined,
     prefixCcApi: prefixCcApi,
     showFormatButton: true,
+    showMapButton: true,
     checkConstructVariables: true,
     snippets: [
       {

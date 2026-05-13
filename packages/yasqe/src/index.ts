@@ -1,5 +1,6 @@
 import "./scss/yasqe.scss";
 import "./scss/buttons.scss";
+import "leaflet/dist/leaflet.css";
 import { findFirstPrefixLine } from "./prefixFold";
 import { getPrefixesFromQuery, addPrefixes, removePrefixes, Prefixes } from "./prefixUtils";
 import { getPreviousNonWsToken, getNextNonWsToken, getCompleteToken } from "./tokenUtils";
@@ -17,6 +18,8 @@ import getDefaults from "./defaults";
 import CodeMirror from "./CodeMirror";
 import { YasqeAjaxConfig } from "./sparql";
 import { spfmt } from "sparql-formatter";
+import * as L from "leaflet";
+import { coordinatesToWkt, WktCoordinate, WktGeometryType } from "./mapWidget";
 
 // Toast notification timing constants
 const TOAST_DEFAULT_DURATION = 3000; // 3 seconds
@@ -68,6 +71,9 @@ export class Yasqe extends CodeMirror {
   private hamburgerBtn: HTMLButtonElement | undefined;
   private hamburgerMenu: HTMLDivElement | undefined;
   private shareBtn: HTMLButtonElement | undefined;
+  private mapBtn: HTMLButtonElement | undefined;
+  private mapPopup: HTMLDivElement | undefined;
+  private closeMapPopupHandler: (() => void) | undefined;
   private isFullscreen: boolean = false;
   private horizontalResizeWrapper?: HTMLDivElement;
   private snippetsBar?: HTMLDivElement;
@@ -631,7 +637,26 @@ export class Yasqe extends CodeMirror {
     }
 
     /**
-     * Draw fullscreen btn (FIFTH)
+     * Draw map btn (FIFTH)
+     */
+    if (this.config.showMapButton) {
+      this.mapBtn = document.createElement("button");
+      addClass(this.mapBtn, "yasqe_mapButton");
+      const mapIcon = document.createElement("i");
+      addClass(mapIcon, "fas");
+      addClass(mapIcon, "fa-map-location-dot");
+      mapIcon.setAttribute("aria-hidden", "true");
+      this.mapBtn.appendChild(mapIcon);
+      this.mapBtn.onclick = () => {
+        this.toggleMapPopup(buttons);
+      };
+      this.mapBtn.title = "Open map";
+      this.mapBtn.setAttribute("aria-label", "Open map");
+      buttons.appendChild(this.mapBtn);
+    }
+
+    /**
+     * Draw fullscreen btn (SIXTH)
      */
     this.fullscreenBtn = document.createElement("button");
     addClass(this.fullscreenBtn, "yasqe_fullscreenButton");
@@ -743,6 +768,24 @@ export class Yasqe extends CodeMirror {
       this.hamburgerMenu.appendChild(formatItem);
     }
 
+    if (this.config.showMapButton) {
+      const mapItem = document.createElement("button");
+      mapItem.className = "yasqe_hamburgerMenuItem";
+      const mapIconMenu = document.createElement("i");
+      addClass(mapIconMenu, "fas");
+      addClass(mapIconMenu, "fa-map-location-dot");
+      mapIconMenu.setAttribute("aria-hidden", "true");
+      mapItem.appendChild(mapIconMenu);
+      const mapLabel = document.createElement("span");
+      mapLabel.textContent = "Open map";
+      mapItem.appendChild(mapLabel);
+      mapItem.onclick = () => {
+        this.closeHamburgerMenu();
+        this.mapBtn?.click();
+      };
+      this.hamburgerMenu.appendChild(mapItem);
+    }
+
     const fullscreenItem = document.createElement("button");
     fullscreenItem.className = "yasqe_hamburgerMenuItem";
     const fullscreenIconMenu = document.createElement("i");
@@ -793,6 +836,209 @@ export class Yasqe extends CodeMirror {
     if (!this.hamburgerMenu || !this.hamburgerBtn) return;
     removeClass(this.hamburgerMenu, "active");
     this.hamburgerBtn.setAttribute("aria-expanded", "false");
+  }
+  private toggleMapPopup(buttons: HTMLDivElement) {
+    if (this.mapPopup) {
+      this.closeMapPopupHandler?.();
+      return;
+    }
+    this.createMapPopup(buttons);
+  }
+
+  private createMapPopup(buttons: HTMLDivElement) {
+    this.mapPopup = document.createElement("div");
+    this.mapPopup.className = "yasqe_mapPopup";
+    buttons.appendChild(this.mapPopup);
+
+    const header = document.createElement("div");
+    header.className = "yasqe_mapPopup_header";
+    const title = document.createElement("div");
+    title.className = "yasqe_mapPopup_title";
+    title.textContent = "Create WKT";
+    header.appendChild(title);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "yasqe_mapPopup_close";
+    closeBtn.setAttribute("aria-label", "Close map");
+    closeBtn.innerHTML = "&times;";
+    header.appendChild(closeBtn);
+    this.mapPopup.appendChild(header);
+
+    const geometryTypeSelect = document.createElement("select");
+    geometryTypeSelect.className = "yasqe_mapPopup_geometrySelect";
+    for (const type of ["POINT", "LINESTRING", "POLYGON"] as WktGeometryType[]) {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      geometryTypeSelect.appendChild(option);
+    }
+    this.mapPopup.appendChild(geometryTypeSelect);
+
+    const mapContainer = document.createElement("div");
+    mapContainer.className = "yasqe_mapPopup_map";
+    this.mapPopup.appendChild(mapContainer);
+
+    const hint = document.createElement("div");
+    hint.className = "yasqe_mapPopup_hint";
+    hint.textContent = "Click the map to add coordinates";
+    this.mapPopup.appendChild(hint);
+
+    const preview = document.createElement("textarea");
+    preview.className = "yasqe_mapPopup_preview";
+    preview.readOnly = true;
+    preview.rows = 2;
+    this.mapPopup.appendChild(preview);
+
+    const actions = document.createElement("div");
+    actions.className = "yasqe_mapPopup_actions";
+    const undoBtn = document.createElement("button");
+    undoBtn.className = "yasqe_btn yasqe_btn-sm";
+    undoBtn.textContent = "Undo";
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "yasqe_btn yasqe_btn-sm";
+    clearBtn.textContent = "Clear";
+    const insertBtn = document.createElement("button");
+    insertBtn.className = "yasqe_btn yasqe_btn-sm";
+    insertBtn.textContent = "Insert WKT";
+    actions.appendChild(undoBtn);
+    actions.appendChild(clearBtn);
+    actions.appendChild(insertBtn);
+    this.mapPopup.appendChild(actions);
+
+    let geometryType: WktGeometryType = "POINT";
+    let coordinates: WktCoordinate[] = [];
+    let marker: L.Marker | undefined;
+    let shape: L.Polyline | L.Polygon | undefined;
+
+    const map = L.map(mapContainer, {
+      zoomControl: true,
+      attributionControl: true,
+    }).setView([51.505, -0.09], 2);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19,
+    }).addTo(map);
+
+    const updatePreview = () => {
+      const wkt = coordinatesToWkt(geometryType, coordinates);
+      preview.value = wkt || "";
+      insertBtn.disabled = !wkt;
+      undoBtn.disabled = coordinates.length === 0;
+      clearBtn.disabled = coordinates.length === 0;
+    };
+
+    const redrawGeometry = () => {
+      if (marker) {
+        map.removeLayer(marker);
+        marker = undefined;
+      }
+      if (shape) {
+        map.removeLayer(shape);
+        shape = undefined;
+      }
+
+      const latLngs = coordinates.map((coord) => L.latLng(coord.lat, coord.lng));
+      if (geometryType === "POINT" && latLngs.length > 0) {
+        marker = L.marker(latLngs[latLngs.length - 1]).addTo(map);
+      } else if (geometryType === "LINESTRING" && latLngs.length > 0) {
+        shape = L.polyline(latLngs, { color: "#337ab7" }).addTo(map);
+      } else if (geometryType === "POLYGON" && latLngs.length > 0) {
+        shape = L.polygon(latLngs, { color: "#337ab7" }).addTo(map);
+      }
+
+      updatePreview();
+    };
+
+    const closePopup = () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.removeEventListener("click", closeOnOutsideClick, true);
+      map.remove();
+      this.mapPopup?.remove();
+      this.mapPopup = undefined;
+      this.closeMapPopupHandler = undefined;
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closePopup();
+      }
+    };
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!this.mapPopup) return;
+      if (this.mapPopup.contains(event.target as Node) || this.mapBtn?.contains(event.target as Node)) return;
+      closePopup();
+    };
+
+    geometryTypeSelect.onchange = () => {
+      geometryType = geometryTypeSelect.value as WktGeometryType;
+      coordinates = [];
+      redrawGeometry();
+    };
+
+    map.on("click", (event: L.LeafletMouseEvent) => {
+      const point: WktCoordinate = { lat: event.latlng.lat, lng: event.latlng.lng };
+      if (geometryType === "POINT") {
+        coordinates = [point];
+      } else {
+        coordinates.push(point);
+      }
+      redrawGeometry();
+    });
+
+    undoBtn.onclick = () => {
+      coordinates.pop();
+      redrawGeometry();
+    };
+
+    clearBtn.onclick = () => {
+      coordinates = [];
+      redrawGeometry();
+    };
+
+    insertBtn.onclick = () => {
+      const wkt = coordinatesToWkt(geometryType, coordinates);
+      if (!wkt) return;
+      this.replaceSelection(wkt);
+      closePopup();
+    };
+
+    closeBtn.onclick = () => closePopup();
+    this.closeMapPopupHandler = closePopup;
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.addEventListener("click", closeOnOutsideClick, true);
+
+    const positionPopup = () => {
+      if (!this.mapPopup) return;
+      const buttonsRect = buttons.getBoundingClientRect();
+      const popupHeight = this.mapPopup.offsetHeight || 500;
+      const spaceAbove = buttonsRect.top;
+      if (spaceAbove >= popupHeight + 20) {
+        this.mapPopup.style.bottom = (buttons.clientHeight || 46) + "px";
+        this.mapPopup.style.top = "auto";
+        this.mapPopup.style.right = "0px";
+      } else {
+        this.mapPopup.style.position = "fixed";
+        this.mapPopup.style.bottom = "auto";
+        this.mapPopup.style.top = "20px";
+        this.mapPopup.style.right = "20px";
+      }
+    };
+
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => {
+        positionPopup();
+        map.invalidateSize();
+      });
+    } else {
+      setTimeout(() => {
+        positionPopup();
+        map.invalidateSize();
+      }, 0);
+    }
+
+    redrawGeometry();
   }
   public toggleFullscreen() {
     this.isFullscreen = !this.isFullscreen;
@@ -1857,6 +2103,7 @@ export class Yasqe extends CodeMirror {
   public destroy() {
     // Abort running query
     this.abortQuery();
+    this.closeMapPopupHandler?.();
     this.unregisterEventListeners();
     this.horizontalResizeWrapper?.removeEventListener("mousedown", this.initDrag, false);
     this.horizontalResizeWrapper?.removeEventListener("dblclick", this.expandEditor);
@@ -2043,6 +2290,7 @@ export interface Config extends Partial<CodeMirror.EditorConfiguration> {
   queryingDisabled: string | undefined; // The string will be the message displayed when hovered
   prefixCcApi: string; // the suggested default prefixes URL API getter
   showFormatButton: boolean; // Show a button to format the query
+  showMapButton: boolean; // Show a button to create WKT literals from map input
   checkConstructVariables: boolean; // Check for undefined variables in CONSTRUCT queries
   snippets: Snippet[]; // Code snippets to show in the snippets bar
   showSnippetsBar: boolean; // Show the snippets bar

@@ -26,12 +26,14 @@
   "dependencies": {
     "@matdata/yasgui-utils": "^4.6.1",
     "codemirror": "^5.51.0",
+    "leaflet": "^1.9.4",
     "lodash-es": "^4.17.15",
     "query-string": "^6.10.1",
     "sparql-formatter": "^1.0.2"
   },
   "devDependencies": {
     "@types/codemirror": "0.0.100",
+    "@types/leaflet": "^1.9.21",
     "@types/lodash-es": "^4.17.3",
     "@types/node": "^22.5.4"
   },

@@ -292,6 +292,69 @@
         }
       }
     }
+    .yasqe_mapPopup {
+      position: absolute;
+      padding: 12px;
+      background-color: var(--yasgui-bg-primary, #fff);
+      border: 1px solid var(--yasgui-border-color, #e3e3e3);
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      width: min(520px, calc(100vw - 40px));
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10001;
+
+      .yasqe_mapPopup_header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .yasqe_mapPopup_title {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--yasgui-text-primary, #333);
+      }
+
+      .yasqe_mapPopup_close {
+        border: none;
+        background: none;
+        color: var(--yasgui-text-secondary, #505050);
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        margin-left: 0;
+      }
+
+      .yasqe_mapPopup_geometrySelect {
+        width: 100%;
+      }
+
+      .yasqe_mapPopup_map {
+        height: 280px;
+        border: 1px solid var(--yasgui-border-color, #e3e3e3);
+        border-radius: 4px;
+      }
+
+      .yasqe_mapPopup_hint {
+        color: var(--yasgui-text-secondary, #666);
+        font-size: 12px;
+      }
+
+      .yasqe_mapPopup_preview {
+        width: 100%;
+        resize: vertical;
+      }
+
+      .yasqe_mapPopup_actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+    }
 
     .yasqe_saveWrapper {
       position: relative;
@@ -324,6 +387,28 @@
     }
 
     .yasqe_formatButton {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 6px;
+      margin-left: 8px;
+      height: 36px;
+      width: 36px;
+      color: var(--yasgui-text-secondary, #505050);
+
+      i {
+        font-size: 20px;
+      }
+
+      &:hover {
+        color: #337ab7;
+      }
+    }
+
+    .yasqe_mapButton {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -451,6 +536,7 @@
       .yasqe_share,
       .yasqe_saveWrapper,
       .yasqe_formatButton,
+      .yasqe_mapButton,
       .yasqe_fullscreenButton {
         display: none !important;
       }
