@@ -299,9 +299,11 @@
       border: 1px solid var(--yasgui-border-color, #e3e3e3);
       border-radius: 4px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-sizing: border-box;
       width: min(520px, calc(100vw - 40px));
       max-height: calc(100vh - 40px);
       overflow-y: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -354,12 +356,20 @@
         z-index: 500;
         display: flex;
         flex-direction: column;
+        border: 1px solid var(--yasgui-border-color, #e3e3e3);
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: var(--yasgui-graph-shadow, 0 2px 4px rgba(0, 0, 0, 0.2));
       }
 
       .yasqe_mapPopup_geometryBtn {
+        appearance: none;
         width: 30px;
         height: 30px;
+        margin: 0;
         border: none;
+        border-radius: 0;
+        border-bottom: 1px solid var(--yasgui-border-color, #e3e3e3);
         background: var(--yasgui-bg-primary, #fff);
         color: var(--yasgui-text-primary, #333);
         cursor: pointer;
@@ -379,6 +389,10 @@
           background: var(--yasgui-accent-color, #337ab7);
           color: #fff;
         }
+
+        &:last-child {
+          border-bottom: none;
+        }
       }
 
       .yasqe_mapPopup_hint {
@@ -388,6 +402,7 @@
 
       .yasqe_mapPopup_preview {
         width: 100%;
+        box-sizing: border-box;
         resize: vertical;
         border: 1px solid var(--yasgui-border-color, #e3e3e3);
         background-color: var(--yasgui-bg-secondary, #f8f8f8);
