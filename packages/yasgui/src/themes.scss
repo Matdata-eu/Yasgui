@@ -292,6 +292,48 @@
         border-color: var(--yasgui-border-color);
       }
     }
+
+    .yasqe_mapPopup {
+      background-color: var(--yasgui-bg-primary) !important;
+      border-color: var(--yasgui-border-color) !important;
+      color: var(--yasgui-text-primary) !important;
+
+      .yasqe_mapPopup_map {
+        border-color: var(--yasgui-border-color) !important;
+      }
+
+      .yasqe_mapPopup_geometryBtn {
+        background-color: var(--yasgui-bg-primary) !important;
+        color: var(--yasgui-text-primary) !important;
+        border-color: var(--yasgui-border-color) !important;
+
+        &:hover {
+          background-color: var(--yasgui-bg-secondary) !important;
+        }
+
+        &.active {
+          background-color: var(--yasgui-accent-color) !important;
+          color: var(--yasgui-bg-primary) !important;
+        }
+      }
+
+      .yasqe_mapPopup_preview {
+        background-color: var(--yasgui-bg-secondary) !important;
+        color: var(--yasgui-text-primary) !important;
+        border-color: var(--yasgui-border-color) !important;
+      }
+
+      .leaflet-control-zoom a,
+      .leaflet-control-attribution {
+        background-color: var(--yasgui-bg-primary) !important;
+        color: var(--yasgui-text-primary) !important;
+        border-color: var(--yasgui-border-color) !important;
+      }
+
+      .leaflet-control-zoom a:hover {
+        background-color: var(--yasgui-bg-secondary) !important;
+      }
+    }
   }
 
   .yasqe_btn {

@@ -19,7 +19,7 @@ import CodeMirror from "./CodeMirror";
 import { YasqeAjaxConfig } from "./sparql";
 import { spfmt } from "sparql-formatter";
 import * as L from "leaflet";
-import { coordinatesToWkt, WktCoordinate, WktGeometryType } from "./mapWidget";
+import { coordinatesToWkt, wrapWktLiteral, WktCoordinate, WktGeometryType } from "./mapWidget";
 
 // Toast notification timing constants
 const TOAST_DEFAULT_DURATION = 3000; // 3 seconds
@@ -864,19 +864,13 @@ export class Yasqe extends CodeMirror {
     header.appendChild(closeBtn);
     this.mapPopup.appendChild(header);
 
-    const geometryTypeSelect = document.createElement("select");
-    geometryTypeSelect.className = "yasqe_mapPopup_geometrySelect";
-    for (const type of ["POINT", "LINESTRING", "POLYGON"] as WktGeometryType[]) {
-      const option = document.createElement("option");
-      option.value = type;
-      option.textContent = type;
-      geometryTypeSelect.appendChild(option);
-    }
-    this.mapPopup.appendChild(geometryTypeSelect);
-
     const mapContainer = document.createElement("div");
     mapContainer.className = "yasqe_mapPopup_map";
     this.mapPopup.appendChild(mapContainer);
+
+    const geometryControls = document.createElement("div");
+    geometryControls.className = "yasqe_mapPopup_geometryControls leaflet-bar";
+    mapContainer.appendChild(geometryControls);
 
     const hint = document.createElement("div");
     hint.className = "yasqe_mapPopup_hint";
@@ -909,6 +903,12 @@ export class Yasqe extends CodeMirror {
     let coordinates: WktCoordinate[] = [];
     let marker: L.Marker | undefined;
     let shape: L.Polyline | L.Polygon | undefined;
+    let geometryButtons: Record<WktGeometryType, HTMLButtonElement>;
+
+    const getMapAccentColor = () => {
+      const accent = getComputedStyle(this.rootEl).getPropertyValue("--yasgui-accent-color").trim();
+      return accent || "#337ab7";
+    };
 
     const map = L.map(mapContainer, {
       zoomControl: true,
@@ -938,16 +938,55 @@ export class Yasqe extends CodeMirror {
       }
 
       const latLngs = coordinates.map((coord) => L.latLng(coord.lat, coord.lng));
+      const accentColor = getMapAccentColor();
       if (geometryType === "POINT" && latLngs.length > 0) {
         marker = L.marker(latLngs[latLngs.length - 1]).addTo(map);
       } else if (geometryType === "LINESTRING" && latLngs.length > 0) {
-        shape = L.polyline(latLngs, { color: "#337ab7" }).addTo(map);
+        shape = L.polyline(latLngs, { color: accentColor }).addTo(map);
       } else if (geometryType === "POLYGON" && latLngs.length > 0) {
-        shape = L.polygon(latLngs, { color: "#337ab7" }).addTo(map);
+        shape = L.polygon(latLngs, { color: accentColor }).addTo(map);
       }
 
       updatePreview();
     };
+
+    const updateGeometryButtons = () => {
+      for (const type of Object.keys(geometryButtons) as WktGeometryType[]) {
+        const button = geometryButtons[type];
+        button.classList.toggle("active", type === geometryType);
+        button.setAttribute("aria-pressed", type === geometryType ? "true" : "false");
+      }
+    };
+
+    const createGeometryButton = (type: WktGeometryType, iconClass: string, label: string) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "yasqe_mapPopup_geometryBtn";
+      button.title = label;
+      button.setAttribute("aria-label", label);
+      button.setAttribute("aria-pressed", "false");
+      const icon = document.createElement("i");
+      addClass(icon, "fas");
+      addClass(icon, iconClass);
+      icon.setAttribute("aria-hidden", "true");
+      button.appendChild(icon);
+      button.onclick = () => {
+        if (geometryType === type) return;
+        geometryType = type;
+        coordinates = [];
+        updateGeometryButtons();
+        redrawGeometry();
+      };
+      geometryControls.appendChild(button);
+      return button;
+    };
+
+    geometryButtons = {
+      POINT: createGeometryButton("POINT", "fa-location-dot", "Point"),
+      LINESTRING: createGeometryButton("LINESTRING", "fa-slash", "LineString"),
+      POLYGON: createGeometryButton("POLYGON", "fa-draw-polygon", "Polygon"),
+    };
+    updateGeometryButtons();
 
     const closePopup = () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -968,12 +1007,6 @@ export class Yasqe extends CodeMirror {
       if (!this.mapPopup) return;
       if (this.mapPopup.contains(event.target as Node) || this.mapBtn?.contains(event.target as Node)) return;
       closePopup();
-    };
-
-    geometryTypeSelect.onchange = () => {
-      geometryType = geometryTypeSelect.value as WktGeometryType;
-      coordinates = [];
-      redrawGeometry();
     };
 
     map.on("click", (event: L.LeafletMouseEvent) => {
@@ -999,7 +1032,7 @@ export class Yasqe extends CodeMirror {
     insertBtn.onclick = () => {
       const wkt = coordinatesToWkt(geometryType, coordinates);
       if (!wkt) return;
-      this.replaceSelection(wkt);
+      this.replaceSelection(wrapWktLiteral(wkt));
       closePopup();
     };
 
@@ -1040,6 +1073,13 @@ export class Yasqe extends CodeMirror {
 
     redrawGeometry();
   }
+
+  public toggleMapWidget() {
+    const buttons = this.getWrapperElement().querySelector(".yasqe_buttons");
+    if (!buttons || !(buttons instanceof HTMLDivElement)) return;
+    this.toggleMapPopup(buttons);
+  }
+
   public toggleFullscreen() {
     this.isFullscreen = !this.isFullscreen;
     if (this.isFullscreen) {

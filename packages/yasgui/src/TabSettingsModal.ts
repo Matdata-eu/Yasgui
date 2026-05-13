@@ -38,6 +38,7 @@ export default class TabSettingsModal {
   private settingsButton!: HTMLButtonElement;
   private themeToggleButton!: HTMLButtonElement;
   private prefixButton!: HTMLButtonElement;
+  private mapButton!: HTMLButtonElement;
   private prefixTextarea!: HTMLTextAreaElement;
   private autoCaptureCheckbox!: HTMLInputElement;
   private hamburgerMenuButton!: HTMLButtonElement;
@@ -88,6 +89,15 @@ export default class TabSettingsModal {
     addClass(this.prefixButton, "tabContextButton", "prefixButton", "desktopOnly");
     controlBarEl.appendChild(this.prefixButton);
     this.prefixButton.onclick = () => this.insertPrefixesIntoQuery();
+
+    // Map button
+    this.mapButton = document.createElement("button");
+    this.mapButton.setAttribute("aria-label", "Open map");
+    this.mapButton.title = "Open map";
+    this.mapButton.innerHTML = '<i class="fas fa-map-location-dot"></i>';
+    addClass(this.mapButton, "tabContextButton", "desktopOnly");
+    controlBarEl.appendChild(this.mapButton);
+    this.mapButton.onclick = () => this.openMapWidget();
 
     // Hamburger menu button and dropdown (mobile only)
     const hamburgerContainer = document.createElement("div");
@@ -147,6 +157,15 @@ export default class TabSettingsModal {
       this.closeHamburgerMenu();
     };
     this.hamburgerDropdown.appendChild(prefixItem);
+
+    const mapItem = document.createElement("button");
+    addClass(mapItem, "hamburgerMenuItem");
+    mapItem.innerHTML = '<i class="fas fa-map-location-dot"></i><span>Open map</span>';
+    mapItem.onclick = () => {
+      this.openMapWidget();
+      this.closeHamburgerMenu();
+    };
+    this.hamburgerDropdown.appendChild(mapItem);
 
     // Theme toggle menu item (if enabled)
     if (this.tab.yasgui.config.showThemeToggle) {
@@ -1844,6 +1863,12 @@ export default class TabSettingsModal {
     const newQuery = savedPrefixes + (restOfQuery ? "\n\n" + restOfQuery : "");
     yasqe.setValue(newQuery);
     yasqe.focus();
+  }
+
+  private openMapWidget() {
+    const yasqe = this.tab.getYasqe();
+    if (!yasqe) return;
+    yasqe.toggleMapWidget();
   }
 
   public capturePrefixesFromQuery() {

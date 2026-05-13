@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import { describe, it } from "mocha";
 
-import { coordinatesToWkt } from "../../packages/yasqe/src/mapWidget.js";
+import { coordinatesToWkt, wrapWktLiteral } from "../../packages/yasqe/src/mapWidget.js";
 
 const expect = chai.expect;
 
@@ -43,5 +43,9 @@ describe("WKT map widget utilities", () => {
       { lng: 4.1, lat: 52.1 },
     ]);
     expect(wkt).to.equal(undefined);
+  });
+
+  it("wraps generated WKT as a typed literal using ^^wktLiteral", () => {
+    expect(wrapWktLiteral("POINT(4.1 52.1)")).to.equal('"POINT(4.1 52.1)"^^wktLiteral');
   });
 });

@@ -46,3 +46,7 @@ export function coordinatesToWkt(geometryType: WktGeometryType, coordinates: Wkt
 
   return `POLYGON((${formatCoordinates(polygonCoordinates)}))`;
 }
+
+export function wrapWktLiteral(wkt: string) {
+  return `"${wkt}"^^wktLiteral`;
+}
