@@ -864,13 +864,18 @@ export class Yasqe extends CodeMirror {
     header.appendChild(closeBtn);
     this.mapPopup.appendChild(header);
 
+    const mapWrapper = document.createElement("div");
+    mapWrapper.className = "yasqe_mapPopup_map";
+    this.mapPopup.appendChild(mapWrapper);
+
     const mapContainer = document.createElement("div");
-    mapContainer.className = "yasqe_mapPopup_map";
-    this.mapPopup.appendChild(mapContainer);
+    mapContainer.style.height = "100%";
+    mapContainer.style.width = "100%";
+    mapWrapper.appendChild(mapContainer);
 
     const geometryControls = document.createElement("div");
     geometryControls.className = "yasqe_mapPopup_geometryControls leaflet-bar";
-    mapContainer.appendChild(geometryControls);
+    mapWrapper.appendChild(geometryControls);
 
     const hint = document.createElement("div");
     hint.className = "yasqe_mapPopup_hint";
