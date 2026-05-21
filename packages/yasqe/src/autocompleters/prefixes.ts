@@ -1,5 +1,6 @@
 import * as Autocompleter from "./";
 import { sortBy } from "lodash-es";
+import bundledPrefixes from "../prefixes.json";
 var tokenTypes: { [id: string]: "prefixed" | "var" } = {
   "string-2": "prefixed",
   atom: "var",
@@ -90,21 +91,29 @@ var conf: Autocompleter.CompleterConfig = {
     return true;
   },
   get: function (yasqe) {
-    return fetch(yasqe.config.prefixCcApi)
+    const url = yasqe.config.prefixCcApi;
+
+    const buildPrefixArray = (resp: Record<string, string>): string[] => {
+      const prefixArray: string[] = [];
+      for (const prefix in resp) {
+        prefixArray.push(`${prefix}: <${resp[prefix]}>`);
+      }
+      return prefixArray.sort();
+    };
+
+    if (!url) {
+      // Default: use bundled prefix data (refreshed from prefix.cc at build time)
+      return Promise.resolve(buildPrefixArray(bundledPrefixes));
+    }
+
+    return fetch(url)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch prefixes");
         }
         return response.json();
       })
-      .then((resp) => {
-        const prefixArray: string[] = [];
-        for (const prefix in resp) {
-          const completeString = `${prefix}: <${resp[prefix]}>`;
-          prefixArray.push(completeString); // the array we want to store in local storage
-        }
-        return prefixArray.sort();
-      });
+      .then((resp) => buildPrefixArray(resp));
   },
   preProcessToken: function (yasqe, token) {
     var previousToken = yasqe.getPreviousNonWsToken(yasqe.getDoc().getCursor().line, token);

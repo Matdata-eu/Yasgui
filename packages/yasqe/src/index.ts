@@ -2353,7 +2353,7 @@ export interface Config extends Partial<CodeMirror.EditorConfiguration> {
   resizeable: boolean;
   editorHeight: string;
   queryingDisabled: string | undefined; // The string will be the message displayed when hovered
-  prefixCcApi: string; // the suggested default prefixes URL API getter
+  prefixCcApi: string | null; // URL to fetch prefix data from; null (default) uses the bundled prefix data
   showFormatButton: boolean; // Show a button to format the query
   showMapButton: boolean; // Show a button to create WKT literals from map input
   checkConstructVariables: boolean; // Check for undefined variables in CONSTRUCT queries
