@@ -1543,39 +1543,213 @@ Visit the [Graph Plugin Repository](https://github.com/Matdata-eu/yasgui-graph-p
 
 ### Geo Plugin
 
-Displays geographic data on an interactive map.
-
-**Features:**
-
-- Interactive map with zoom and pan
-- Marker clustering for dense data
-- Popup information on marker click
-- Multiple map layer options
-- Theme-aware styling
+Displays geographic SPARQL results on an interactive [Leaflet](https://leafletjs.com/) map. It supports a wide range of geometry formats and coordinate systems, and includes tools for styling, filtering, exploring, and exporting spatial data.
 
 **Best For:**
 
-- Queries returning coordinates (latitude/longitude)
-- Geographic/spatial data
-- Location-based queries
-- Visualizing geographic distributions
+- Queries returning WKT geometries (`geo:wktLiteral`)
+- Queries returning GeoJSON, GML, or GeoHash literals
+- Queries with `?lat`/`?lon` numeric columns (auto-detected, no WKT needed)
+- Visualizing geographic distributions, routes, and regions
+- Spatial exploration with drawing-based SPARQL filter generation
+- Animated playback of time-stamped geographic data
 
-**Usage:**
+---
 
-- Execute a query returning geo-coordinates
-- Results should include latitude/longitude properties
-- Select "Geo" from the plugin selector
-- Interact with map markers
+**Supported Data Formats:**
 
-**Expected Data Format:**
-The plugin looks for common coordinate properties:
+The plugin automatically recognizes result columns whose values use any of these datatypes:
 
-- `wkt` (Well-Known Text)
-- `lat`/`long` or `latitude`/`longitude`
-- GeoJSON structures
+| Format | Datatype |
+|---|---|
+| WKT | `geo:wktLiteral`, `virtrdf:Geometry`, `wgs84:geometry` |
+| GeoJSON | `geo:geoJSONLiteral` |
+| GML | `geo:gmlLiteral` |
+| GeoHash | `geo:geoHashLiteral` |
+
+When your query returns `?lat` and `?lon` (or `?latitude`/`?longitude`) as numeric values, the plugin synthesizes a point geometry automatically — no WKT column required.
+
+All WKT geometry types are supported: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON`, and `GEOMETRYCOLLECTION`.
+
+---
+
+**Getting Started:**
+
+1. Execute a query that returns geometry bindings or `?lat`/`?lon` columns.
+2. The Geo plugin tab appears automatically when geographic data is detected.
+3. Click the **Geo** tab to switch to the map view.
+4. The map auto-fits to the extent of the returned features.
+
+**Minimal example — lat/lon columns:**
+
+```sparql
+SELECT ?name ?lat ?lon WHERE {
+  ?city a <http://dbpedia.org/ontology/City> ;
+        rdfs:label   ?name ;
+        geo:lat      ?lat ;
+        geo:long     ?lon .
+  FILTER(LANG(?name) = 'en')
+} LIMIT 100
+```
+
+**Minimal example — WKT geometry:**
+
+```sparql
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+SELECT ?feature ?wkt WHERE {
+  ?feature geo:hasGeometry/geo:asWKT ?wkt .
+} LIMIT 500
+```
+
+---
+
+**Map Controls:**
+
+The map toolbar includes several controls:
+
+| Control | Location | Description |
+|---|---|---|
+| Zoom in / out | Top-left | Standard Leaflet zoom buttons. |
+| Layers | Top-right | Toggle basemaps and switch geometry column overlays on/off. |
+| Style | Top-right | Set default color, opacity, fill, stroke width, and marker radius. |
+| Simplify | Top-right | Live tolerance slider to reduce geometry complexity. |
+| Drawing | Top-left | Draw a rectangle or polygon to generate a spatial SPARQL filter. |
+| Export | Top-right | Download or copy results in multiple formats. |
+| Coordinate readout | Bottom | Shows the cursor's lat/lon position. |
+| Attribution | Bottom-right | Basemap attribution. |
+
+---
+
+**Popups:**
+
+Click any feature on the map to open an information popup. The popup shows:
+
+- All SPARQL binding values for that result row, rendered as a key/value table.
+- IRIs are linkified (clickable links).
+- Bindings whose value is an image URL render as an inline image preview.
+
+You can override the popup content by including a `?wktLabel` binding in your query (plain text or Markdown), or add a `?wktTooltip` binding for hover-only tooltips.
+
+---
+
+**Per-Feature Styling:**
+
+Include a `?wktColor` variable in your SELECT to color individual features:
+
+```sparql
+SELECT ?name ?wkt ?wktColor WHERE {
+  VALUES (?name ?wktColor) {
+    ("Forest" "green")
+    ("Lake"   "blue")
+    ("Road"   "#888888")
+  }
+  # ... bind ?wkt ...
+}
+```
+
+The style control also lets you set global defaults (color, opacity, fill on/off, stroke width, point radius) that are remembered across sessions for the same query.
+
+---
+
+**Marker Clustering:**
+
+When clustering is enabled by the site administrator, nearby point markers are grouped into cluster markers at lower zoom levels. The cluster marker displays the feature count; zoom in or click to expand. Clustering activates automatically when the result set exceeds a configured threshold.
+
+---
+
+**Heatmap:**
+
+When heatmap mode is enabled, point features are rendered as a colour-gradient intensity layer instead of individual markers. Lines and polygons always render normally.
+
+---
+
+**Drawing Spatial Filters:**
+
+Use the drawing tools (rectangle or polygon) to select an area on the map. After you finish drawing, a panel displays a GeoSPARQL `sfWithin` filter snippet:
+
+```sparql
+FILTER(geof:sfWithin(?geom, "POLYGON((...))"^^geo:wktLiteral))
+```
+
+Click **Copy** to copy it to the clipboard, then paste it into your SPARQL query to restrict results to that area. Required prefixes:
+
+```sparql
+PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+```
+
+See [Drawing Spatial Filters](drawing.md) for more details.
+
+---
+
+**Geometry Simplification:**
+
+The simplify slider reduces the number of vertices in complex polygon/line geometries. Drag the slider right to increase the tolerance; drag left to restore full detail. This is useful for improving rendering performance with highly detailed boundaries.
+
+---
+
+**Temporal Filtering (Time Slider):**
+
+When your results include a `?time`, `?date`, `?datetime`, `?timestamp`, `?start`, or `?startDate` binding, a time slider appears below the map. Use it to:
+
+- Scrub through time and see which features are active at each point.
+- Press **Play** to animate forward through the timeline automatically.
+- Toggle between **Cumulative** mode (show all features up to the selected time) and **Instant** mode (show only features at exactly the selected time).
+
+Features without a timestamp are always visible regardless of the slider position.
+
+---
+
+**Export:**
+
+The Export control (top-right of the map) lets you save or share the visible data:
+
+| Option | Description |
+|---|---|
+| **Download GeoJSON** | Save all visible features as a `.geojson` file. |
+| **Copy GeoJSON** | Copy the GeoJSON to the clipboard. |
+| **Download KML** | Save as a `.kml` file (compatible with Google Earth, QGIS, etc.). |
+| **Download CSV** | Save as a `.csv` file with one row per feature and a `wkt` column. |
+| **Download PNG** | Save a screenshot of the current map viewport. |
+
+All visible geometry columns are merged into the export. See [Export Capabilities](export.md) for details.
+
+---
+
+**Permalink:**
+
+When permalink support is enabled, the URL in your browser's address bar is automatically updated as you pan and zoom. Sharing that URL with a colleague will open the map at the same view, with the same basemap and layer visibility. No extra steps needed.
+
+---
+
+**CRS and Coordinate Order:**
+
+The plugin handles coordinate reference systems automatically:
+
+- **Plain WKT / CRS84**: coordinates are in lon/lat order.
+- **`SRID=4326;` EWKT prefix**: lon/lat order.
+- **EPSG:4326 URI prefix** (e.g. `<http://www.opengis.net/def/crs/EPSG/0/4326>`): lat/lon authority order — the plugin swaps the coordinates automatically for correct display.
+- **Other projected CRS** (e.g. Belgian Lambert, RD New, ETRS89-LCC): reprojected on the fly; no manual configuration needed for common systems.
+
+---
+
+**Troubleshooting:**
+
+| Symptom | What to check |
+|---|---|
+| Geo tab does not appear | Verify the query returns a geometry binding or `?lat`/`?lon` columns. |
+| Map is empty after switching to Geo | Open the Table tab to confirm the query returned data. Check that geometry literals use a recognized datatype. |
+| Features appear in the wrong location | Check the coordinate order. WKT from a GeoSPARQL endpoint using EPSG:4326 URI CRS is in lat/lon order, not lon/lat. |
+| Popup shows raw IRI instead of a label | Add a `?wktLabel` binding to your query for a human-readable popup. |
+| Time slider not visible | Ensure your query includes a variable named `?time`, `?date`, or another recognized temporal binding. |
+| PNG export is blank or missing basemap tiles | Most tile providers block cross-origin rendering. Switch to the OpenStreetMap basemap before exporting. |
+
+---
 
 **More Information:**
-Visit [Yasgui Geo Plugin](https://github.com/Matdata-eu/yasgui-geo-plugin/) for detailed documentation.
+
+Visit the [Yasgui Geo Plugin repository](https://github.com/Matdata-eu/yasgui-geo-plugin/) for full documentation, including the [options reference](options.md), [drawing guide](drawing.md), and [export guide](export.md).
 
 ### Error Plugin
 

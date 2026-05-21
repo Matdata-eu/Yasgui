@@ -125,6 +125,24 @@ This comprehensive guide covers everything developers need to know to integrate,
     - [Example Queries](#example-queries)
     - [Troubleshooting](#troubleshooting)
     - [Repository](#repository)
+  - [Using the Geo Plugin](#using-the-geo-plugin)
+    - [Installation](#installation-2)
+    - [Registering the Plugin](#registering-the-plugin)
+    - [Quick Configuration](#quick-configuration)
+    - [Key Features](#key-features-1)
+    - [Options Reference](#options-reference)
+    - [Convention-Based Per-Feature Bindings](#convention-based-per-feature-bindings)
+    - [Supported Geometry Types](#supported-geometry-types)
+    - [CRS and Coordinate Transformations](#crs-and-coordinate-transformations)
+    - [Drawing Spatial Filters](#drawing-spatial-filters)
+    - [Export Capabilities](#export-capabilities)
+    - [Temporal Filtering](#temporal-filtering)
+    - [Clustering and Heatmap](#clustering-and-heatmap)
+    - [Permalink Support](#permalink-support)
+    - [TypeScript Support](#typescript-support-1)
+    - [Example Queries](#example-queries-1)
+    - [Troubleshooting](#troubleshooting-1)
+    - [Repository](#repository-1)
   - [Contributing](#contributing)
     - [Getting Started](#getting-started)
     - [Project Structure](#project-structure)
@@ -3434,6 +3452,377 @@ DESCRIBE ex:Alice ex:Bob
 
 For complete documentation, examples, and source code, visit:
 **[https://github.com/Matdata-eu/yasgui-graph-plugin](https://github.com/Matdata-eu/yasgui-graph-plugin)**
+
+---
+
+## Using the Geo Plugin
+
+The Geo Plugin is a YASR plugin that renders geographic SPARQL results on an interactive [Leaflet](https://leafletjs.com/) map. It supports multiple geometry formats, on-the-fly CRS reprojection, drawing-based spatial filters, export, temporal animation, clustering, heatmap rendering, and more.
+
+### Installation
+
+**npm:**
+
+```bash
+npm install @matdata/yasgui-geo-plugin
+```
+
+```javascript
+import Yasgui from '@matdata/yasgui';
+import GeoPlugin from '@matdata/yasgui-geo-plugin';
+
+Yasgui.Yasr.registerPlugin('geo', GeoPlugin);
+
+const yasgui = new Yasgui(document.getElementById('yasgui'));
+```
+
+**CDN (IIFE bundle):**
+
+The release ships a minified IIFE bundle. Include Leaflet first, then the bundle:
+
+```html
+<!doctype html>
+<html>
+<head>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- YASGUI -->
+  <link rel="stylesheet" href="https://unpkg.com/@matdata/yasgui/build/yasgui.min.css" />
+  <script src="https://unpkg.com/@matdata/yasgui/build/yasgui.min.js"></script>
+  <!-- Geo Plugin -->
+  <script src="https://unpkg.com/@matdata/yasgui-geo-plugin/dist/yasgui-geo-plugin.min.js"></script>
+</head>
+<body>
+  <div id="yasgui" style="height:600px"></div>
+  <script>
+    const GeoPlugin = window.YasguiGeoPlugin?.default ?? window.YasguiGeoPlugin;
+    Yasgui.Yasr.registerPlugin('geo', GeoPlugin);
+    const yasgui = new Yasgui(document.getElementById('yasgui'), {
+      requestConfig: { endpoint: 'https://dbpedia.org/sparql' },
+      yasr: { pluginOrder: ['table', 'response', 'geo'], defaultPlugin: 'geo' },
+    });
+  </script>
+</body>
+</html>
+```
+
+### Registering the Plugin
+
+Call `Yasr.registerPlugin` **before** constructing the `Yasgui` instance:
+
+```javascript
+import Yasgui from '@matdata/yasgui';
+import GeoPlugin from '@matdata/yasgui-geo-plugin';
+
+// Register under the name 'geo'
+Yasgui.Yasr.registerPlugin('geo', GeoPlugin);
+
+const yasgui = new Yasgui(document.getElementById('yasgui'), {
+  yasr: {
+    pluginOrder: ['table', 'response', 'geo'],
+    defaultPlugin: 'geo',
+  },
+});
+```
+
+### Quick Configuration
+
+Pass plugin options through Yasgui's `yasr.plugins.geo` slot:
+
+```javascript
+const yasgui = new Yasgui(document.getElementById('yasgui'), {
+  yasr: {
+    pluginOrder: ['table', 'response', 'geo'],
+    defaultPlugin: 'geo',
+    plugins: {
+      geo: {
+        defaultColor: '#ff5722',
+        defaultBasemap: 'CartoDB Voyager',
+        initialView: { center: [50.85, 4.35], zoom: 8 },
+        maxZoom: 18,
+        clustering: true,
+        permalink: true,
+      },
+    },
+  },
+});
+```
+
+### Key Features
+
+- **Multi-format geometry**: WKT, GeoJSON, GML, GeoHash, and DBpedia/WGS84 literals
+- **On-the-fly reprojection**: 15+ embedded SRIDs plus automatic fetch from epsg.io for unknown ones
+- **Lat/lon auto-detection**: Numeric `?lat`/`?lon` column pairs are recognized without WKT
+- **Per-column layers**: One toggleable overlay per detected geometry column in the layers control
+- **Style control**: Persisted default color, opacity, fill, stroke width and marker radius; per-feature `?wktColor` overrides color
+- **Marker clustering**: Optional `leaflet.markercluster` integration for large point sets
+- **Heatmap**: Optional `leaflet.heat` rendering mode
+- **Drawing tools**: Rectangle/polygon drawing emits a ready-to-paste GeoSPARQL `sfWithin` filter
+- **Geometry simplification**: turf-simplify with a live tolerance slider
+- **Export**: GeoJSON, KML, CSV-with-WKT, PNG screenshot, clipboard copy
+- **Temporal filtering**: Time slider with play/pause animation for `?time`/`?date` bindings
+- **Permalink**: Map center, zoom, basemap and visible columns encoded in the URL hash
+- **Coordinate readout** and **distance measure** tool
+- **Dark-mode-aware** default basemap
+- **Safe popups**: bindings rendered via DOM APIs (no XSS), IRI linkification, inline image previews
+- **Accessibility**: keyboard-focusable popups, semantic buttons, ARIA-labeled plugin icon
+- **TypeScript declarations** included
+
+### Options Reference
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `defaultColor` | `string` (CSS color) | `#3388ff` | Color for features without a `?wktColor` binding. |
+| `defaultBasemap` | `string` | `'openStreetMap'` | Name of the basemap to activate on startup. Must match a key in `basemaps`. |
+| `initialView` | `{ center: [lat, lon], zoom: number }` | Belgium @ 5 | Map center and zoom when no features are present. |
+| `maxZoom` | `number` | `14` | Upper bound applied when auto-fitting bounds to features. |
+| `minHeight` | `number` (px) | `500` | Minimum height of the map container. |
+| `latLonAutoDetect` | `boolean` | `true` | Auto-detect numeric lat/lon column pairs and synthesize a WKT POINT column. |
+| `basemaps` | `{ [name]: L.TileLayer }` | built-in | Replace the bundled basemap dictionary entirely. |
+| `clustering` | `boolean` | `false` | Enable marker clustering via `leaflet.markercluster`. |
+| `clusteringThreshold` | `number` | `100` | Minimum feature count before clustering activates. |
+| `heatmap` | `boolean` | `false` | Render points as a heatmap via `leaflet.heat` instead of markers. |
+| `styleControl` | `boolean` | `true` | Show the compact style control panel. |
+| `styleStorageKey` | `string \| null` | query hash | Override the localStorage key used to persist style-control values. |
+| `simplifyTolerance` | `number` | `0` | Initial turf-simplify tolerance in degrees. |
+| `simplifyControl` | `boolean` | `true` | Show the live simplification tolerance slider. |
+| `simplifyMaxTolerance` | `number` | `0.05` | Maximum tolerance exposed by the slider. |
+| `simplifyStep` | `number` | `0.0001` | Slider step size. |
+| `timeSlider` | `boolean` | `true` | Show a temporal slider when rows contain time/date-like bindings. |
+| `timeBindingNames` | `string[] \| null` | common names | Override recognized temporal binding names. Defaults: `time`, `date`, `datetime`, `timestamp`, `start`, `startDate`. |
+| `timeMode` | `'cumulative' \| 'instant'` | `'cumulative'` | Show all features up to the selected time (`cumulative`) or only features at the exact selected time (`instant`). |
+| `permalink` | `boolean` | `false` | Persist center, zoom, basemap and visible geometry columns in the URL hash. |
+| `exportControl` | `boolean` | `true` | Show the Export control on the map. |
+| `drawing` | `boolean` | `true` | Enable rectangle/polygon drawing tools and spatial filter output. |
+
+See [docs/options.md](options.md) for the full reference including styling and simplification details.
+
+### Convention-Based Per-Feature Bindings
+
+The plugin reads the following SPARQL variable names from result rows:
+
+| Binding | Effect |
+|---|---|
+| `?wktColor` | Override fill/stroke color for that feature (CSS color string). |
+| `?wktLabel` | Plain-text popup content (replaces the default key/value table). |
+| `?wktTooltip` | Hover tooltip text shown on mouse-over. |
+
+### Supported Geometry Types
+
+| Datatype URI | Parsed as |
+|---|---|
+| `geo:wktLiteral` (`http://www.opengis.net/ont/geosparql#wktLiteral`) | WKT / CRS-prefixed WKT / EWKT |
+| `virtrdf:Geometry` (`http://www.openlinksw.com/schemas/virtrdf#Geometry`) | WKT |
+| `wgs84:geometry` (`http://www.w3.org/2003/01/geo/wgs84_pos#geometry`) | WKT (DBpedia style) |
+| `geo:geoJSONLiteral` | GeoJSON geometry |
+| `geo:gmlLiteral` | GML 2/3 geometry |
+| `geo:geoHashLiteral` | GeoHash — decoded to center point |
+
+All major WKT geometry types are supported, including `GeometryCollection`.
+
+### CRS and Coordinate Transformations
+
+The plugin follows GeoSPARQL coordinate-order semantics:
+
+- **No CRS specified**: lon/lat order (CRS84 / plain WKT convention)
+- **`SRID=4326;` prefix (EWKT)**: lon/lat order
+- **`<http://www.opengis.net/def/crs/EPSG/0/4326>` URI prefix**: authority lat/lon order — coordinates are automatically swapped before Leaflet rendering
+- **`<http://www.opengis.net/def/crs/OGC/1.3/CRS84>` URI prefix**: lon/lat order
+
+**Embedded SRIDs** (no network request required):
+`4326`, `3857`, `31370`, `4258`, `3035`, `25831`, `25832`, `25833`, `2154`, `27700`, `28992`, `3006`, `2056`, `4269`, `3978`
+
+**Auto-loading unknown SRIDs:**
+
+For any SRID not embedded, the helper `ensureProjDef` fetches the proj4 definition from `https://epsg.io/<srid>.proj4` and registers it at runtime:
+
+```javascript
+import { ensureProjDef } from '@matdata/yasgui-geo-plugin';
+
+await ensureProjDef('7855');  // GDA2020 / MGA zone 55
+geoPlugin.draw();             // re-render after CRS is registered
+```
+
+### Drawing Spatial Filters
+
+When `options.drawing` is `true` (default), the map gains rectangle and polygon drawing tools. After finishing a shape, a panel displays a ready-to-paste GeoSPARQL filter:
+
+```sparql
+FILTER(geof:sfWithin(?geom, "POLYGON((4.30 50.80, 4.40 50.80, 4.40 50.90, 4.30 50.80))"^^geo:wktLiteral))
+```
+
+A **Copy** button copies the snippet to the clipboard. The required prefixes are:
+
+```sparql
+PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+```
+
+See [docs/drawing.md](drawing.md) for more details.
+
+### Export Capabilities
+
+The **Export** control (top-right of the map, toggle via `exportControl` option) provides:
+
+| Action | Output | Notes |
+|---|---|---|
+| GeoJSON download | `results.geojson` | Verbatim copy of the in-memory feature collection. |
+| Clipboard copy | — | Formatted GeoJSON copied to clipboard. |
+| PNG screenshot | `map.png` | Current viewport captured as an image. |
+| KML download | `results.kml` | Supports Point, LineString, Polygon (incl. holes). |
+| CSV download | `results.csv` | One row per feature with all binding variables plus a `wkt` column. |
+
+Features from all visible geometry columns are merged into the export. See [docs/export.md](export.md) for details.
+
+### Temporal Filtering
+
+When result rows contain a binding whose name matches `?time`, `?date`, `?datetime`, `?timestamp`, `?start`, or `?startDate`, the plugin displays a time slider with play/pause controls.
+
+- **Cumulative mode** (default): Shows all features with a timestamp up to and including the selected value. Features without a timestamp remain visible at all times.
+- **Instant mode**: Shows only features whose timestamp matches the exact selected value.
+
+Configure via the `timeSlider`, `timeMode`, and `timeBindingNames` options.
+
+### Clustering and Heatmap
+
+**Marker clustering** groups nearby points into cluster markers at lower zoom levels, reducing visual clutter for large point datasets:
+
+```javascript
+const yasgui = new Yasgui(el, {
+  yasr: {
+    plugins: {
+      geo: {
+        clustering: true,
+        clusteringThreshold: 50,  // activate when > 50 points
+      },
+    },
+  },
+});
+```
+
+**Heatmap** renders point intensity as a color gradient. Clustering and heatmap are mutually exclusive — heatmap takes precedence when both are enabled:
+
+```javascript
+geo: { heatmap: true }
+```
+
+### Permalink Support
+
+When `permalink: true`, the plugin appends map state to the page URL hash on every map move. State encoded:
+
+- Map center (lat/lon) and zoom level
+- Active basemap name
+- Visible geometry columns (layer visibility)
+
+This lets users share a URL that reopens the map at the same view and layer configuration.
+
+### TypeScript Support
+
+The package ships `index.d.ts` declarations. Import the options type:
+
+```typescript
+import GeoPlugin from '@matdata/yasgui-geo-plugin';
+import type { GeoPluginOptions } from '@matdata/yasgui-geo-plugin';
+
+const options: GeoPluginOptions = {
+  defaultColor: '#e91e63',
+  clustering: true,
+  permalink: true,
+};
+```
+
+### Example Queries
+
+**WKT points with custom colors and tooltips:**
+
+```sparql
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+SELECT * WHERE {
+  VALUES (?name ?lat ?lon ?wktColor) {
+    ("Brussels"  50.8503 4.3517  "blue")
+    ("Antwerp"   51.2194 4.4025  "red")
+    ("Ghent"     51.0543 3.7174  "green")
+  }
+  BIND(STRDT(CONCAT("POINT(", STR(?lon), " ", STR(?lat), ")"), geo:wktLiteral) AS ?wkt)
+  BIND(?name AS ?wktTooltip)
+}
+```
+
+**GeoSPARQL endpoint (e.g., GraphDB, Fuseki with GeoSPARQL):**
+
+```sparql
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+
+SELECT ?feature ?wkt WHERE {
+  ?feature a geo:Feature ;
+           geo:hasGeometry/geo:asWKT ?wkt .
+}
+LIMIT 500
+```
+
+**Lat/lon auto-detection (no WKT required):**
+
+```sparql
+SELECT ?name ?lat ?lon WHERE {
+  ?city a <http://dbpedia.org/ontology/City> ;
+        <http://www.w3.org/2000/01/rdf-schema#label>    ?name ;
+        <http://www.w3.org/2003/01/geo/wgs84_pos#lat>   ?lat ;
+        <http://www.w3.org/2003/01/geo/wgs84_pos#long>  ?lon .
+  FILTER(LANG(?name) = 'en')
+} LIMIT 100
+```
+
+When `latLonAutoDetect` is enabled (default), the plugin synthesizes a `POINT` geometry from `?lat` and `?lon` automatically.
+
+**Temporal data:**
+
+```sparql
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?name ?wkt ?date WHERE {
+  # ... your query ...
+  BIND("2024-03-15"^^xsd:date AS ?date)
+}
+```
+
+### Troubleshooting
+
+**Geo plugin tab not appearing:**
+- Ensure `Yasgui.Yasr.registerPlugin('geo', GeoPlugin)` is called **before** creating the `Yasgui` instance.
+- Verify the query returns at least one geometry binding (WKT literal, GeoJSON, etc.) or a `?lat`/`?lon` pair with `latLonAutoDetect: true`.
+- Check the browser console for JavaScript errors.
+
+**Map shows no features:**
+- Check that geometry literals use a [supported datatype](#supported-geometry-types).
+- For `geo:wktLiteral` with a CRS URI prefix, verify the coordinate order matches the CRS specification.
+- Switch to the **Table** or **Response** tab to confirm the query returns data.
+
+**CRS reprojection not working:**
+- Verify the SRID number in your WKT CRS prefix is correct.
+- For non-embedded SRIDs, call `ensureProjDef(srid)` before rendering (see [CRS section](#crs-and-coordinate-transformations)).
+- Check the browser console — failed `epsg.io` fetches are logged as warnings.
+
+**Clustering or heatmap not rendering:**
+- Ensure `leaflet.markercluster` / `leaflet.heat` are available if you are using the IIFE bundle without a bundler (they are bundled in the npm package).
+- Heatmap mode only applies to point geometries; lines and polygons render normally regardless.
+
+**Drawing tools missing:**
+- Confirm `options.drawing` is not set to `false`.
+- `leaflet-draw` is included in the bundle; no separate installation is needed.
+
+**Export PNG is blank or missing tiles:**
+- Most basemap tile servers restrict cross-origin image use. The PNG export captures whatever the browser can render; third-party basemap tiles may be excluded due to CORS policy.
+- Switch to a CORS-friendly basemap (e.g., the bundled OpenStreetMap layer) before exporting.
+
+### Repository
+
+For full source code, issue tracker, and additional documentation:
+**[https://github.com/Matdata-eu/yasgui-geo-plugin](https://github.com/Matdata-eu/yasgui-geo-plugin)**
+
+Npm package: [`@matdata/yasgui-geo-plugin`](https://www.npmjs.com/package/@matdata/yasgui-geo-plugin)
 
 ---
 
