@@ -1679,8 +1679,6 @@ PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
 PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 ```
 
-See [Drawing Spatial Filters](drawing.md) for more details.
-
 ---
 
 **Geometry Simplification:**
@@ -1712,8 +1710,6 @@ The Export control (top-right of the map) lets you save or share the visible dat
 | **Download KML** | Save as a `.kml` file (compatible with Google Earth, QGIS, etc.). |
 | **Download CSV** | Save as a `.csv` file with one row per feature and a `wkt` column. |
 | **Download PNG** | Save a screenshot of the current map viewport. |
-
-All visible geometry columns are merged into the export. See [Export Capabilities](export.md) for details.
 
 ---
 
@@ -1749,7 +1745,7 @@ The plugin handles coordinate reference systems automatically:
 
 **More Information:**
 
-Visit the [Yasgui Geo Plugin repository](https://github.com/Matdata-eu/yasgui-geo-plugin/) for full documentation, including the [options reference](options.md), [drawing guide](drawing.md), and [export guide](export.md).
+Visit the [Yasgui Geo Plugin repository](https://github.com/Matdata-eu/yasgui-geo-plugin/) for full documentation.
 
 ### Error Plugin
 
