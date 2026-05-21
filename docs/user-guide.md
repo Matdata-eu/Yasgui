@@ -1050,7 +1050,7 @@ yasgui-d:ws1_mq_v_1e1c4bec-0d79-474a-a930-6f38ec8f90b5
         dcterms:isVersionOf  yasgui-d:ws1_mq_aaf6a7e1-6dfa-4d06-89c4-7fbd8de475c4;
         spin:text            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT * WHERE {\n  ?sub ?pred ?obj .\n} LIMIT 10";
         prov:used            [ rdf:type      ssd:Service;
-                               ssd:endpoint  <https://data-interop.era.europa.eu/api/sparql>
+                               ssd:endpoint  <https://graph.data.era.europa.eu/repositories/rinf-plus>
                              ] .
 
 # Version 2 (updated query text)

@@ -1834,7 +1834,7 @@ const yasgui = new Yasgui(document.getElementById("yasgui"), {
   endpointButtons: [
     { endpoint: "https://dbpedia.org/sparql", label: "DBpedia" },
     { endpoint: "https://query.wikidata.org/bigdata/namespace/wdq/sparql", label: "Wikidata" },
-    { endpoint: "https://data-interop.era.europa.eu/api/sparql", label: "ERA" }
+    { endpoint: "https://graph.data.era.europa.eu/repositories/rinf-plus", label: "ERA" }
   ]
 });
 ```

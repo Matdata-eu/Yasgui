@@ -55,7 +55,7 @@ if (typeof Yasgui !== "undefined") {
           //Feel free to include any other fields (e.g. a description or icon
           //that you'd like to use when rendering)
           {
-            endpoint: "https://data-interop.era.europa.eu/api/sparql",
+            endpoint: "https://graph.data.era.europa.eu/repositories/rinf-plus",
           },
           {
             endpoint: "https://dbpedia.org/sparql",

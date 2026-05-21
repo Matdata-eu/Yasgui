@@ -326,7 +326,7 @@ yasgui:AgentShape
 ex:eraEndpoint
   a sd:Service ;
   rdfs:label "ERA SPARQL Endpoint" ;
-  sd:endpoint <https://data-interop.era.europa.eu/api/sparql> .
+  sd:endpoint <https://graph.data.era.europa.eu/repositories/rinf-plus> .
 
 ex:wikidataEndpoint
   a sd:Service ;
