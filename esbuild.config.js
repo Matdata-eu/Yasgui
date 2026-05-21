@@ -47,12 +47,30 @@ for (const file of htmlFiles) {
   }
 }
 
+/**
+ * The esbuild-sass-plugin follows the `/* src/yasgui-compat.css *\/` sourcemap comment
+ * that the geo plugin's dist CSS starts with, causing esbuild to load the src/ version
+ * which has broken relative PNG paths. This plugin intercepts that load and returns
+ * the dist/ version instead (which already has the images inlined as base64 data URIs).
+ */
+const geoPluginCssFix = {
+  name: "geo-plugin-css-fix",
+  setup(build) {
+    build.onLoad({ filter: /yasgui-geo-plugin[/\\]src[/\\]yasgui-compat\.css$/ }, (args) => {
+      const distPath = args.path.replace(/([/\\])src([/\\])/, "$1dist$2");
+      const contents = fs.readFileSync(distPath, "utf-8");
+      return { contents, loader: "css" };
+    });
+  },
+};
+
 const commonConfig = {
   bundle: true,
   sourcemap: true,
   target: "es2020",
   minify: isProd,
   plugins: [
+    geoPluginCssFix,
     sassPlugin({
       async transform(source, resolveDir) {
         const { css } = await postcss([autoprefixer]).process(source, { from: undefined });

@@ -27,7 +27,7 @@ import "@matdata/yasgui-geo-plugin/dist/yasgui-compat.css";
 
 // Register plugins to Yasr
 Yasr.registerPlugin("Table", TablePlugin);
-Yasr.registerPlugin("Geo", GeoPlugin);
+Yasr.registerPlugin("Geo", GeoPlugin as any);
 Yasr.registerPlugin("Graph", GraphPlugin);
 if (window) {
   //We're storing yasqe and yasr as a member of Yasgui, but _also_ in the window
