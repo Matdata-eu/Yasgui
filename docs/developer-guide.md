@@ -3596,8 +3596,6 @@ const yasgui = new Yasgui(document.getElementById('yasgui'), {
 | `exportControl` | `boolean` | `true` | Show the Export control on the map. |
 | `drawing` | `boolean` | `true` | Enable rectangle/polygon drawing tools and spatial filter output. |
 
-See [docs/options.md](options.md) for the full reference including styling and simplification details.
-
 ### Convention-Based Per-Feature Bindings
 
 The plugin reads the following SPARQL variable names from result rows:
@@ -3659,8 +3657,6 @@ PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
 PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
 ```
 
-See [docs/drawing.md](drawing.md) for more details.
-
 ### Export Capabilities
 
 The **Export** control (top-right of the map, toggle via `exportControl` option) provides:
@@ -3672,8 +3668,6 @@ The **Export** control (top-right of the map, toggle via `exportControl` option)
 | PNG screenshot | `map.png` | Current viewport captured as an image. |
 | KML download | `results.kml` | Supports Point, LineString, Polygon (incl. holes). |
 | CSV download | `results.csv` | One row per feature with all binding variables plus a `wkt` column. |
-
-Features from all visible geometry columns are merged into the export. See [docs/export.md](export.md) for details.
 
 ### Temporal Filtering
 
