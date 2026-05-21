@@ -82,4 +82,14 @@ packages.forEach((pkg) => {
   console.log(`  Copied build files for ${pkg}`);
 });
 
+// Copy prefixes.json into the yasqe package build directory
+const prefixesSrc = path.join("build", "prefixes.json");
+const prefixesDest = path.join("packages", "yasqe", "build", "prefixes.json");
+if (fs.existsSync(prefixesSrc)) {
+  fs.copyFileSync(prefixesSrc, prefixesDest);
+  console.log("Copied prefixes.json to packages/yasqe/build/");
+} else {
+  console.warn("prefixes.json not found in build/ - skipping copy to yasqe package");
+}
+
 console.log("Distribution complete!");

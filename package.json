@@ -29,7 +29,7 @@
       }
     },
     "build": {
-      "command": "node esbuild.config.js && node distributeBuildFiles.js",
+      "command": "node esbuild.config.js && node fetchPrefixData.js && node distributeBuildFiles.js",
       "env": {
         "NODE_ENV": "production"
       }

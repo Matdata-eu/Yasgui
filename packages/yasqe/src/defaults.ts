@@ -9,7 +9,7 @@ import * as queryString from "query-string";
 import CodeMirror from "codemirror";
 //need to pass Yasqe object as argument, as the imported version might not have inherited all (e.g. `fold`) props of Codemirror yet
 export default function get() {
-  const prefixCcApi = "https://prefix.cc/popular/all.file.json";
+  const prefixCcApi = "./prefixes.json";
   const config: Omit<Config, "requestConfig"> = {
     mode: "sparql11",
     value: `PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
