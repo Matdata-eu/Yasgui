@@ -53,6 +53,7 @@
   - [Keyboard Shortcuts](#keyboard-shortcuts)
     - [Query Editor (YASQE)](#query-editor-yasqe)
     - [Fullscreen](#fullscreen)
+    - [YASGUI Tabs](#yasgui-tabs)
     - [General Editor](#general-editor)
     - [Results Viewer (YASR)](#results-viewer-yasr)
   - [Troubleshooting](#troubleshooting)
@@ -1574,7 +1575,7 @@ The plugin looks for common coordinate properties:
 - GeoJSON structures
 
 **More Information:**
-Visit [Yasgui Geo Plugin](https://github.com/Thib-G/yasgui-geo-tg) for detailed documentation.
+Visit [Yasgui Geo Plugin](https://github.com/Matdata-eu/yasgui-geo-plugin/) for detailed documentation.
 
 ### Error Plugin
 

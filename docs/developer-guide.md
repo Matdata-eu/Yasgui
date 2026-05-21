@@ -3679,7 +3679,7 @@ Releases are managed using Changesets:
 - **CodeMirror Documentation**: [https://codemirror.net/5/](https://codemirror.net/5/)
 - **Table Plugin**: [https://github.com/Matdata-eu/yasgui-table-plugin](https://github.com/Matdata-eu/yasgui-table-plugin)
 - **Graph Plugin**: [https://github.com/Matdata-eu/yasgui-graph-plugin](https://github.com/Matdata-eu/yasgui-graph-plugin)
-- **Geo Plugin**: [https://github.com/Thib-G/yasgui-geo-tg](https://github.com/Thib-G/yasgui-geo-tg)
+- **Geo Plugin**: [https://github.com/Matdata-eu/yasgui-geo-plugin](https://github.com/Matdata-eu/yasgui-geo-plugin)
 
 ---
 

@@ -513,7 +513,7 @@ Reference these in your plugin styles:
 Point users to these existing external plugins:
 - [@matdata/yasgui-table-plugin](https://www.npmjs.com/package/@matdata/yasgui-table-plugin)
 - [@matdata/yasgui-graph-plugin](https://www.npmjs.com/package/@matdata/yasgui-graph-plugin)
-- [yasgui-geo-tg](https://www.npmjs.com/package/yasgui-geo-tg)
+- [@matdata/yasgui-geo-plugin](https://www.npmjs.com/package/@matdata/yasgui-geo-plugin)
 
 ## Output Format
 

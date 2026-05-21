@@ -10,7 +10,7 @@ import TabElements from "./TabElements";
 import { default as Yasqe, PartialConfig as YasqeConfig, RequestConfig } from "@matdata/yasqe";
 import { default as Yasr, Config as YasrConfig } from "@matdata/yasr";
 import { addClass, removeClass } from "@matdata/yasgui-utils";
-import GeoPlugin from "yasgui-geo-tg";
+import GeoPlugin from "@matdata/yasgui-geo-plugin";
 import GraphPlugin from "@matdata/yasgui-graph-plugin";
 import TablePlugin from "@matdata/yasgui-table-plugin";
 import { moveTabIdToFront, removeTabId } from "./tabNavigationHistory";
