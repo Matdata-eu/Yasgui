@@ -519,7 +519,7 @@ export class Yasr extends EventEmitter {
     const icon = document.createElement("i");
     addClass(icon, "fas", "fa-circle-question");
     this.documentationLink.appendChild(icon);
-    this.documentationLink.href = "https://docs.triply.cc/yasgui/";
+    this.documentationLink.href = "https://yasgui-doc.matdata.eu/docs/user-guide";
     this.documentationLink.target = "_blank";
     this.documentationLink.rel = "noopener noreferrer";
     this.headerEl.appendChild(this.documentationLink); // We can do this as long as the help-element is the last item in the row
