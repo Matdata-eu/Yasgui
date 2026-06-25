@@ -292,9 +292,21 @@ class Parser {
       };
     }
     if (summary) {
-      //if data is set, it should be less than max limit. If not set, it's probably a response error that we'd like to store as well
-      if (summary.data && summary.data.length > maxResponseSize) {
-        return undefined;
+      // If data is set, it should be less than max limit. For non-strings, compare serialized size.
+      if (summary.data !== undefined) {
+        let dataSize = 0;
+        if (typeof summary.data === "string") {
+          dataSize = summary.data.length;
+        } else {
+          try {
+            dataSize = JSON.stringify(summary.data).length;
+          } catch (_e) {
+            return undefined;
+          }
+        }
+        if (dataSize > maxResponseSize) {
+          return undefined;
+        }
       }
       return summary;
     }

@@ -551,6 +551,11 @@ export class Yasr extends EventEmitter {
   }
 
   public getResponseFromStorage() {
+    if (this.config.maxPersistentResponseSize <= 0) {
+      const storageId = this.getStorageId(this.config.persistenceLabelResponse);
+      if (storageId) this.storage.remove(storageId);
+      return;
+    }
     const storageId = this.getStorageId(this.config.persistenceLabelResponse);
     if (storageId) {
       return this.storage.get(storageId);
@@ -581,6 +586,10 @@ export class Yasr extends EventEmitter {
   }
   private storeResponse() {
     const storageId = this.getStorageId(this.config.persistenceLabelResponse);
+    if (storageId && this.config.maxPersistentResponseSize <= 0) {
+      this.storage.remove(storageId);
+      return;
+    }
     if (storageId && this.results) {
       const storeObj = this.results.getAsStoreObject(this.config.maxPersistentResponseSize);
       if (storeObj && !storeObj.error) {

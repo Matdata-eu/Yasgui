@@ -850,3 +850,80 @@ WHERE {
     });
   });
 });
+
+describe("Yasr", function () {
+  let browser: puppeteer.Browser;
+  let page: puppeteer.Page;
+  let server: http.Server | undefined;
+
+  before(async function () {
+    const refs = await setup(this, path.resolve("./build"));
+    browser = refs.browser;
+    server = refs.server;
+  });
+
+  beforeEach(async function () {
+    this.timeout(30000);
+    page = await getPage(browser, "yasr.html");
+    await page.evaluate(() => localStorage.clear());
+  });
+
+  afterEach(async () => {
+    await closePage(this, page);
+  });
+
+  after(async function () {
+    return destroy(browser, server);
+  });
+
+  it("does not restore previous response when response persistence is disabled", async function () {
+    const result = await page.evaluate(() => {
+      localStorage.clear();
+      const YasrCtor = (window as any).Yasr;
+      const storageKey = "yasr_cache_disable_response";
+
+      const firstParent = document.createElement("div");
+      firstParent.id = "yasr-cache-first";
+      document.body.appendChild(firstParent);
+      const first = new YasrCtor(firstParent, {
+        persistenceId: "yasr_cache_disable",
+        persistencyExpire: 3600,
+        maxPersistentResponseSize: 100000,
+      });
+      first.setResponse({
+        head: { vars: ["s"] },
+        results: {
+          bindings: [
+            {
+              s: {
+                type: "uri",
+                value: "urn:first",
+              },
+            },
+          ],
+        },
+      });
+
+      const storedBeforeDisable = !!localStorage.getItem(storageKey);
+
+      const secondParent = document.createElement("div");
+      secondParent.id = "yasr-cache-second";
+      document.body.appendChild(secondParent);
+      const second = new YasrCtor(secondParent, {
+        persistenceId: "yasr_cache_disable",
+        persistencyExpire: 0,
+        maxPersistentResponseSize: 0,
+      });
+
+      return {
+        storedBeforeDisable,
+        restoredResults: !!second.results,
+        stillStoredAfterDisable: !!localStorage.getItem(storageKey),
+      };
+    });
+
+    expect(result.storedBeforeDisable).to.equal(true);
+    expect(result.restoredResults).to.equal(false);
+    expect(result.stillStoredAfterDisable).to.equal(false);
+  });
+});

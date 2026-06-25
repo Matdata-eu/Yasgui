@@ -36,6 +36,7 @@ This comprehensive guide covers everything developers need to know to integrate,
       - [Share Configuration](#share-configuration)
     - [YASR Configuration](#yasr-configuration)
       - [YASR Example](#yasr-example)
+      - [Disabling Response Cache](#disabling-response-cache)
     - [Request Configuration](#request-configuration)
       - [Request Configuration Example](#request-configuration-example)
     - [Authentication](#authentication)
@@ -1346,6 +1347,36 @@ const yasr = new Yasr(document.getElementById('yasr'), {
   }
 });
 ```
+
+#### Disabling Response Cache
+
+To ensure YASR never shows a previously cached result, set:
+
+- `maxPersistentResponseSize: 0`
+
+Example:
+
+```javascript
+const yasr = new Yasr(document.getElementById("yasr"), {
+  persistenceId: "my-yasr",
+  maxPersistentResponseSize: 0,
+});
+```
+
+Behavior details:
+
+- `maxPersistentResponseSize <= 0` disables response persistence.
+- On initialization, YASR does not restore a stored response.
+- If a stored response exists for the same `persistenceId`, it is removed.
+- New responses are not written to storage.
+
+Important:
+
+- `persistencyExpire: 0` does **not** mean "expire immediately". In current storage semantics, `0` acts as no expiry.
+
+Regression coverage:
+
+- Browser test: `test/run.ts` (`Yasr` suite, `does not restore previous response when response persistence is disabled`).
 
 ### Request Configuration
 
